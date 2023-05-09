@@ -1,0 +1,19 @@
+{
+  "name": "Implement-js",
+  "version": "1.0.0",
+  "description": "Interface implementation for Javascript users",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "tanhuy998",
+  "license": "MIT",
+  "devDependencies": {
+    "@babel/cli": "^7.21.0",
+    "@babel/core": "^7.20.12",
+    "@babel/preset-env": "^7.20.2",
+    "@babel/node": "^7.20.7",
+    "@babel/plugin-proposal-decorators": "^7.20.13",
+    "@babel/register": "^7.18.9"
+  }
+}
