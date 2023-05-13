@@ -1,4 +1,4 @@
-const {implement, Interface, type, hintable} = require('./index.js');
+const {implement, Interface, type, hintable, countFunctionParams} = require('./index.js');
 
 class ITest extends Interface{
 
@@ -50,7 +50,10 @@ class A extends AnotherClass{
     }
 }
 
+
 const obj = new A();
+
+//console.log(obj.__is(A))
 
 console.log(ITest.__proto__);
 
@@ -62,7 +65,9 @@ obj.prop = new E();
 
 obj.func();
 
-console.log(obj.prop);
+//console.log(obj.prop);
+
+
 
 
 

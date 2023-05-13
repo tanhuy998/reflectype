@@ -1,6 +1,23 @@
 const INTERFACE_PROTOTYPE = Symbol(Date.now());
 const IS_CHECKABLE = Symbol(Date.now());
 const EXPORT = Symbol(Date.now());
+const GET = Symbol(Date.now());
+
+function countFunctionParams(_func) {
+
+    if (typeof _func !== 'function') return 0;
+
+    const detectParamsRegex = /\((.*)\)/;
+
+    const match = _func.toString()
+                        .match(detectParamsRegex);
+
+    if (match == null) return 0;
+
+    paramsString = match[1];
+
+    return paramsString.split(',').length;
+}
 
 class InterfaceCrossMap {
 
@@ -44,10 +61,93 @@ class InterfacePrototype {
         return this.#interfaces;
     }
 
-    constructor(..._interfaces) {
+    #prototype;
+    #origin;
+    get origin() {
+
+        return this.#origin;
+    }
+
+
+    constructor(_origin , ..._interfaces) {
 
         this.#interfaces = new Set(_interfaces);
+        this.#prototype = new Map();
+
+        this.#origin = _origin;
+        //this.#init();
     }
+
+    // #init() {
+
+    //     for (const intf of this.#interfaces.values()) {
+
+    //         if (!isInterface(intf)) {
+
+    //             throw new TypeError(`${intf.prototype.name} is not type of Interface`);
+    //         }
+
+    //         const props = Object.values(intf);
+
+    //         for (const value of props) {
+
+    //             if (typeof value !== 'function') continue;
+
+    //             const prototype = this.#prototype;
+
+    //             const paramsCount = countFunctionParams(value);
+
+    //             const methodName = value.name;
+
+    //             if (!prototype.has(methodName)) {
+
+    //                 prototype.set(methodName, new Set());
+    //             }
+
+    //             const methodVariations = prototype.get(methodName);
+    //         }
+    //     }
+    // }
+
+    getPrototype() {
+
+        return Array.from(this.#prototype);
+    }
+
+    [GET] (_method) {
+
+
+    }
+
+    verify(_object) {
+
+        for (const intf of this.#interfaces.values()) {
+
+            //const methods = Object.getOwnPropertyNames(intf.prototype);
+            const methods = intf.PROTOTYPE;
+
+            for (const method of methods) {
+                
+                if (method == "constructor") continue;
+
+                if (!_object[method]) throw new TypeError(`class ${_object.realClassName} implements ${intf.name} but not defines '${method}' method`);
+
+                if (typeof _object[method] !== 'function') throw new TypeError(`class ${_object.realClassName} implements ${intf.name} but defines '${method}' as not type of function`)
+            }
+        }
+    }
+}
+
+function overload(_func, context) {
+
+    const {kind, name} = context;
+
+    if (kind !== 'method') {
+
+        throw new Error('decorator @overload just applies to method');
+    }
+
+
 }
 
 
@@ -223,7 +323,7 @@ function type(_abstract) {
                     apply: checkReturnTypeAndResolve
                 })
 
-                return [theFunction, invovable];
+                return [theFunction, _abstract, invovable];
             }
 
             return checkReturnTypeAndResolve(_method, this, arguments);
@@ -310,11 +410,48 @@ function preventImmediateValue(_type) {
     }
 }
 
+
+function isInterfacePrototypeConflict(_class) {
+
+    /**
+     *  _class[INTERFACE_PROTOTYPE] is public static property
+     *  Classes that extend other class will inherit that property
+     *  we need check for the existence of _class[INTERFACE_PROTOTYPE] 
+     *  in order to overload that property
+     */
+
+    const interfacePrototype = _class[INTERFACE_PROTOTYPE];
+
+    if (interfacePrototype) {
+
+        // when the existent interface prototype if not the class
+        // that mean we need to overload the _class[INTERFACE_PROTOTYPE]
+        if (interfacePrototype.origin !== _class) {
+
+            return true;
+        }
+        else {
+
+            return false;
+        }
+    }
+    else {
+
+        return false;
+    }
+}
+
+
 function implement(..._interfaces) {
 
     return function (_class) {
 
         _interfaces = _interfaces.map((value) => {
+
+            if (!isInterface(value)) {
+    
+                throw new TypeError(`${intf.name} is not Interface`);
+            }
 
             const transformedInterface = InterfaceCrossMap.getFromMinor(value);
 
@@ -327,9 +464,14 @@ function implement(..._interfaces) {
             return value;
         })
 
-        if (!_class[INTERFACE_PROTOTYPE]) {
 
-            const interfaceProto = new InterfacePrototype(..._interfaces);
+        if (!_class[INTERFACE_PROTOTYPE] || isInterfacePrototypeConflict(_class)) {
+
+            /**
+             *  Overload or initialize interface's prototype
+             */
+
+            const interfaceProto = new InterfacePrototype(_class, ..._interfaces);
 
             Object.defineProperty(_class, INTERFACE_PROTOTYPE, {
                 configurable: false,
@@ -356,10 +498,10 @@ function implement(..._interfaces) {
 
         class InterfaceImplemetedCLass extends _class {
 
-            static #realName = super.name;
+            static #realName = _class.name;
             static get realName() {
 
-                return this.#realName;
+                return _class.name;
             }
 
 
@@ -375,19 +517,18 @@ function implement(..._interfaces) {
 
                 super(...arguments);
 
-                for (const intf of _interfaces) {
+                // for (const intf of _interfaces) {
 
-                    //const methods = Object.getOwnPropertyNames(intf.prototype);
-                    const methods = intf.PROTOTYPE;
+                //     //const methods = Object.getOwnPropertyNames(intf.prototype);
+                //     const methods = intf.PROTOTYPE;
 
-                    for (const method of methods) {
+                //     for (const method of methods) {
                         
-                        if (method == "constructor") continue;
+                //         if (method == "constructor") continue;
 
-                        if (!this[method]) throw new TypeError(`class ${_class.name} implements ${intf.name} but not defines '${method}' method`);
-                    }
-                }
-
+                //         if (!this[method]) throw new TypeError(`class ${_class.name} implements ${intf.name} but not defines '${method}' method`);
+                //     }
+                // }
 
                 Object.defineProperty(this, INTERFACE_PROTOTYPE, {
                     value: _class[INTERFACE_PROTOTYPE],
@@ -395,6 +536,8 @@ function implement(..._interfaces) {
                     writable: false,
                     enumerable: false,
                 });
+
+                _class[INTERFACE_PROTOTYPE].verify(this);
             }
         }
 
@@ -402,8 +545,6 @@ function implement(..._interfaces) {
 
             return checkable(InterfaceImplemetedCLass);
         }
-
-        return InterfaceImplemetedCLass;
     }
 }
 
@@ -430,5 +571,5 @@ function hintable(_class, {kind}) {
 }
 
 module.exports = {
-    Interface, implement, checkable, type, hintable
+    Interface, implement, checkable, type, hintable, countFunctionParams
 };
