@@ -1,7 +1,9 @@
-const INTERFACE_PROTOTYPE = Symbol(Date.now());
-const IS_CHECKABLE = Symbol(Date.now());
-const EXPORT = Symbol(Date.now());
-const GET = Symbol(Date.now());
+const InterfacePrototype = require('./interfacePrototype.js');
+const Interface = require('./interface.js');
+const Variable = require('./variable.js');
+const {preventImmediateValue, isInterface} = require('./utils.js');
+const {INTERFACE_PROTOTYPE, INTERFACES, REFLECTION, IS_CHECKABLE, EXPORT} = require('./constant.js');
+
 
 function countFunctionParams(_func) {
 
@@ -54,193 +56,58 @@ class InterfaceCrossMap {
     }
 }
 
-class InterfacePrototype {
 
-    #interfaces;
-    get list() {
-        return this.#interfaces;
+class PropertyType {
+
+    static get METHOD() {
+
+        return 0x1
+        ;
     }
 
-    #prototype;
-    #origin;
-    get origin() {
+    static get FIELD() {
 
-        return this.#origin;
-    }
-
-
-    constructor(_origin , ..._interfaces) {
-
-        this.#interfaces = new Set(_interfaces);
-        this.#prototype = new Map();
-
-        this.#origin = _origin;
-        //this.#init();
-    }
-
-    // #init() {
-
-    //     for (const intf of this.#interfaces.values()) {
-
-    //         if (!isInterface(intf)) {
-
-    //             throw new TypeError(`${intf.prototype.name} is not type of Interface`);
-    //         }
-
-    //         const props = Object.values(intf);
-
-    //         for (const value of props) {
-
-    //             if (typeof value !== 'function') continue;
-
-    //             const prototype = this.#prototype;
-
-    //             const paramsCount = countFunctionParams(value);
-
-    //             const methodName = value.name;
-
-    //             if (!prototype.has(methodName)) {
-
-    //                 prototype.set(methodName, new Set());
-    //             }
-
-    //             const methodVariations = prototype.get(methodName);
-    //         }
-    //     }
-    // }
-
-    getPrototype() {
-
-        return Array.from(this.#prototype);
-    }
-
-    [GET] (_method) {
-
-
-    }
-
-    verify(_object) {
-
-        for (const intf of this.#interfaces.values()) {
-
-            //const methods = Object.getOwnPropertyNames(intf.prototype);
-            const methods = intf.PROTOTYPE;
-
-            for (const method of methods) {
-                
-                if (method == "constructor") continue;
-
-                if (!_object[method]) throw new TypeError(`class ${_object.realClassName} implements ${intf.name} but not defines '${method}' method`);
-
-                if (typeof _object[method] !== 'function') throw new TypeError(`class ${_object.realClassName} implements ${intf.name} but defines '${method}' as not type of function`)
-            }
-        }
+        return 0x2;
     }
 }
-
-function overload(_func, context) {
-
-    const {kind, name} = context;
-
-    if (kind !== 'method') {
-
-        throw new Error('decorator @overload just applies to method');
-    }
-
-
-}
-
-
-class Interface {
-
-    static get PROTOTYPE() {
-
-        return Object.getOwnPropertyNames(this.prototype);
-    }
-}
-
-class Variable {
+class PropertyReflectionMetadata {
 
     #type;
     #value;
-    #name;
-    #isClassProperty;
-    #isMethod;
-    #class;
-    #isStatic;
 
-    get type() {
+    setType(type) {
 
-        return this.#type;
+        this.#type = type;
     }
 
-    get value() {
+    setValue(value) {
 
-        return this.#value;
+        this.#type = value;
     }
 
-    constructor(_type, _value, _name, metadata = {class: undefined, isMethod, isStatic}) {
+    constructor(context) {
 
-        this.#type = _type;
-        this.#value = _value;
-        this.#name = _name;
-        this.#class = metadata.class;
-        this.#isMethod = metadata.isMethod;
-        this.#isStatic = metadata.isStatic;
-
-        try {
-
-            preventImmediateValue(this.#type);
-        }
-        catch (e) {
-            
-            throw new TypeError();
-        }
-
-        //if (this.#value === undefined) return;
-
-        this.check();
+        this.#bindContextArgs(context);
     }
 
-    
+    #bindContextArgs(context) {
 
-    setValue(_value) {
+        if (!context) return;
 
-        this.#value = _value;
+        const {kind, name} = context;
+    }
+}
 
-        this.check()
+class ObjectReflection {
+
+    #properties = new Map();
+    get properties() {
+
+        return this.#properties;
     }
 
-    getValue() {
+    constructor() {
 
-        return this.#value;
-    }
-
-    setClass(_class) {
-
-        this.#class = _class;
-    }
-
-    check() {
-
-        if (this.#value === undefined) return;
-
-        const _type = this.#type
-
-        if (this.#value[IS_CHECKABLE]) {
-
-            if (!this.#value.__is(this.#type)) {
-
-                throw new TypeError(`Initial value is not implements or type of ${_type.name}`);
-            }
-        }
-        else {
-
-            if (!(this.#value instanceof _type)) {
-
-                throw new TypeError(`Initial value is not type of ${_type.name}`);
-            }
-        }
     }
 }
 
@@ -252,14 +119,34 @@ function type(_abstract) {
 
     return function(instance, context) {
 
-        const {kind} = context;
+        return handle(instance, context); 
+    }
+
+    function handle(prop, context) {
+        const {kind, name} = context;
+
+        if (!this[REFLECTION]) {
+
+            this[REFLECTION] = new ObjectReflection();
+        }
+
+        if (this[REFLECTION].properties.has(name)) {
+
+            throw new Error('Type was applied on this property before');
+        }
+
+        const propertyReflection = new PropertyReflectionMetadata();
+
+        this[REFLECTION].properties.set(name, propertyReflection);
 
         switch(kind) {
 
             case 'accessor':
-                return handleAccessor(instance, context);
+                propertyReflection.setType(PropertyType.FIELD);
+                return handleAccessor(prop, context);
             case 'method':
-                return hanldeMethod(instance, context);
+                propertyReflection.setType(PropertyType.METHOD);
+                return hanldeMethod(prop, context);
             default:
                 throw new Error('Decorator @type just applied to auto assessor, add \'accessor\' syntax before the class property');
         }
@@ -332,85 +219,6 @@ function type(_abstract) {
 }
 
 
-
-function checkable(_class = undefined) {
-
-     // defines static property 'isCheckable' 
-    Object.defineProperty(_class, IS_CHECKABLE, {
-        value: true,
-        configurable: false,
-        enumerable: false,
-        writable: false
-    })
-
-    Object.defineProperty(_class, '__implemented', {
-        configurable: false,
-        writable: false,
-        enumerable: false,
-        value: function(_abstract) {
-
-            //onst isInterface = _abstract.__proto__ === Interface;
-
-            if (!isInterface(_abstract)) {
-
-                throw new Error(`${_abstract.name} is not type of Interface`);
-            }
-            
-            return this[INTERFACE_PROTOTYPE].list.has(_abstract);
-        }
-    })
-
-    const checkableClass = class extends _class {
-
-        
-        constructor() {
-
-            super(...arguments);
-
-            Object.defineProperty(this, '__is', {
-                configurable: false,
-                writable: false,
-                enumerable: false,
-                value: function (_abstract) {
-
-                    try {
-
-                        // throw Error when _abstract is not type of Interface
-                        return _class.__implemented(_abstract);
-
-                    } catch (e) {
-
-                      return this instanceof _abstract;
-                    }
-                }
-            });
-
-            Object.defineProperty(this, IS_CHECKABLE, {
-                value: true,
-                configurable: false,
-                enumerable: false,
-                writable: false
-            })
-        }
-    }
-
-    return checkableClass;
-}
-
-function isInterface(_class) {
-
-    return _class.__proto__ === Interface;
-} 
-
-function preventImmediateValue(_type) {
-
-    if (typeof _type != 'function') {
-
-        throw new TypeError(`Cannot pass immediate value`);
-    }
-}
-
-
 function isInterfacePrototypeConflict(_class) {
 
     /**
@@ -444,16 +252,22 @@ function isInterfacePrototypeConflict(_class) {
 
 function implement(..._interfaces) {
 
-    return function (_class) {
+    function mapInterfaces(interfaces) {
 
-        _interfaces = _interfaces.map((value) => {
+        return interfaces.map((value) => {
 
             if (!isInterface(value)) {
     
                 throw new TypeError(`${intf.name} is not Interface`);
             }
 
-            const transformedInterface = InterfaceCrossMap.getFromMinor(value);
+            return crossCheckInterface(value);
+        })
+    }
+
+    function crossCheckInterface(_interface) {
+
+        const transformedInterface = InterfaceCrossMap.getFromMinor(_interface);
 
             if (transformedInterface !== undefined) {
 
@@ -461,42 +275,64 @@ function implement(..._interfaces) {
                 return transformedInterface;
             }
 
-            return value;
-        })
+            return _interface;
+    }
 
+    return function (_class) {
 
-        if (!_class[INTERFACE_PROTOTYPE] || isInterfacePrototypeConflict(_class)) {
+        _interfaces = mapInterfaces(_interfaces);
 
-            /**
-             *  Overload or initialize interface's prototype
-             */
-
-            const interfaceProto = new InterfacePrototype(_class, ..._interfaces);
-
-            Object.defineProperty(_class, INTERFACE_PROTOTYPE, {
-                configurable: false,
-                writable: false,
-                enumerable: false,
-                value: interfaceProto
-            });
-        }
-        else {
-
-            for (const intf of _interfaces) {
-
-                preventImmediateValue(intf);
-    
-                if (!isInterface(intf)) {
-    
-                    throw new TypeError(`${intf.name} is not Interface`);
-                }
-    
-                _class[INTERFACE_PROTOTYPE].list.add(intf);
-            }
-        }
-
+        //_class = checkable(_class);
 
         class InterfaceImplemetedCLass extends _class {
+
+            static {
+
+                if (!this[INTERFACE_PROTOTYPE] || isInterfacePrototypeConflict(this)) {
+
+                    /**
+                     *  Overload or initialize interface's prototype
+                     */
+        
+                    const interfaceProto = new InterfacePrototype(this, ..._interfaces);
+        
+                    Object.defineProperty(this, INTERFACE_PROTOTYPE, {
+                        configurable: false,
+                        writable: false,
+                        enumerable: false,
+                        value: interfaceProto
+                    });
+                }
+                else {
+        
+                    for (const intf of _interfaces) {
+        
+                        preventImmediateValue(intf);
+            
+                        if (!isInterface(intf)) {
+            
+                            throw new TypeError(`${intf.name} is not Interface`);
+                        }
+            
+                        this[INTERFACE_PROTOTYPE].list.add(intf);
+                    }
+                }
+        
+        
+                if (!this[INTERFACES]) {
+        
+                    Object.defineProperty(this, INTERFACES, {
+                        configurable: false,
+                        writable: true,
+                        enumerable: false,
+                        value: new Set(_interfaces)
+                    })
+                }
+                else {
+        
+                    this[INTERFACES] = new Set([..._interfaces, ..._class[INTERFACES]]);
+                }
+            }
 
             static #realName = _class.name;
             static get realName() {
@@ -504,6 +340,20 @@ function implement(..._interfaces) {
                 return _class.name;
             }
 
+            static get [IS_CHECKABLE] () {
+
+                return true;
+            }
+
+            static __implemented(_abstract) {
+
+                if (!isInterface(_abstract)) {
+
+                    throw new TypeError(`${_abstract.name} is not type of Interface`);
+                }
+
+                return this[INTERFACES].has(_abstract)
+            }
 
             
             #realClassName = super.constructor.name;
@@ -512,39 +362,39 @@ function implement(..._interfaces) {
                 return this.#realClassName;
             }
             
+            get [IS_CHECKABLE] () {
+
+                return true;
+            }
+
+            get [INTERFACES] () {
+
+                return InterfaceImplemetedCLass[INTERFACES]
+            }
 
             constructor() {
 
                 super(...arguments);
 
-                // for (const intf of _interfaces) {
+                InterfaceImplemetedCLass[INTERFACE_PROTOTYPE].verify(this);
+            }
 
-                //     //const methods = Object.getOwnPropertyNames(intf.prototype);
-                //     const methods = intf.PROTOTYPE;
+            __is(_abstract) {
 
-                //     for (const method of methods) {
-                        
-                //         if (method == "constructor") continue;
+                _abstract = crossCheckInterface(_abstract);
 
-                //         if (!this[method]) throw new TypeError(`class ${_class.name} implements ${intf.name} but not defines '${method}' method`);
-                //     }
-                // }
+                try {
 
-                Object.defineProperty(this, INTERFACE_PROTOTYPE, {
-                    value: _class[INTERFACE_PROTOTYPE],
-                    configurable: false,
-                    writable: false,
-                    enumerable: false,
-                });
+                    return InterfaceImplemetedCLass.__implemented(_abstract)
+                }
+                catch (e) {
 
-                _class[INTERFACE_PROTOTYPE].verify(this);
+                    return this instanceof _abstract;
+                }
             }
         }
 
-        if (!_class[IS_CHECKABLE]) {
-
-            return checkable(InterfaceImplemetedCLass);
-        }
+        return InterfaceImplemetedCLass;
     }
 }
 
@@ -571,5 +421,5 @@ function hintable(_class, {kind}) {
 }
 
 module.exports = {
-    Interface, implement, checkable, type, hintable, countFunctionParams
+    Interface, implement, type, hintable, countFunctionParams, INTERFACES
 };
