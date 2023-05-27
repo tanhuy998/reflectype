@@ -73,14 +73,14 @@ class Variable {
 
             if (!this.#value.__is(this.#type)) {
 
-                throw new TypeError(`Initial value is not implements or type of ${_type.name}`);
+                throw new TypeError(`Initial value is not implements or type of ${_type.realName}`);
             }
         }
         else {
 
             if (!(this.#value instanceof _type)) {
 
-                throw new TypeError(`Initial value is not type of ${_type.name}`);
+                throw new TypeError(`Initial value is not type of ${_type.realName}`);
             }
         }
     }

@@ -3,6 +3,7 @@ const Interface = require('./interface.js');
 const Variable = require('./variable.js');
 const {preventImmediateValue, isInterface} = require('./utils.js');
 const {INTERFACE_PROTOTYPE, INTERFACES, REFLECTION, IS_CHECKABLE, EXPORT} = require('./constant.js');
+const {ObjectReflection} = require('./reflection/metadata.js');
 
 
 function countFunctionParams(_func) {
@@ -57,58 +58,38 @@ class InterfaceCrossMap {
 }
 
 
-class PropertyType {
+function SetPropertyReflectionMetadata(_object, _decoratorContext) {
 
-    static get METHOD() {
+    if (!_object[REFLECTION]) {
 
-        return 0x1
-        ;
+        _object[REFLECTION] = new ObjectReflection();
     }
 
-    static get FIELD() {
+    const {name, kind, private} = _decoratorContext;
 
-        return 0x2;
-    }
-}
-class PropertyReflectionMetadata {
+    const propertyReflection = new PropertyReflectionMetadata();
 
-    #type;
-    #value;
+    _object[REFLECTION].properties.set(name, propertyReflection);
 
-    setType(type) {
+    switch(kind) {
 
-        this.#type = type;
-    }
-
-    setValue(value) {
-
-        this.#type = value;
-    }
-
-    constructor(context) {
-
-        this.#bindContextArgs(context);
-    }
-
-    #bindContextArgs(context) {
-
-        if (!context) return;
-
-        const {kind, name} = context;
+        case 'accessor':
+            propertyReflection.setKind(PropertyType.FIELD, private);
+            break;
+        case 'field':
+            propertyReflection.setKind(PropertyType.FIELD, private);
+            break;
+        case 'method':
+            propertyReflection.setKind(PropertyType.METHOD, private);
+            break;
+        default:
+            break;
     }
 }
 
-class ObjectReflection {
+function placeMetadata(_object, _metadata) {
 
-    #properties = new Map();
-    get properties() {
 
-        return this.#properties;
-    }
-
-    constructor() {
-
-    }
 }
 
 function type(_abstract) {
@@ -125,27 +106,11 @@ function type(_abstract) {
     function handle(prop, context) {
         const {kind, name} = context;
 
-        if (!this[REFLECTION]) {
-
-            this[REFLECTION] = new ObjectReflection();
-        }
-
-        if (this[REFLECTION].properties.has(name)) {
-
-            throw new Error('Type was applied on this property before');
-        }
-
-        const propertyReflection = new PropertyReflectionMetadata();
-
-        this[REFLECTION].properties.set(name, propertyReflection);
-
         switch(kind) {
 
             case 'accessor':
-                propertyReflection.setType(PropertyType.FIELD);
                 return handleAccessor(prop, context);
             case 'method':
-                propertyReflection.setType(PropertyType.METHOD);
                 return hanldeMethod(prop, context);
             default:
                 throw new Error('Decorator @type just applied to auto assessor, add \'accessor\' syntax before the class property');
@@ -167,7 +132,31 @@ function type(_abstract) {
         return {
             get() {
 
-                return variable.getValue();
+                const currentValue = variable.getValue();
+
+                const notNullAndUndefined = currentValue !== undefined && currentValue !== null;
+
+                const propValue = notNullAndUndefined ? currentValue : variable;
+
+                return new Proxy(propValue, {
+                    referenceObj: this,
+                    get: function(target, prop) {
+
+                        const propertyMetadata = this.referenceObj[REFLECTION].properties[context.name];
+
+                        if (prop === 'type') {
+
+                            return propertyMetadata.type;
+                        }
+
+                        if (target instanceof Variable) {
+
+                            throw new Error(`Property ${prop} is null or undefined`);
+                        }
+
+                        return target[prop];
+                    }
+                });
             },
             set(_value) {
 
@@ -175,7 +164,14 @@ function type(_abstract) {
             },
             init(intiValue) {
 
-                variable.setClass(this.__proto__);
+                checkIfMetadataIsSetted(this, name);
+
+                this[REFLECTION].setProperty(context);
+
+                this[REFLECTION].properties[context.name].setType(_abstract)
+                //this[REFLECTION].typeHintedProperties.get(name).setType(_abstract);
+
+                variable.setClass(_abstract);
 
                 variable.setValue(intiValue);
 
@@ -188,7 +184,7 @@ function type(_abstract) {
 
         function checkReturnTypeAndResolve(target, _this, _args) {
 
-            const result = target.call(_this, ...arguments);
+            const result = target.call(_this, ..._args);
 
             const matchType = (result[IS_CHECKABLE]) ? result.__is(_abstract) : result instanceof _abstract;
 
@@ -200,20 +196,89 @@ function type(_abstract) {
             return result;
         }
 
-        return function typeHintedFunction(flag) {
+        // function typeHintedFunction(flag) {
 
-            if (flag === EXPORT) {
+        //     const {name} = context;
 
-                const theFunction = _method.bind(this);
+        //     //checkIfMetadataIsSetted(this, name);
 
-                const invovable = new Proxy(theFunction, {
-                    apply: checkReturnTypeAndResolve
-                })
+        //     //this[REFLECTION].typeHintedProperties.get(name).setType(_abstract);
 
-                return [theFunction, _abstract, invovable];
-            }
+        //     const invocable = new Proxy(theFunction, {
+        //         apply: checkReturnTypeAndResolve,
+        //     })
 
-            return checkReturnTypeAndResolve(_method, this, arguments);
+        //     if (flag === EXPORT) {
+
+        //         const theFunction = _method.bind(this);
+
+        //         return [theFunction, _abstract, invocable];
+        //     }
+
+        //     return checkReturnTypeAndResolve(_method, this, arguments);
+        // }
+
+        return new Proxy(_method, {
+            referenceObj: this,
+            apply: function (target, _this, _args) {
+
+                checkIfMetadataIsSetted(this.referenceObj, context.name);
+
+                const metadata = this.referenceObj[REFLECTION];
+
+                metadata.setProperty(context);
+
+                const propertyMetadata = metadata.properties[context.name];
+
+                if (!propertyMetadata.type) {
+
+                    propertyMetadata.setType(_abstract);
+                }
+
+                return checkReturnTypeAndResolve(target, _this, _args)
+            },
+            get: function (_target, _metadata) {
+
+                checkIfMetadataIsSetted(this.referenceObj, context.name);
+
+                const metadata = this.referenceObj[REFLECTION];
+
+                metadata.setProperty(context);
+
+                const propertyMetadata = metadata.properties[context.name];
+
+                if (!propertyMetadata.type) {
+
+                    propertyMetadata.setType(_abstract);
+                }
+
+                switch(_metadata) {
+                    case 'returnType':
+                        return propertyMetadata.type;
+                    case 'parameters':
+                        return ;
+                    default:
+                        break;
+                }
+
+                return _target[_metadata];
+            },
+            set: () => false,
+        })
+    }
+
+    function checkIfMetadataIsSetted(_object, prop) {
+
+        if (!_object[REFLECTION]) {
+
+            _object[REFLECTION] = new ObjectReflection(_object);
+        }   
+
+        const metadata = _object[REFLECTION];
+
+        if (metadata.properties[prop]) {
+
+            throw new Error(`@type is applied to ${prop} multiple times`);
         }
     }
 }

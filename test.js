@@ -1,4 +1,5 @@
 const {implement, Interface, type, hintable, countFunctionParams, INTERFACES} = require('./index.js');
+const {REFLECTION} = require('./constant.js')
 
 class ITest extends Interface{
 
@@ -33,7 +34,7 @@ class E {
 
 @implement(ITest)
 class A extends AnotherClass{
-
+    //@E
     @IProp accessor prop;
 
     constructor() {
@@ -53,23 +54,21 @@ class A extends AnotherClass{
 
 const obj = new A();
 
-console.log(obj.__is(IProp))
 
-const rand = new E()
 
-console.log('init', rand.__is(IProp));
+console.log(obj.prop.type)
 
-obj.prop = new E();
-console.log(obj.prop.__is(E))
+// const rand = new E()
 
-obj.func();
+// console.log('init', rand.__is(IProp));
 
-console.log(E[INTERFACES])
+// obj.prop = new E();
+// //console.log(obj.prop.__is(E))
+
+// obj.func();
+
+// console.log(E[INTERFACES])
 
 //console.log(obj.prop);
-
-
-
-
 
 
