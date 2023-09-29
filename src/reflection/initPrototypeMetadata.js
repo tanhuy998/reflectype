@@ -1,5 +1,6 @@
 const initMetadata = require('./initMetadata.js');
-const METADATA = require('./metadata.js');
+const {metadata_t} = require('./metadata.js')
+const {METADATA} = require('./metadata.js');
 
 function initPrototypeMetadata(_abstract) {
 
@@ -12,11 +13,13 @@ function initPrototypeMetadata(_abstract) {
         return;
     }
 
-    const prototypeMeta = {
-        properties: {
+    // const prototypeMeta = {
+    //     properties: {
 
-        }
-    }
+    //     }
+    // }
+
+    const prototypeMeta = new metadata_t(_abstract);
 
     _abstract[METADATA].prototype = prototypeMeta;
 }

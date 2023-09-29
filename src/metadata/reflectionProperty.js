@@ -1,5 +1,6 @@
 const Reflector = require('./reflector.js');
 const ReflectorContext = require('./reflectorContext.js');
+const isAbastract = require('../utils/isAbstract.js');
 
 class ReflectionProperty extends Reflector{
 
@@ -26,6 +27,26 @@ class ReflectionProperty extends Reflector{
 
     /**@type {boolean} */
     #isValid;
+
+    // #originClass;
+
+    // #target;
+
+    #name;
+
+    // get target() {
+
+    //     return this.#target;
+    // }
+
+    // get originClass() {
+
+    //     return this.#originClass;
+    // }
+    get name() {
+
+        return this.#name;
+    }
 
     get value() {
 
@@ -63,8 +84,8 @@ class ReflectionProperty extends Reflector{
     }
 
     /**
-     * @param {Object} target 
-     * @param {string} property 
+     * @param {Function} target 
+     * @param {string || Symbol} property 
      */
     constructor(target, property) {
 
@@ -74,6 +95,10 @@ class ReflectionProperty extends Reflector{
         }
 
         super(target);
+
+        //this.#target = target;
+
+        this.#name = property;
 
         this.#init(property);
 
@@ -95,7 +120,12 @@ class ReflectionProperty extends Reflector{
             return;
         }  
 
-        const isAbstract = (super.reflectionContext === ReflectorContext.ABSTRACT);
+        
+        //const isAbstract = (super.reflectionContext === ReflectorContext.ABSTRACT);
+
+        const isAbstract = isAbastract(this.target);
+
+        //this.#originClass = isAbstract ? this.#target : this.#target.constructor;
 
         const contextMetadata = (isAbstract) ? super.metadata : super.metadata?.prototype;
 
@@ -110,8 +140,10 @@ class ReflectionProperty extends Reflector{
 
         const propMeta = properties[prop];
 
-        if (typeof propMeta !== 'object') {
+        //console.log(proper
 
+        if (typeof propMeta !== 'object') {
+            
             this.#isValid = false;
 
             return;

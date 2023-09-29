@@ -17,11 +17,28 @@ class Reflector extends IDisposable{
     /**@type {keyof ReflectorContext} */
     #context;
 
+    #originClass;
+
+    #target;
+
+    get target() {
+
+        return this.#target;
+    }
+
+    get originClass() {
+
+        return this.#originClass;
+    }
+
     get reflectionContext() {
 
         return this.#context;
     }
 
+    /**
+     *  @description this property check if a particular (or related) abstract has the correct metadata on its blueprint
+     */
     get isValidReflection() {
 
         return this.#isValid;
@@ -37,50 +54,67 @@ class Reflector extends IDisposable{
         return this.#isDisposed;
     }
 
+
     /**
      * 
      * @param {Object} _unknown 
      */
     constructor(_unknown) {
 
-        if (typeof _unknown !== 'object') {
+        super();
 
-            this.#isValid = false;
+        // if (typeof _unknown !== 'object') {
 
-            this.#isDisposed = true;
+        //     this.#isValid = false;
 
-            return;
-        }
+        //     this.#isDisposed = true;
+
+        //     return;
+        // }
 
         this.#resolveMetadata(_unknown);
+
+        this.#target = _unknown;
     }
 
     #resolveMetadata(_target) {
 
         if (isAbStract(_target)) {
-
+            
             this.#metadata = getMetadata(_target);
 
             this.#context = ReflectorContext.ABSTRACT;
 
+            this.#originClass = _target;
+
             return;
         }
 
-        if (typeof _target.constructor === 'function') {
-
+        if (isAbStract(_target.constructor)) {
+            
             this.#metadata = getMetadata(_target.constructor);
 
             this.#context = ReflectorContext.INSTANCE;
+
+            this.#originClass = _target.constructor;
 
             return;
         }
 
         this.#isValid = false;
+        this.#isDisposed = true;
+    }
+
+    hasProperty(_key) {
+
+        contextMeta = this.ReflectorContext === ReflectorContext.ABSTRACT ? this.metadata.properties : this.metadata.prototype?.properties;
+
+        return typeof contextMeta === 'object' && typeof contextMeta[_key] === 'object';
     }
 
     _dispose() {
 
-        delete this.#metadata;
+        this.#metadata = undefined;
 
         this.#isDisposed = true;
     }
