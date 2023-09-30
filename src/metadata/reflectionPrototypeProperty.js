@@ -1,6 +1,10 @@
 const PrototypeReflector = require('./prototypeReflector');
 const reflectionContext = require('./reflectorContext');
 
+/**
+ *  ReflectionPrototypeProperty focus on reading metadata of the prototype
+ *  of class/object
+ */
 class ReflectionPrototypeProperty extends PrototypeReflector {
 
     #name;
@@ -61,7 +65,7 @@ class ReflectionPrototypeProperty extends PrototypeReflector {
      */
     constructor(_target, _attributeKey) {
 
-        if (!_attributekey || typeof _attributekey !== 'string' || typeof _attributekey !== 'symbol') {
+        if (!_attributeKey || typeof _attributeKey !== 'string' && typeof _attributeKey !== 'symbol') {
 
             throw new TypeError('invalid type of _attribute parameter');
         }

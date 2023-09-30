@@ -1,7 +1,15 @@
 const Reflector = require('./reflector.js');
 const ReflectorContext = require('./reflectorContext.js');
 const isAbastract = require('../utils/isAbstract.js');
+const { metadata_t, metaOf, property_metadata_t } = require('../reflection/metadata.js');
+const {resolvePropertyMetadata} = require('./traitPropertyReflection.js')
 
+/**
+ *  RefletionPropety reads metadata of class/object,
+ *  the reflection result is based on the target of reflection (class/object)
+ *  so it is for general use only.
+ *  
+ */
 class ReflectionProperty extends Reflector{
 
     #kind;
@@ -89,7 +97,7 @@ class ReflectionProperty extends Reflector{
      */
     constructor(target, property) {
 
-        if (!target || !property) {
+        if (!target && !property) {
 
             throw new Error('')
         }
@@ -113,52 +121,27 @@ class ReflectionProperty extends Reflector{
      */
     #init(prop) {
 
-        if (!super.isValidReflection) {
-
-            this.#isValid = false;
-
-            return;
-        }  
-
+        const propMeta = resolvePropertyMetadata.call(this, prop);
         
-        //const isAbstract = (super.reflectionContext === ReflectorContext.ABSTRACT);
+        if (propMeta instanceof property_metadata_t) {
 
-        const isAbstract = isAbastract(this.target);
-
-        //this.#originClass = isAbstract ? this.#target : this.#target.constructor;
-
-        const contextMetadata = (isAbstract) ? super.metadata : super.metadata?.prototype;
-
-        if (typeof contextMetadata !== 'object') {
-
-            this.#isValid = false;
-
+            this.#isStatic = propMeta.static || false;
+            this.#isPrivate = propMeta.private || true;
+            this.#type = propMeta.type;
+            this.#value = propMeta.value;
+    
+            const { value } = propMeta;
+    
+            this.#isMethod = (typeof value === 'function' && !value.prototype);
+    
+            this.#isValid = true;
+    
             return;
         }
-
-        const {properties} = contextMetadata;
-
-        const propMeta = properties[prop];
-
-        //console.log(proper
-
-        if (typeof propMeta !== 'object') {
-            
-            this.#isValid = false;
-
-            return;
-        }
-
-        this.#isStatic = propMeta.static || false;
-        this.#isPrivate = propMeta.private || true;
-        this.#type = propMeta.type;
-        this.#value = propMeta.value;
-
-        const {value} = propMeta;
-
-        this.#isMethod = (typeof value === 'function' && !value.prototype);
-
-        this.#isValid = true;
+    
+        this.#isValid = false;
+        
+        return;
     }
 
     #checkMatchType(_value, _type) {

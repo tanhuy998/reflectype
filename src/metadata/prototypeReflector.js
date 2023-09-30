@@ -1,6 +1,9 @@
 const { prototype } = require("events");
 const Reflector = require("./reflector");
 
+/**
+ *  PrototypeReflector focus on the prototype metadata of class/object
+ */
 class PrototypeReflector extends Reflector{
 
     #metadata;
@@ -10,7 +13,7 @@ class PrototypeReflector extends Reflector{
 
     get isDisposed() {
 
-        return 
+        return this.#isDisposed;
     }
 
     get metadata() {
@@ -46,7 +49,7 @@ class PrototypeReflector extends Reflector{
 
         this.#metadata = super.metadata.prototype;
 
-        this.isDisposed = false;
+        this.#isDisposed = false;
     }
 
     _dispose() {

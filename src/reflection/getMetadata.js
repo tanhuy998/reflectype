@@ -1,8 +1,9 @@
-const {METADATA} = require('./metadata.js');
+const {METADATA, TYPE_JS, metaOf} = require('./metadata.js');
 
 function getMetadata (_object) {
 
-    return _object[METADATA];
+    //return _object[METADATA][TYPE_JS];
+    return metaOf(_object);
 }
 
 

@@ -1,4 +1,4 @@
-const {METADATA, property_metadata_t} = require('./metadata.js');
+const {METADATA, property_metadata_t, metaOf} = require('./metadata.js');
 const initMetadata = require('./initMetadata.js');
 
 /**
@@ -18,7 +18,7 @@ function addPropertyMetadata(_abstract, prop, meta) {
 
     initMetadata(_abstract);
 
-    const {properties} = _abstract[METADATA];
+    const {properties} = metaOf(_abstract);
 
     const {private, type, value} = meta || {};
 

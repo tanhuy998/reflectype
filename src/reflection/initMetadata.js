@@ -9,12 +9,12 @@ function initMetadata(_unknown) {
 
     if (typeof _unknown !== 'function' && !_unknown.prototype) {
 
-        return;
+        return false;
     }
 
     if (typeof metadata === 'object' && metadata.abstract === _unknown ) {
 
-        return;
+        return false;
     }
 
     _unknown[METADATA] ??= {};
@@ -22,6 +22,8 @@ function initMetadata(_unknown) {
     const meta = new metadata_t(_unknown);
 
     _unknown[METADATA][TYPE_JS] = meta;
+
+    return true;
 }
 
 module.exports = initMetadata;

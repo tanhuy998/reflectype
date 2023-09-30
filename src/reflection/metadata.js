@@ -39,21 +39,6 @@ function metaOf(_unknown) {
     return typeof wrapper === 'object' ? wrapper[TYPE_JS] : undefined;
 }
 
-function compareRelation(_left, _right) {
-
-    if (!_left && !_right) {
-
-        return undefined;
-    }
-    else if (!_left) {
-
-        return _right;
-    }
-    else if (!_right) {
-
-        return _left;
-    }
-}
 
 function isAbstract(_unknown) {
 

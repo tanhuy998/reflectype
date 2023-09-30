@@ -53,9 +53,25 @@ const ReflectionClass = require('./src/metadata/reflectionClass.js');
 
 const isAbastract = require('./src/utils/isAbstract.js')
 
+const {property_metadata_t, METADATA, TYPE_JS, metaOf} = require('./src/reflection/metadata.js');
+
 const path = require('node:path');
 const { cwd } = require('node:process');
+
+const list = [];
+
 class A {
+
+    static {
+
+        console.log('A static block');
+
+        //list.push(this);
+    }
+
+    static testStatic;
+
+    //static prop = list.push(this);
 
     #prop = 1;
     constructor() {
@@ -69,32 +85,37 @@ class A {
     }
 }
 
+A.prototype.func[METADATA] = {};
+A.prototype.func[METADATA][TYPE_JS] = new property_metadata_t();
 
 class B extends A {
 
-}
+    // static {
 
-initMetadata(A);
-initPrototypeMetadata(A);
+    //     console.log('B static block');
+    // }
+}
+// initMetadata(A);
+// initPrototypeMetadata(A);
 
 addPropertyMetadata(A, 'testStatic');
-addPrototypePropertyMetadata(A, 'prop');
+// addPrototypePropertyMetadata(A, 'func');
+
+const temp = getMetadata(A);
+
+console.log(temp)
 
 const a = new A()
 
 const meta = new ReflectionClass(A);
 
+const propMeta = new ReflectionProperty(a, 'func');
 
-const propMeta = new ReflectionProperty(A, 'prop');
+//const static = new ReflectionProperty(A, 'testStatic')
 
-console.log(propMeta.isValidReflection)
+console.log('is valid', propMeta.isValid)
 
-meta.attributes.forEach((prop) => {
+// meta.attributes.forEach((prop) => {
 
-    console.log(prop.isStatic);
-});  
-
-
-A.prototype.func.meta = {};
-
-console.log(a.func);
+//     console.log(prop.isStatic);
+// });  

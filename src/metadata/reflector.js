@@ -2,10 +2,15 @@ const IDisposable = require('../libs/iDisposable.js');
 const isAbStract = require('../utils/isAbstract.js');
 const getMetadata = require('../reflection/getMetadata.js');
 const ReflectorContext = require('./reflectorContext.js');
+const { metadata_t } = require('../reflection/metadata.js');
 
+/**
+ *  Reflector is the atomic unit of the reflecting progress.
+ *  reflectors reads raw metadata of which whether class or object,
+ */
 class Reflector extends IDisposable{
 
-    /**@type {!Object} */
+    /**@type {! metadata_t} */
     #metadata;
 
     /**@type {boolean} */

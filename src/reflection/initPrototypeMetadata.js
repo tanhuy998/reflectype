@@ -1,16 +1,17 @@
 const initMetadata = require('./initMetadata.js');
-const {metadata_t} = require('./metadata.js')
-const {METADATA} = require('./metadata.js');
+const {metadata_t, metaOf} = require('./metadata.js')
+const {METADATA, TYPE_JS} = require('./metadata.js');
 
 function initPrototypeMetadata(_abstract) {
 
     initMetadata(_abstract);
 
-    const meta = _abstract[METADATA];
+    //const meta = _abstract[METADATA][TYPE_JS];
+    const meta = metaOf(_abstract);
 
     if (typeof meta.prototype === 'object') {
 
-        return;
+        return false;
     }
 
     // const prototypeMeta = {
@@ -21,7 +22,12 @@ function initPrototypeMetadata(_abstract) {
 
     const prototypeMeta = new metadata_t(_abstract);
 
-    _abstract[METADATA].prototype = prototypeMeta;
+    meta.prototype = prototypeMeta;
+
+    _abstract.prototype[METADATA] ??= {};
+    _abstract.prototype[METADATA][TYPE_JS] = prototypeMeta;
+
+    return true;
 }
 
 module.exports = initPrototypeMetadata;
