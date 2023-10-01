@@ -2,13 +2,12 @@ const Reflector = require('./reflector.js');
 const ReflectorContext = require('./reflectorContext.js');
 const isAbastract = require('../utils/isAbstract.js');
 const { metadata_t, metaOf, property_metadata_t } = require('../reflection/metadata.js');
-const {resolvePropertyMetadata} = require('./traitPropertyReflection.js')
+const {resolvePropertyMetadata, checkPropertyDescriptorState} = require('./traitPropertyReflection.js')
 
 /**
  *  RefletionPropety reads metadata of class/object,
  *  the reflection result is based on the target of reflection (class/object)
  *  so it is for general use only.
- *  
  */
 class ReflectionProperty extends Reflector{
 
@@ -89,6 +88,35 @@ class ReflectionProperty extends Reflector{
     get isMethod() {
 
         return this.#isValid ? this.#isMethod : undefined;
+    }
+
+    get defaultValue() {
+
+        if (this.isValid) {
+
+            return;
+        }
+
+        const meta = metaOf(this.originClass);
+
+        return this.reflectionContext === ReflectorContext.ABSTRACT ? 
+                meta.properties[this.#name].value :
+                meta.prototype?.properties[this.#name].value;
+    }
+
+    get isWritable() {
+
+        return checkPropertyDescriptorState.call(this, 'writable');
+    }
+
+    get isEnumerable() {
+
+        return checkPropertyDescriptorState.call(this, 'enumerable');
+    }
+
+    get isConfigurable() {
+
+        return checkPropertyDescriptorState.call(this, 'configurable')
     }
 
     /**

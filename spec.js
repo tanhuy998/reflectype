@@ -57,21 +57,17 @@ const {property_metadata_t, METADATA, TYPE_JS, metaOf} = require('./src/reflecti
 
 const path = require('node:path');
 const { cwd } = require('node:process');
+const ReflectionPrototypeProperty = require('./src/metadata/reflectionPrototypeProperty.js');
 
 const list = [];
 
 class A {
 
-    static {
-
-        console.log('A static block');
-
-        //list.push(this);
-    }
-
     static testStatic;
 
     //static prop = list.push(this);
+
+    test = 1;
 
     #prop = 1;
     constructor() {
@@ -94,18 +90,22 @@ class B extends A {
 
     //     console.log('B static block');
     // }
+
+    func() {
+
+    }
 }
 // initMetadata(A);
 // initPrototypeMetadata(A);
 
 addPropertyMetadata(A, 'testStatic');
-// addPrototypePropertyMetadata(A, 'func');
+addPrototypePropertyMetadata(A, 'test');
 
 const temp = getMetadata(A);
 
-console.log(temp)
-
 const a = new A()
+
+console.log(temp);
 
 const meta = new ReflectionClass(A);
 
@@ -113,7 +113,9 @@ const propMeta = new ReflectionProperty(a, 'func');
 
 //const static = new ReflectionProperty(A, 'testStatic')
 
-console.log('is valid', propMeta.isValid)
+const newProp = new ReflectionPrototypeProperty(A, 'test');
+
+console.log('is valid', propMeta.defaultValue)
 
 // meta.attributes.forEach((prop) => {
 

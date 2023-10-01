@@ -34,6 +34,11 @@ function property_metadata_t() {
 
 function metaOf(_unknown) {
 
+    if (!_unknown) {
+
+        return;
+    }
+
     const wrapper = _unknown[METADATA];
 
     return typeof wrapper === 'object' ? wrapper[TYPE_JS] : undefined;

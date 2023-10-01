@@ -2,11 +2,12 @@ const IDisposable = require('../libs/iDisposable.js');
 const isAbStract = require('../utils/isAbstract.js');
 const getMetadata = require('../reflection/getMetadata.js');
 const ReflectorContext = require('./reflectorContext.js');
-const { metadata_t } = require('../reflection/metadata.js');
+const { metadata_t, metaOf } = require('../reflection/metadata.js');
 
 /**
  *  Reflector is the atomic unit of the reflecting progress.
- *  reflectors reads raw metadata of which whether class or object,
+ *  reflectors is supposed to be a valid reflection when the target object of reflectors
+ *  contain metadatafiled.
  */
 class Reflector extends IDisposable{
 
@@ -68,15 +69,6 @@ class Reflector extends IDisposable{
 
         super();
 
-        // if (typeof _unknown !== 'object') {
-
-        //     this.#isValid = false;
-
-        //     this.#isDisposed = true;
-
-        //     return;
-        // }
-
         this.#resolveMetadata(_unknown);
 
         this.#target = _unknown;
@@ -95,6 +87,7 @@ class Reflector extends IDisposable{
             return;
         }
 
+        // when the _target of reflection is an instance of a particular class
         if (isAbStract(_target.constructor)) {
             
             this.#metadata = getMetadata(_target.constructor);
@@ -106,15 +99,19 @@ class Reflector extends IDisposable{
             return;
         }
 
+        if (metaOf(_target) instanceof Object) {
+
+            this.#metadata = metaOf(_target)
+
+            this.#context = ReflectorContext.OTHER;
+
+            this.#target = _target;
+
+            return;
+        }
+
         this.#isValid = false;
         this.#isDisposed = true;
-    }
-
-    hasProperty(_key) {
-
-        contextMeta = this.ReflectorContext === ReflectorContext.ABSTRACT ? this.metadata.properties : this.metadata.prototype?.properties;
-
-        return typeof contextMeta === 'object' && typeof contextMeta[_key] === 'object';
     }
 
     _dispose() {

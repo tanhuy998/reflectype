@@ -1,5 +1,6 @@
 const { prototype } = require("events");
 const Reflector = require("./reflector");
+const ReflectorContext = require("./reflectorContext");
 
 /**
  *  PrototypeReflector focus on the prototype metadata of class/object
@@ -10,6 +11,7 @@ class PrototypeReflector extends Reflector{
 
     #isDisposed;
 
+    #isValid;
 
     get isDisposed() {
 
@@ -23,7 +25,7 @@ class PrototypeReflector extends Reflector{
 
     get isValidReflection() {
 
-        return (super.isValidReflection && this.#metadata);
+        return this.#isValid;
     }
 
     constructor(target) {
@@ -31,21 +33,18 @@ class PrototypeReflector extends Reflector{
         super(target);
 
         this.#init();
-
-        super._dispose();
     }
 
     #init() {
 
-        if (!super.isValidReflection) {
+        if (!super.isValidReflection || super.reflectionContext === ReflectorContext.OTHER || !super.metadata.prototype) {
+
+            this.#isValid = false;
 
             return;
         }
 
-        if (!super.metadata.prototype) {
-
-            return;
-        }
+        this.#isValid = true;
 
         this.#metadata = super.metadata.prototype;
 

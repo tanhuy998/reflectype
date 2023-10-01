@@ -2,12 +2,8 @@ const {METADATA, property_metadata_t, metaOf} = require('./metadata.js');
 const initMetadata = require('./initMetadata.js');
 const initPrototypeMetadata = require('./initPrototypeMetadata.js');
 
+// 
 function addPrototypePropertyMetadata(_abstract, prop, meta) {
-
-    if (!Reflect.ownKeys(_abstract.prototype).includes(prop)) {
-
-        return false;
-    }
     
     initMetadata(_abstract);
 
@@ -27,6 +23,11 @@ function addPrototypePropertyMetadata(_abstract, prop, meta) {
 
     protoProp.static = false;
     protoProp.value = _abstract[prop];
+    
+    /**
+     *  ES6 class's prototype just include method
+     */
+    protoProp.isMethod = Reflect.ownKeys(_abstract.prototype).includes(prop) && typeof _abstract.prototype[prop] === 'function';
 
     properties[prop] = protoProp;
 

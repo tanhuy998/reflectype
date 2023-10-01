@@ -1,9 +1,15 @@
+const { property_metadata_t } = require('../reflection/metadata');
+const isAbStract = require('../utils/isAbstract');
 const PrototypeReflector = require('./prototypeReflector');
 const reflectionContext = require('./reflectorContext');
+const {resolvePropertyMetadata, checkPropertyDescriptorState} = require('./traitPropertyReflection.js');
 
 /**
- *  ReflectionPrototypeProperty focus on reading metadata of the prototype
- *  of class/object
+ *  ReflectionPrototypeProperty focus on reading metadata of the prototype.
+ *  because the fact that, with ReflectionProperty, we cannot reach the class's prototype's
+ *  metadata without instantiating an object of a specific class.
+ *  ReflectionPrototypeProperty instantiating object is not neccessary, just directly apply reflection
+ *  on class to get info about the class's prototype.
  */
 class ReflectionPrototypeProperty extends PrototypeReflector {
 
@@ -39,23 +45,35 @@ class ReflectionPrototypeProperty extends PrototypeReflector {
         return this.#type;
     }
 
-    get isInstance() {
+    // get isInstance() {
 
-        return super.reflectionContext === reflectionContext.INSTANCE;
-    }
+    //     return super.reflectionContext === reflectionContext.INSTANCE;
+    // }
 
-    get defaultValue() {
+    // get defaultValue() {
 
-        return this.isValid ? this.#defaultValue : undefined;
-    }
+    //     return this.isValid ? this.#defaultValue : undefined;
+    // }
 
+    //
     get value() {
 
-        const key = this.#name;
+        return this.#defaultValue;
+    }
 
-        return this.isValid ? 
-                (this.isInstance ? this.target[key] : this.originClass.prototype[key])
-                : undefined;
+    get isWritable() {
+
+        return checkPropertyDescriptorState.call(this, 'writable');
+    }
+
+    get isEnumerable() {
+
+        return checkPropertyDescriptorState.call(this, 'enumerable');
+    }
+
+    get isConfigurable() {
+
+        return checkPropertyDescriptorState.call(this, 'configurable')
     }
 
     /**
@@ -64,6 +82,11 @@ class ReflectionPrototypeProperty extends PrototypeReflector {
      * @param {string || Symbol} _attributekey 
      */
     constructor(_target, _attributeKey) {
+
+        if (!isAbStract(_target)) {
+
+            throw new TypeError('ReflectionPrototypeProperty just affect on class, invalid type of _target param');
+        }
 
         if (!_attributeKey || typeof _attributeKey !== 'string' && typeof _attributeKey !== 'symbol') {
 
@@ -81,28 +104,21 @@ class ReflectionPrototypeProperty extends PrototypeReflector {
 
     #init() {
 
-        if (!this.isValidReflection) {
+        const targetPropMeta = resolvePropertyMetadata.call(this, this.#name);
+
+        //this.#defaultValue = this.originClass?.prototype?.properties[this.#name].value;
+        
+        if (targetPropMeta instanceof property_metadata_t) {
+
+            this.#type = targetPropMeta.type;
+            this.#isPrivate = targetPropMeta.type || false;
+            this.#isValid = true;
+            this.#defaultValue = targetPropMeta.value;
 
             return;
-        }
+        }        
 
-        const targetAttrMeta = this.metadata.properties[this.#name];
-
-        if (typeof targetAttrMeta !== 'object') {
-
-            return;
-        }
-
-        this.#resolveMetadataResolution();
-
-        this.#defaultValue = targetAttrMeta.value;
-        this.#type = targetAttrMeta.type;
-        this.#isPrivate = targetAttrMeta.type || false;
-    }
-
-    #resolveMetadataResolution() {
-
-
+        this.#isValid = false;
     }
 }
 

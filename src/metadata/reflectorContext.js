@@ -10,6 +10,11 @@ class ReflectorContext {
 
         return 1;
     }
+
+    static get OTHER() {
+
+        return 2;
+    }
 }
 
 module.exports = ReflectorContext;
