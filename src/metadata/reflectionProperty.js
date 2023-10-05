@@ -160,7 +160,7 @@ class ReflectionProperty extends Reflector{
     
             const { value } = propMeta;
     
-            this.#isMethod = (typeof value === 'function' && !value.prototype);
+            this.#isMethod = (typeof value === 'function' && propMeta.isMethod);
     
             this.#isValid = true;
     

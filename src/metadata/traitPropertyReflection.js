@@ -3,7 +3,7 @@ const {metaOf} = require('../reflection/metadata.js');
 const ReflectorContext = require('./reflectorContext.js');
 
 /**
- * this file define macros for Property reflectors that is called in context of a property reflector
+ * this file define macros functions for Property reflectors that is called in context of a property reflector
  */
 
 /**
@@ -22,24 +22,16 @@ const ReflectorContext = require('./reflectorContext.js');
  */
 function resolvePropertyMetadata(prop) {
 
-    const targetIsClass = this.reflectionContext === ReflectorContext.ABSTRACT;
+    //const targetIsClass = this.reflectionContext === ReflectorContext.ABSTRACT
+    const isInstanceContext = this.reflectionContext === ReflectorContext.INSTANCE;
 
     /**@type {metadata_t} */
-    const contextMetadata = (targetIsClass) ? this.metadata : this.metadata?.prototype;
+    const contextMetadata = (isInstanceContext) ? this.metadata?.prototype : this.metadata;
 
-    /**@type {property_metadata_t} */
-    let propMeta = contextMetadata?.properties;
+    // /**@type {property_metadata_t} */
+    // let propMeta = contextMetadata?.properties;
 
     return contextMetadata?.properties[prop] || getMetadataFromProp.call(this, prop);
-
-    // if (typeof contextMetadata !== 'object') {
-
-    //     return getMetadataFromProp.call(this, prop);
-    // }
-    // else {
-        
-    //     return contextMetadata?.properties[prop] || getMetadataFromProp.call(this, prop);
-    // }
 }
 
 /**
@@ -51,11 +43,13 @@ function resolvePropertyMetadata(prop) {
  */
 function getMetadataFromProp(prop) {
     
-    const targetIsClass = this.reflectionContext === ReflectorContext.ABSTRACT;
+    //const isStatic = this.reflectionContext === ReflectorContext.ABSTRACT;
+
+    const isFocusOnPrototype = [ReflectorContext.INSTANCE, ReflectorContext.PROTOTYPE].includes(this.reflectionContext);
 
     const targetAbstract = this.originClass;
 
-    const propInstance = (targetIsClass) ? targetAbstract[prop] : targetAbstract.prototype[prop];
+    const propInstance = (isFocusOnPrototype) ? targetAbstract.prototype[prop] : targetAbstract[prop];
 
     return metaOf(propInstance);
 }

@@ -7,6 +7,7 @@ const ReflectorContext = require("./reflectorContext");
  */
 class PrototypeReflector extends Reflector{
 
+    /**@type {! metadata_t | property_metadata_t} */
     #metadata;
 
     #isDisposed;
@@ -26,6 +27,11 @@ class PrototypeReflector extends Reflector{
     get isValidReflection() {
 
         return this.#isValid;
+    }
+
+    get reflectionContext() {
+
+        return this.#isValid ? ReflectorContext.PROTOTYPE : undefined;
     }
 
     constructor(target) {

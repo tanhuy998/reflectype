@@ -2,7 +2,7 @@ const IDisposable = require('../libs/iDisposable.js');
 const isAbStract = require('../utils/isAbstract.js');
 const getMetadata = require('../reflection/getMetadata.js');
 const ReflectorContext = require('./reflectorContext.js');
-const { metadata_t, metaOf } = require('../reflection/metadata.js');
+const { metadata_t, metaOf, property_metadata_t } = require('../reflection/metadata.js');
 
 /**
  *  Reflector is the atomic unit of the reflecting progress.
@@ -11,7 +11,7 @@ const { metadata_t, metaOf } = require('../reflection/metadata.js');
  */
 class Reflector extends IDisposable{
 
-    /**@type {! metadata_t} */
+    /**@type {! metadata_t | property_metadata_t} */
     #metadata;
 
     /**@type {boolean} */

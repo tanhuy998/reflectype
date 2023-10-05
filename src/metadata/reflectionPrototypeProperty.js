@@ -25,6 +25,13 @@ class ReflectionPrototypeProperty extends PrototypeReflector {
 
     #defaultValue;
 
+    #isMethod;
+
+    get isMethod() {
+
+        return this.#isMethod;
+    }
+
     get isPrivate() {
 
         return this.#isPrivate;
@@ -110,10 +117,14 @@ class ReflectionPrototypeProperty extends PrototypeReflector {
         
         if (targetPropMeta instanceof property_metadata_t) {
 
+            const theProp = this.originClass.prototype[this.#name];
+
             this.#type = targetPropMeta.type;
             this.#isPrivate = targetPropMeta.type || false;
             this.#isValid = true;
             this.#defaultValue = targetPropMeta.value;
+
+            this.#isMethod = typeof theProp === 'function' && targetPropMeta.isMethod;
 
             return;
         }        

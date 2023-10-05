@@ -2,14 +2,11 @@ const ReflectionPrototypeProperty = require("./reflectionPrototypeProperty");
 
 class ReflectionPrototypeMethod extends ReflectionPrototypeProperty {
 
-    static {
-
-        
-    }
-
     #isValid = false;
 
-    #isInterface
+    #isInterface;
+
+    #defaultArgs;
 
     get isValid() {
 
@@ -26,6 +23,11 @@ class ReflectionPrototypeMethod extends ReflectionPrototypeProperty {
         return super.type;
     }
 
+    get defaultArgs() {
+
+        return this.isValid ? super.value : undefined;
+    }
+
     constructor(_target, _methodKey) {
 
         super(...arguments);
@@ -38,12 +40,14 @@ class ReflectionPrototypeMethod extends ReflectionPrototypeProperty {
         if (!super.isValid) {
 
             return;
-        }
+        } 
 
-        if (typeof super.value !== 'function') {
+        if (!super.isMethod) {
 
             return;
         }
+        
+        //this.#defaultArgs = super.value;
 
         this.#isValid = true;
     }
@@ -55,7 +59,7 @@ class ReflectionPrototypeMethod extends ReflectionPrototypeProperty {
             throw new Error('cannot invoke method of an invalid Reflection');
         }
 
-        const method = this.value;
+        const method = this.originClass.prototype[this.name];
 
         const _thisContext = this.isInstance ? this.target : this.originClass;
 

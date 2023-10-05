@@ -1,5 +1,5 @@
 /** @type {Symbol} */
-const METADATA = Symbol(Date.now());
+const METADATA = Symbol.metadata || Symbol(Date.now());
 
 const TYPE_JS = Symbol(Date.now);
 

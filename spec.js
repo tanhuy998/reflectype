@@ -67,12 +67,14 @@ class A {
 
     //static prop = list.push(this);
 
+    //accessor getTest = 1;
+
     test = 1;
 
     #prop = 1;
     constructor() {
 
-        console.log('hello world');
+        //console.log('hello world');
     }
 
     func() {
@@ -82,7 +84,13 @@ class A {
 }
 
 A.prototype.func[METADATA] = {};
-A.prototype.func[METADATA][TYPE_JS] = new property_metadata_t();
+
+const funcMeta = new property_metadata_t();
+
+funcMeta.isMethod = true;
+
+
+A.prototype.func[METADATA][TYPE_JS] = funcMeta;
 
 class B extends A {
 
@@ -105,19 +113,23 @@ const temp = getMetadata(A);
 
 const a = new A()
 
-console.log(temp);
+//console.log(metaOf(A))
 
 const meta = new ReflectionClass(A);
 
-const propMeta = new ReflectionProperty(a, 'func');
+//const propMeta = new ReflectionProperty(a, 'func');
 
 //const static = new ReflectionProperty(A, 'testStatic')
 
 const newProp = new ReflectionPrototypeProperty(A, 'test');
 
-console.log('is valid', propMeta.defaultValue)
+const prop = new ReflectionPrototypeProperty(A,'func');
 
-// meta.attributes.forEach((prop) => {
+console.log('is valid', prop.isValid)
 
-//     console.log(prop.isStatic);
-// });  
+
+console.log(a.getTest)
+meta.methods.forEach((prop) => {
+
+    console.log(prop.name, prop.isMethod);
+});  
