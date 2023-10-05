@@ -1,3 +1,9 @@
+const propertyDecorator = require('../libs/propertyDecorator.js');
+const { METADATA } = require('../reflection/metadata.js');
+const Interface = require('../interface/interface.js');
+const isPrimitive = require('../utils/isPrimitive.js');
+
+const {TYPE_JS, property_metadata_t, metadata_t} = require('../reflection/metadata.js');
 function type(_abstract) {
 
     preventImmediateValue(_abstract);
@@ -23,154 +29,115 @@ function type(_abstract) {
         }
     }
 
-    function handleAccessor(prop, context) {
+    // function handleAccessor(prop, context) {
 
-        const getter = prop.get;
-        const setter = prop.set;
+    //     const getter = prop.get;
+    //     const setter = prop.set;
 
-        const {static, private, name} = context;
+    //     const {static, private, name} = context;
 
-        const variable = new Variable(_abstract, undefined, name, {
-            isStatic: static,
-            isPrivate: private,
-        });
+    //     const variable = new Variable(_abstract, undefined, name, {
+    //         isStatic: static,
+    //         isPrivate: private,
+    //     });
 
-        return {
-            get() {
+    //     return {
+    //         get() {
 
-                const currentValue = variable.getValue();
+    //             const currentValue = variable.getValue();
 
-                const notNullAndUndefined = currentValue !== undefined && currentValue !== null;
+    //             const notNullAndUndefined = currentValue !== undefined && currentValue !== null;
 
-                const propValue = notNullAndUndefined ? currentValue : variable;
+    //             const propValue = notNullAndUndefined ? currentValue : variable;
 
-                return new Proxy(propValue, {
-                    referenceObj: this,
-                    get: function(target, prop) {
+    //             return new Proxy(propValue, {
+    //                 referenceObj: this,
+    //                 get: function(target, prop) {
 
-                        const propertyMetadata = this.referenceObj[REFLECTION].properties[context.name];
+    //                     const propertyMetadata = this.referenceObj[REFLECTION].properties[context.name];
 
-                        if (prop === 'type') {
+    //                     if (prop === 'type') {
 
-                            return propertyMetadata.type;
-                        }
+    //                         return propertyMetadata.type;
+    //                     }
 
-                        if (target instanceof Variable) {
+    //                     if (target instanceof Variable) {
 
-                            throw new Error(`Property ${prop} is null or undefined`);
-                        }
+    //                         throw new Error(`Property ${prop} is null or undefined`);
+    //                     }
 
-                        return target[prop];
-                    }
-                });
-            },
-            set(_value) {
+    //                     return target[prop];
+    //                 }
+    //             });
+    //         },
+    //         set(_value) {
 
-                return variable.setValue(_value);
-            },
-            init(intiValue) {
+    //             return variable.setValue(_value);
+    //         },
+    //         init(intiValue) {
 
-                checkIfMetadataIsSetted(this, name);
+    //             checkIfMetadataIsSetted(this, name);
 
-                this[REFLECTION].setProperty(context);
+    //             this[REFLECTION].setProperty(context);
 
-                this[REFLECTION].properties[context.name].setType(_abstract)
-                //this[REFLECTION].typeHintedProperties.get(name).setType(_abstract);
+    //             this[REFLECTION].properties[context.name].setType(_abstract)
+    //             //this[REFLECTION].typeHintedProperties.get(name).setType(_abstract);
 
-                variable.setClass(_abstract);
+    //             variable.setClass(_abstract);
 
-                variable.setValue(intiValue);
+    //             variable.setValue(intiValue);
 
-                return variable;
-            }
-        }
-    }
+    //             return variable;
+    //         }
+    //     }
+    // }
 
     function hanldeMethod(_method, context) {
 
-        function checkReturnTypeAndResolve(target, _this, _args) {
+        function checkReturnTypeAndResolve(target, _this, _args = []) {
 
             const result = target.call(_this, ..._args);
 
-            const matchType = (result[IS_CHECKABLE]) ? result.__is(_abstract) : result instanceof _abstract;
+            const error = new TypeError('The return value of function is not match return type');
+            
+            if (result === undefined || result === null) {
+
+                throw error;
+            }
+
+            const matchType = isPrimitive(result) ? (isPrimitive(_abstract) ? _abstract(result) : false)
+                                : (result[IS_CHECKABLE]) ? result.__is(_abstract) : result instanceof _abstract;
 
             if (!matchType) {
 
-                throw new TypeError('The return value of function is not match return type');
+                throw error;
             }
 
             return result;
         }
+        
+        if (typeof _method !== 'function') {
 
-        // function typeHintedFunction(flag) {
+            return;
+        }
 
-        //     const {name} = context;
+        const metadata = propertyDecorator.initPropMetadata(context);
 
-        //     //checkIfMetadataIsSetted(this, name);
+        if (!metadata) {
 
-        //     //this[REFLECTION].typeHintedProperties.get(name).setType(_abstract);
+            return;
+        }
 
-        //     const invocable = new Proxy(theFunction, {
-        //         apply: checkReturnTypeAndResolve,
-        //     })
+        const decoratedMethod = function() {
 
-        //     if (flag === EXPORT) {
+            return checkReturnTypeAndResolve(_method, this, ...arguments);
+        }
 
-        //         const theFunction = _method.bind(this);
+        const methodMeta = placeMethodMetadata(_method, context);
 
-        //         return [theFunction, _abstract, invocable];
-        //     }
+        decoratedMethod[METADATA] = metadata;
 
-        //     return checkReturnTypeAndResolve(_method, this, arguments);
-        // }
-
-        return new Proxy(_method, {
-            referenceObj: this,
-            apply: function (target, _this, _args) {
-
-                checkIfMetadataIsSetted(this.referenceObj, context.name);
-
-                const metadata = this.referenceObj[REFLECTION];
-
-                metadata.setProperty(context);
-
-                const propertyMetadata = metadata.properties[context.name];
-
-                if (!propertyMetadata.type) {
-
-                    propertyMetadata.setType(_abstract);
-                }
-
-                return checkReturnTypeAndResolve(target, _this, _args)
-            },
-            get: function (_target, _metadata) {
-
-                checkIfMetadataIsSetted(this.referenceObj, context.name);
-
-                const metadata = this.referenceObj[REFLECTION];
-
-                metadata.setProperty(context);
-
-                const propertyMetadata = metadata.properties[context.name];
-
-                if (!propertyMetadata.type) {
-
-                    propertyMetadata.setType(_abstract);
-                }
-
-                switch(_metadata) {
-                    case 'returnType':
-                        return propertyMetadata.type;
-                    case 'parameters':
-                        return ;
-                    default:
-                        break;
-                }
-
-                return _target[_metadata];
-            },
-            set: () => false,
-        })
+        return decoratedMethod;
     }
 
     function checkIfMetadataIsSetted(_object, prop) {
@@ -188,3 +155,52 @@ function type(_abstract) {
         }
     }
 }
+
+/**
+ * 
+ * @param {*} _target 
+ * @returns {metadata_t | property_metadata_t}
+ */
+function placeTypeMetadata(_target) {
+
+    if (!_target) {
+
+        return;
+    }
+
+    _target[METADATA] ??= {};
+
+    _target[METADATA][TYPE_JS] ??= new property_metadata_t();
+
+    return _target[METADATA][TYPE_JS]
+}
+
+function placeMethodMetadata(_target, context) {
+
+    /**@type {property_metadata_t} */
+    const meta = placeTypeMetadata(_target);
+
+    if (meta instanceof property_metadata_t) {
+
+        const {static, private, name, access} = context;
+
+        meta.isMethod = true;
+        meta.static = static;
+        meta.private = private;
+        meta.name = name;
+
+        return meta;
+    }
+}
+
+function preventImmediateValue(_target) {
+
+    if (typeof _target !== 'function' && !_target.prototype) {
+
+        throw new TypeError('require a constructor, immediate value given');
+    }
+}
+
+
+
+module.exports = type;

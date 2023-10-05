@@ -30,6 +30,7 @@ function property_metadata_t() {
     this.type = undefined;
     this.value = undefined;
     this.isMethod = undefined;
+    this.name = undefined;
 }
 
 function metaOf(_unknown) {

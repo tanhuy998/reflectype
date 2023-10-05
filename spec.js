@@ -59,7 +59,18 @@ const path = require('node:path');
 const { cwd } = require('node:process');
 const ReflectionPrototypeProperty = require('./src/metadata/reflectionPrototypeProperty.js');
 
+const type = require('./src/decorators/type.js');
+
 const list = [];
+
+function decorated(func, context) {
+
+    const {access} = context;
+
+    console.log(access.get() === func)
+
+    return func;
+}
 
 class A {
 
@@ -77,9 +88,16 @@ class A {
         //console.log('hello world');
     }
 
+    //@decorated
     func() {
 
         return this.#prop;
+    }
+
+    @type(Boolean)
+    testFunc() {
+
+        return 't'
     }
 }
 
@@ -113,6 +131,8 @@ const temp = getMetadata(A);
 
 const a = new A()
 
+a.testFunc();
+
 //console.log(metaOf(A))
 
 const meta = new ReflectionClass(A);
@@ -131,5 +151,5 @@ console.log('is valid', prop.isValid)
 console.log(a.getTest)
 meta.methods.forEach((prop) => {
 
-    console.log(prop.name, prop.isMethod);
+    console.log(prop.name, prop.defaultArgs);
 });  

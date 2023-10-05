@@ -28,6 +28,11 @@ class ReflectionPrototypeMethod extends ReflectionPrototypeProperty {
         return this.isValid ? super.value : undefined;
     }
 
+    get defaultArguments() {
+
+        this.defaultValue;
+    }
+
     constructor(_target, _methodKey) {
 
         super(...arguments);
