@@ -67,9 +67,18 @@ function decorated(func, context) {
 
     const {access} = context;
 
-    console.log(access.get() === func)
+    console.log(metaOf(func))
 
     return func;
+}
+
+function acc(prop, context) {
+
+    const {get, set} = context.access;
+
+    console.log(get.toString())
+
+    return prop;
 }
 
 class A {
@@ -79,8 +88,8 @@ class A {
     //static prop = list.push(this);
 
     //accessor getTest = 1;
-
-    test = 1;
+    @type(Boolean)
+    accessor test = 1;
 
     #prop = 1;
     constructor() {
@@ -94,6 +103,7 @@ class A {
         return this.#prop;
     }
 
+    @decorated
     @type(Boolean)
     testFunc() {
 
@@ -125,13 +135,13 @@ class B extends A {
 // initPrototypeMetadata(A);
 
 addPropertyMetadata(A, 'testStatic');
-addPrototypePropertyMetadata(A, 'test');
+//addPrototypePropertyMetadata(A, 'test');
 
 const temp = getMetadata(A);
 
 const a = new A()
 
-a.testFunc();
+console.log(a[METADATA])
 
 //console.log(metaOf(A))
 
@@ -149,7 +159,7 @@ console.log('is valid', prop.isValid)
 
 
 console.log(a.getTest)
-meta.methods.forEach((prop) => {
+// meta.methods.forEach((prop) => {
 
-    console.log(prop.name, prop.defaultArgs);
-});  
+//     console.log(prop.name, prop.isStatic);
+// });  

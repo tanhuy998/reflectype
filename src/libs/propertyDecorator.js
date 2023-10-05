@@ -2,19 +2,19 @@ const { metaOf, METADATA } = require("../reflection/metadata");
 
 function getMetadata(_context) {
 
-    const {access} = _context;
+    const {access, kind} = _context;
 
-    const theProp = access.get();
+    const theProp = kind === 'method' ? access.get() : undefined;
 
     return outerMetadataExist(_context) ? _context.metadata : metaOf(theProp);
 }
 
 // init wrapper metadata to a specific property
-function initPropMetadata(_context) {
+function initMetadata(_context) {
 
     const {access, kind} = _context;
 
-    const theProp = access.get();
+    const theProp = access?.get();
 
     const isMethod = typeof theProp === 'function' && kind === 'method';
 
@@ -22,19 +22,22 @@ function initPropMetadata(_context) {
 
     if (outerMetadataExist(_context)) {
 
-        _context.metadata = meta;
-
-        return meta
+        return _context.metadata;
     }
-    else if (isMethod) {
+
+    if (isMethod) {
 
         theProp[METADATA] ??= meta;
 
-        return meta;
-    }
+        _context.metadata = theProp[METADATA];
+
+        return _context.metadata;
+    } 
     else {
 
-        return;
+        _context.metadata = meta;
+
+        return meta;
     }
 }
 
@@ -44,4 +47,4 @@ function outerMetadataExist(context) {
 }
 
 
-module.exports = {getMetadata, initPropMetadata, outerMetadataExist};
+module.exports = {getMetadata, initMetadata, outerMetadataExist};
