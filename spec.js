@@ -60,6 +60,8 @@ const { cwd } = require('node:process');
 const ReflectionPrototypeProperty = require('./src/metadata/reflectionPrototypeProperty.js');
 
 const {type, allowNull, defaultArguments} = require('./src/decorators/');
+const Interface = require('./src/interface/interface.js');
+const implement = require('./src/decorators/implement.js');
 
 const list = [];
 
@@ -87,6 +89,17 @@ function acc(prop, context) {
     return prop;
 }
 
+class ITest extends Interface {
+
+    mustHave() {
+
+
+    }
+}
+
+console.log('start', ITest instanceof Interface)
+
+@implement(ITest)
 class A {
     
     // @type(String)
@@ -113,6 +126,10 @@ class A {
         return this.#prop;
     }
 
+    mustHave() {
+
+    }
+
     //@decorated
     // @type(Boolean)
     //@allowNull
@@ -135,6 +152,7 @@ funcMeta.isMethod = true;
 
 A.prototype.func[METADATA][TYPE_JS] = funcMeta;
 
+@implement(ITest)
 class B extends A {
 
     // static {
@@ -146,40 +164,42 @@ class B extends A {
 
     }
 }
+
+
 // initMetadata(A);
 // initPrototypeMetadata(A);
 
-addPropertyMetadata(A, 'testStatic');
-//addPrototypePropertyMetadata(A, 'test');
+// addPropertyMetadata(A, 'testStatic');
+// //addPrototypePropertyMetadata(A, 'test');
 
-const temp = getMetadata(A);
+// const temp = getMetadata(A);
 
-A.testStatic = null;
+// A.testStatic = null;
 
-console.log(A.testStatic)
+// console.log(A.testStatic)
 
-const a = new A()
+// const a = new A()
 
-a.testFunc()//.then(value => console.log(value));
+// a.testFunc()//.then(value => console.log(value));
 
-console.log(a.test)
+// console.log(a.test)
 
-//console.log(metaOf(A))
+// //console.log(metaOf(A))
 
-const meta = new ReflectionClass(A);
+// const meta = new ReflectionClass(A);
 
-//const propMeta = new ReflectionProperty(a, 'func');
+// //const propMeta = new ReflectionProperty(a, 'func');
 
-//const static = new ReflectionProperty(A, 'testStatic')
+// //const static = new ReflectionProperty(A, 'testStatic')
 
-const newProp = new ReflectionPrototypeProperty(A, 'test');
+// const newProp = new ReflectionPrototypeProperty(A, 'test');
 
-const prop = new ReflectionPrototypeProperty(A,'func');
+// const prop = new ReflectionPrototypeProperty(A,'func');
 
-console.log('is valid', prop.isValid)
+// console.log('is valid', prop.isValid)
 
 
-console.log(a.getTest)
+// console.log(a.getTest)
 // meta.methods.forEach((prop) => {
 
 //     console.log(prop.name, prop.isStatic);

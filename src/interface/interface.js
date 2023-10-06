@@ -1,12 +1,10 @@
 /** @class */
 class Interface {
 
-    #checkProtoType() {
+    static get PROTOTYPE() {
 
-
+        return Object.getOwnPropertyNames(this.prototype);
     }
-
-    #check
 }
 
 module.exports = Interface;

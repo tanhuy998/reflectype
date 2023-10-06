@@ -18,6 +18,7 @@ function metadata_t(_abstract) {
 
     this.abstract = _abstract;
     this.properties = {};
+    this.interfaces = undefined;
     //this.inheritance = null;
 }
 
