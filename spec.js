@@ -59,8 +59,7 @@ const path = require('node:path');
 const { cwd } = require('node:process');
 const ReflectionPrototypeProperty = require('./src/metadata/reflectionPrototypeProperty.js');
 
-const type = require('./src/decorators/type.js');
-const allowNull = require('./src/decorators/allowNull.js')
+const {type, allowNull, defaultArguments} = require('./src/decorators/');
 
 const list = [];
 
@@ -117,10 +116,13 @@ class A {
     //@decorated
     // @type(Boolean)
     //@allowNull
+    //@defaultArguments(1,2,3)
     @type(String)
-    testFunc() {
+    testFunc(a = 3, b = 4) {
+        
+        console.log(arguments);
 
-        return true;
+        return 'asdasd';
     }
 }
 

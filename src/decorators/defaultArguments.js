@@ -1,10 +1,11 @@
 const propertyDecorator = require('../libs/propertyDecorator.js');
+const { TYPE_JS } = require('../reflection/metadata.js');
 
 /**
  * 
  * @param  {...any} values 
  */
-function args(...values) {
+function defaultArguments(...args) {
 
     return function(_method, _context) {
 
@@ -15,10 +16,14 @@ function args(...values) {
             throw new Error('cannot apply @args to object that is not a function');
         }
 
-        const wrapperMetadata = propertyDecorator.initMetadata(_context);
+        const propMeta = propertyDecorator.initMetadata(_context);
 
-        
+        propMeta.value = args;
+
+        return _method;
     }
 }
 
-module.exports = args;
+
+
+module.exports = defaultArguments;

@@ -176,7 +176,9 @@ function handleTypeForMethod(_method, context, _abstract) {
 
     const decoratedMethod = function checkReturnTypeAndResolve() {
 
-        const result = _method.call(this, ...arguments);
+        const args = arguments.length !== 0 ? arguments : propMeta.value || [];
+
+        const result = _method.call(this, ...args);
 
         const invocationContext = {
             expectReturnType: _abstract, 
