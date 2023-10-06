@@ -60,6 +60,7 @@ const { cwd } = require('node:process');
 const ReflectionPrototypeProperty = require('./src/metadata/reflectionPrototypeProperty.js');
 
 const type = require('./src/decorators/type.js');
+const allowNull = require('./src/decorators/allowNull.js')
 
 const list = [];
 
@@ -88,14 +89,17 @@ function acc(prop, context) {
 }
 
 class A {
-    @type(String)
+    
+    // @type(String)
+    // @allowNull
     static accessor testStatic;
 
     //static prop = list.push(this);
     testProp;
 
     //accessor getTest = 1;
-    @type(String)
+    // @type(String)
+    // @allowNull
     accessor test = 'abc';
 
     #prop = 1;
@@ -110,12 +114,13 @@ class A {
         return this.#prop;
     }
 
-    @decorated
+    //@decorated
     // @type(Boolean)
+    //@allowNull
     @type(String)
     testFunc() {
 
-        return 'true'
+        return true;
     }
 }
 
@@ -147,7 +152,7 @@ addPropertyMetadata(A, 'testStatic');
 
 const temp = getMetadata(A);
 
-A.testStatic = 'static';
+A.testStatic = null;
 
 console.log(A.testStatic)
 

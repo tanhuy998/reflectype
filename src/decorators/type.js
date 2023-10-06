@@ -12,14 +12,14 @@ function type(_abstract) {
 
     const isInterface = _abstract.__proto__ === Interface;
 
-    return handle;
+    //return handle;
 
     // return function(instance, context) {
 
     //     return handle(instance, context); 
     // }
 
-    function handle(prop, context) {
+    return function handle(prop, context) {
         const {kind, name, static} = context;
 
         const meta = context.metadata;
@@ -47,8 +47,6 @@ function type(_abstract) {
 
         const propMeta = propertyDecorator.getTypeMetadataIn(prop, _context);
 
-        console.log(propMeta)
-
         if (typeof propMeta === 'object' && propMeta.typeDecoratorApplied === true) {
 
             return true;
@@ -58,22 +56,6 @@ function type(_abstract) {
             return false;
         }
     }
-
-
-    // function checkIfMetadataIsSetted(_object, prop) {
-
-    //     if (!_object[REFLECTION]) {
-
-    //         _object[REFLECTION] = new ObjectReflection(_object);
-    //     }   
-
-    //     const metadata = _object[REFLECTION];
-
-    //     if (metadata.properties[prop]) {
-
-    //         throw new Error(`@type is applied to ${prop} multiple times`);
-    //     }
-    // }
 }
 
 /**
@@ -112,10 +94,16 @@ function generateAccessorInitializer(_propMeta) {
 
 function generateAccessorSetter(_propMeta, _defaultSet) {
 
-    const {type} = _propMeta;
-
+    const {type, allowNull} = _propMeta;
     return function(_value) {
-        
+
+        const isNull = _value === undefined || _value === null;
+
+        if (isNull && _propMeta.allowNull) {
+
+            return _defaultSet.call(this, _value);
+        }
+
         if (!matchType(type, _value)) {
 
             const isStatic = _propMeta.static;
@@ -135,6 +123,7 @@ function handleAccessor(_accessor, context, _abstract) {
 
     const {static, private, name} = context;
 
+    /**@type {property_metadata_t} */
     const initPropMeta = propertyDecorator.outerMetadataExist(context) ? 
                     propertyDecorator.initMetadata(context) 
                     : typeMetadata.metaOf(defaultGetter) || new property_metadata_t();
@@ -153,6 +142,7 @@ function handleAccessor(_accessor, context, _abstract) {
     initPropMeta.private ??= private;
     initPropMeta.static ??= static;
     initPropMeta.isMethod = false;
+    initPropMeta.allowNull ??= false;
  
     const initializer = generateAccessorInitializer(initPropMeta);
 
@@ -197,11 +187,11 @@ function handleTypeForMethod(_method, context, _abstract) {
 
             invocationContext.isAsync = true;
 
-            result.then(checkReturnValue.bind(invocationContext));
+            result.then(checkReturnValueWith(_abstract, propMeta.allowNull));
         }
         else {
 
-            checkReturnValue.call(invocationContext, result);
+            checkReturnValueWith(_abstract, propMeta.allowNull)(result);
         }
 
         return result;
@@ -275,7 +265,7 @@ function matchType(_type, value) {
     if (isPrimitive(_type) && isPrimitive(value)) {
 
         if (_type.name === value?.name) {
-            console.log(1)
+            
             return true;
         }
 
@@ -297,28 +287,40 @@ function preventImmediateValue(_target) {
     }
 }
 
-function checkReturnValue(result) {
+function checkReturnValueWith(expectReturnType, allowNull = false) {
 
-    const {expectReturnType, isAsync} = this;
+    return function (returnValue) {
 
-    let error = false;
+        //const { expectReturnType, isAsync } = this;
 
-    if (result === undefined || result === null) {
+        let error = false;
 
-        error = true;
+        const isNull = returnValue === undefined || returnValue === null;
+
+        if (isNull) {
+            
+            if (allowNull) {
+
+                return returnValue;
+            }
+            else {
+
+                error = true;
+            }
+        }
+
+        if (!matchType(expectReturnType, returnValue)) {
+
+            error = true;
+        }
+
+        if (error) {
+
+            throw new TypeError('The return value of function is not match return type');
+        }
+
+        return returnValue;
     }
-
-    if (!matchType(expectReturnType, result)) {
-        
-        error = true;
-    }
-
-    if (error) {
-
-        throw new TypeError('The return value of function is not match return type');
-    }
-    
-    return result;
 }
 
 

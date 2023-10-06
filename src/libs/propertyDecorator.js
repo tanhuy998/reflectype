@@ -74,6 +74,7 @@ function initMetadata(_context) {
 
     propMeta.static = _context.static;
     propMeta.private = _context.private;
+    propMeta.name = name;
 
     if (kind === 'method') {
 
