@@ -1,12 +1,11 @@
 {
   "name": "type-js",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Support types for Javascript using decorator feature",
   "main": "src/",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "workspaces": ["src/"],
   "author": "tanhuy998",
   "license": "MIT",
   "devDependencies": {
