@@ -91,7 +91,29 @@ function acc(prop, context) {
 
 class ITest extends Interface {
 
+    @defaultArguments(1,2,3)
+    @allowNull
+    @type(String)
     mustHave() {
+
+
+    }
+}
+
+class ISecond extends Interface {
+
+    @defaultArguments(1,2,3)
+    @allowNull
+    @type(String)
+    mustHave() {
+
+
+    }
+
+    @defaultArguments(1,2,3)
+    @allowNull
+    @type(String)
+    func() {
 
 
     }
@@ -122,10 +144,13 @@ class A {
 
     //@decorated
     func() {
-
+        console.log(2)
         return this.#prop;
     }
 
+    @defaultArguments(1,2,3)
+    @allowNull
+    @type(String)
     mustHave() {
 
     }
@@ -143,16 +168,16 @@ class A {
     }
 }
 
-A.prototype.func[METADATA] = {};
+// A.prototype.func[METADATA] = {};
 
-const funcMeta = new property_metadata_t();
+// const funcMeta = new property_metadata_t();
 
-funcMeta.isMethod = true;
+// funcMeta.isMethod = true;
 
 
-A.prototype.func[METADATA][TYPE_JS] = funcMeta;
+// A.prototype.func[METADATA][TYPE_JS] = funcMeta;
 
-@implement(ITest)
+@implement(ITest, ISecond)
 class B extends A {
 
     // static {
@@ -160,11 +185,20 @@ class B extends A {
     //     console.log('B static block');
     // }
 
+    @defaultArguments(1,2,3)
+    @allowNull
+    @type(A)
     func() {
 
+        return new A();
     }
 }
 
+const objB = new B();
+
+const temp = objB.func();
+
+console.log(temp)
 
 // initMetadata(A);
 // initPrototypeMetadata(A);

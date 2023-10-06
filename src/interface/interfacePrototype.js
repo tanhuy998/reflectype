@@ -1,9 +1,17 @@
+const { metaOf, property_metadata_t } = require("../reflection/metadata");
+const Interface = require("./interface");
+
 class InterfacePrototype {
 
     #interfaces;
     get list() {
         return this.#interfaces;
     }
+
+    /**
+     * store the encoded tokens of method that the origin class must implements
+     */
+    #methods = new Set();
 
     #prototype;
     #origin;
@@ -19,7 +27,44 @@ class InterfacePrototype {
         this.#prototype = new Map();
 
         this.#origin = _origin;
-        //this.#init();
+        this.#init();
+    }
+
+    #init() {
+        /**@type {Interface} */
+        for (const intf of this.#interfaces.values()) {
+
+            const prototype = intf.prototype;
+
+            for (const methodName of intf.PROTOTYPE) {
+
+                if (methodName === 'constructor') {
+
+                    continue;
+                }
+
+                const token = this.#encodeMethod(prototype[methodName], methodName);
+
+                this.#methods.add(token);
+            }
+        }
+    }
+    #encodeMethod(_func, _name) {
+
+        /**@type {property_metadata_t} */
+        const funcMeta = metaOf(_func);
+
+        if (!funcMeta) {
+
+            return _name ?? _func.name;
+        }
+        
+        const {name, allowNull, type, value} = funcMeta;
+
+        const encoded = `${allowNull}-${type.name}-${name ?? _name ?? _func.name}-${Array.isArray(value) ? value.length : 0}`;
+
+        /** the pattern is '[allowNull]-[type]-[funcName]-[args.length]' */
+        return encoded;
     }
 
     getPrototype() {
@@ -38,15 +83,32 @@ class InterfacePrototype {
             //const methods = Object.getOwnPropertyNames(intf.prototype);
             const methods = intf.PROTOTYPE;
 
+            const token = this.#methods.values();
+
+
             //console.log(methods)
 
-            for (const method of methods) {
+            /**@type {String} */
+            for (const token of this.#methods.values()) {
+
+                const [allowNull, type, methodName, argsLength] = token.split('-');
+
+                if (methodName == "constructor") continue;
+
+                if (!prototype[methodName]) throw new TypeError(`class [${_object.name}] implements [${intf.name}] but not defines '${method}' method`);
+
+                if (typeof prototype[methodName] !== 'function')  throw new TypeError(`class [${_object.name}] implements [${intf.name}] but defines '${method}' is not type of function`);
                 
-                if (method == "constructor") continue;
+                // const objectMethod = prototype[methodName];
 
-                if (!prototype[method]) throw new TypeError(`class [${_object.name}] implements [${intf.name}] but not defines '${method}' method`);
+                // const objectMethodToken = this.#encodeMethod(objectMethod);
 
-                if (typeof prototype[method] !== 'function')  throw new TypeError(`class [${_object.name}] implements [${intf.name}] but defines '${method}' is not type of function`);
+                // console.log(objectMethodToken, token)
+
+                // if (objectMethodToken !== token) {
+
+                //     throw new Error(`The difinition of [${_object.name}].${methodName} not match the Interface`);
+                // }
             }
         }
     }

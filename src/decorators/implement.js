@@ -72,17 +72,14 @@ function alterClass(_class) {
     _class['__implemented'] ??= function(_abstract) {
 
         if (!isInterface(_abstract)) {
-
+            
             return false;
         }
 
-        return metaOf(this)?.interfaces.has(_abstract);
+        return metaOf(this)?.interfaces.list.has(_abstract);
     }
 
-    _class[IS_CHECKABLE] ??= function() {
-
-        return true;
-    }
+    _class[IS_CHECKABLE] ??= true;
 }
 
 function alterClassPrototype(_class) {
@@ -92,14 +89,16 @@ function alterClassPrototype(_class) {
     const classMeta = metaOf(_class);
     const interfaceProto = classMeta.interfaces;
 
-    classPrototype[IS_CHECKABLE] ??= function() {
-
-        return true;
-    }
+    classPrototype[IS_CHECKABLE] ??= true;
 
     classPrototype['__is'] ??= function(_abstract) {
+        
+        if (!isInterface(_abstract)) {
 
-        _class.__implemented(_abstract);
+            return this instanceof _abstract;
+        }
+
+        return _class.__implemented(_abstract);
     }
 }
 
@@ -131,6 +130,11 @@ function isInterfacePrototypeConflict(_class) {
 
         return false;
     }
+}
+
+function isInterface(_class) {
+
+    return _class.prototype instanceof Interface;
 }
 
 module.exports = implement;

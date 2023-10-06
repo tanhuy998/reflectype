@@ -5,6 +5,7 @@ const isPrimitive = require('../utils/isPrimitive.js');
 const typeMetadata = require('../reflection/metadata.js');
 
 const {TYPE_JS, property_metadata_t, metadata_t} = require('../reflection/metadata.js');
+const {IS_CHECKABLE} = require('../constants.js');
 
 function type(_abstract) {
 
@@ -275,9 +276,15 @@ function matchType(_type, value) {
         
         return strictType === _type.name;
     }
-    else {
 
-        return (value[IS_CHECKABLE]) ? value.__is(_type) : value instanceof _type;
+    if (!isPrimitive(_type)) {
+        
+        if  (!isPrimitive(value)) {
+            
+            return (value[IS_CHECKABLE]) ? value.__is(_type) : value instanceof _type;
+        }
+
+        return false;
     }
 }
 
