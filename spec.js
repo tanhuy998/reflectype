@@ -4,17 +4,17 @@
 
 // ABSTRACT METADATA LAYOUT
 // const meta = {
-//       abstract: 
+//       abstract:
 //     properties: {
 //         [prop]: {
 //             private: boolean,
 //             static: boolean,
 //             type: any,
 //             value: Array<VariableMetadata> || any, (when a propety is annotated as method, the "value" option here is detemined as the default parameter of the method)
-//             isMethod: boolean, 
+//             isMethod: boolean,
 //         }
 //     },
-//     
+//
 //     interfaces: Set<Interface>
 //     inheritance: {
 //          properties: {
@@ -23,16 +23,16 @@
 //                  static: boolean,
 //                  type: any,
 //                  value: Array<VariableMetadata> || any, (when a propety is annotated as method, the "value" option here is detemined as the default parameter of the method)
-//                  isMethod: boolean, 
+//                  isMethod: boolean,
 //              }
 //          }
-//     } 
+//     }
 //     prototype: meta
 // }
 
 /**
  *  VARIABLE METADATA LAYOUT
- *  {   
+ *  {
  *      type: any,
  *      value: any,
  *  }
@@ -74,22 +74,29 @@ function decorated(func, context) {
 
 function acc(prop, context) {
 
-    const {get, set} = context.access;
+    const {get, set} = prop;
 
-    console.log(get.toString())
+    console.log(get.meta)
+
+    get.meta = 1;
+    prop.init = function() {
+
+        console.log(this)
+    }
 
     return prop;
 }
 
 class A {
-
-    static testStatic;
+    @type(String)
+    static accessor testStatic;
 
     //static prop = list.push(this);
+    testProp;
 
     //accessor getTest = 1;
-    @type(Boolean)
-    accessor test = 1;
+    @type(String)
+    accessor test = 'abc';
 
     #prop = 1;
     constructor() {
@@ -104,10 +111,11 @@ class A {
     }
 
     @decorated
-    @type(Boolean)
+    // @type(Boolean)
+    @type(String)
     testFunc() {
 
-        return 't'
+        return 'true'
     }
 }
 
@@ -139,9 +147,15 @@ addPropertyMetadata(A, 'testStatic');
 
 const temp = getMetadata(A);
 
+A.testStatic = 'static';
+
+console.log(A.testStatic)
+
 const a = new A()
 
-console.log(a[METADATA])
+a.testFunc()//.then(value => console.log(value));
+
+console.log(a.test)
 
 //console.log(metaOf(A))
 
@@ -162,4 +176,4 @@ console.log(a.getTest)
 // meta.methods.forEach((prop) => {
 
 //     console.log(prop.name, prop.isStatic);
-// });  
+// });

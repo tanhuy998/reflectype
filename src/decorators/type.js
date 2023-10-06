@@ -5,7 +5,7 @@ const isPrimitive = require('../utils/isPrimitive.js');
 const typeMetadata = require('../reflection/metadata.js');
 
 const {TYPE_JS, property_metadata_t, metadata_t} = require('../reflection/metadata.js');
-const getMetadata = require('../reflection/getMetadata.js');
+
 function type(_abstract) {
 
     preventImmediateValue(_abstract);
@@ -24,9 +24,9 @@ function type(_abstract) {
 
         const meta = context.metadata;
 
-        if (alreadyApplied(context)) {
+        if (alreadyApplied(prop, context)) {
 
-            throw new Error('cannot assign @type multiple time');
+            throw new Error('cannot assign @type multiple times');
         }
 
         switch(kind) {
@@ -40,83 +40,22 @@ function type(_abstract) {
         }
     }
 
-    function alreadyApplied(_context) {
+    function alreadyApplied(prop, _context) {
 
-        const {kind, name, metadata} = _context;
-        const isStatic = _context.static;
+        // const {kind, name, metadata} = _context;
+        // const isStatic = _context.static;
 
-        const typeMeta = typeof metadata === 'object' ? metadata[TYPE_JS] : null
+        const propMeta = propertyDecorator.getTypeMetadataIn(prop, _context);
 
-        if (!typeMeta) {
+        console.log(propMeta)
 
-            return false;
-        }
-
-        const classPropertiesMeta = isStatic ? typeMeta.properties : typeMeta.prototype?.properties;
-
-        if (typeof classPropertiesMeta !== 'object') {
-            
-            return false;
-        }
-
-        const propMeta =  classPropertiesMeta[name] || (kind === 'method') ? propertyDecorator.getMetadata(_context) : undefined;
-
-        if (typeof propMeta !== 'object') {
-
-            return false;
-        }
-
-        if (propMeta.type !== undefined || propMeta.type !== null) {
+        if (typeof propMeta === 'object' && propMeta.typeDecoratorApplied === true) {
 
             return true;
         }
-    }
+        else {
 
-    function handleAccessor(prop, context, _abstract) {
-
-        const getter = prop.get;
-        const setter = prop.set;
-
-        const {static, private, name} = context;
-
-        return {
-            get() {
-
-                
-            },
-            set(_value) {
-
-                
-            },
-            init(initValue) {
-
-                const baseClassTypeMetadata = typeMetadata.metaOf(this.constructor);
-                //const prototypeMeta = typeof baseClassTypeMetadata === 'object' ? baseClassTypeMetadata : new metadata_t();
-
-                const wrapper = propertyDecorator.initMetadata(context);
-                
-                wrapper[TYPE_JS] ??= new metadata_t;
-
-
-                const currentThisPrototype = typeMetadata.metaOf(this) || wrapper[TYPE_JS];
-
-                currentThisPrototype.properties ??= {};
-
-                const {properties} = currentThisPrototype;
-
-                const propMeta = properties[name] ?? new property_metadata_t();
-
-                propMeta.isMethod = false;
-                propMeta.type = _abstract
-                propMeta.name = name;
-                propMeta.private = private;
-                propMeta.value = initValue;
-                propMeta.static = false;
-
-                properties[name] = propMeta;
-
-                return initValue;
-            }
+            return false;
         }
     }
 
@@ -137,6 +76,99 @@ function type(_abstract) {
     // }
 }
 
+/**
+ * 
+ * @param {property_metadata_t} _propMeta 
+ * @returns {Function}
+ */
+function generateAccessorInitializer(_propMeta) {
+
+    const propName = _propMeta.name;
+    const {type} = _propMeta;
+    return function(initValue) {
+        
+        if (initValue === undefined || initValue === null) {
+
+            return initValue;
+        }
+
+        const wrapper = this[METADATA] ??= {};
+
+        /**@type {metadata_t} */
+        const typeMeta = wrapper[TYPE_JS] ??= new metadata_t();
+
+        typeMeta.properties[propName] = _propMeta;
+
+        if (!matchType(type, initValue)) {
+
+            const isStatic = _propMeta.static;
+
+            throw new TypeError(`Initialization of ${isStatic? 'static' : ''}${isStatic ? this.name : this.constructor.name}.${propName} not match type [${type.name}]`);
+        }
+
+        return initValue;
+    }
+}
+
+function generateAccessorSetter(_propMeta, _defaultSet) {
+
+    const {type} = _propMeta;
+
+    return function(_value) {
+        
+        if (!matchType(type, _value)) {
+
+            const isStatic = _propMeta.static;
+            const propName = _propMeta.name;
+
+            throw new TypeError(`Cannot set value to${(isStatic? ' static' : '') + ' attribute '}${isStatic ? this.name : this.constructor.name}.${propName} that is not type of [${type.name}]`);
+        }
+
+        return _defaultSet.call(this, _value);
+    }
+}
+
+function handleAccessor(_accessor, context, _abstract) {
+
+    const defaultGetter = _accessor.get;
+    const defaultSetter = _accessor.set;
+
+    const {static, private, name} = context;
+
+    const initPropMeta = propertyDecorator.outerMetadataExist(context) ? 
+                    propertyDecorator.initMetadata(context) 
+                    : typeMetadata.metaOf(defaultGetter) || new property_metadata_t();
+
+    if (!initPropMeta) {
+
+        return;
+    }
+
+    defaultGetter[METADATA] ??= {};
+    defaultGetter[METADATA][TYPE_JS] = initPropMeta;
+
+    initPropMeta.typeDecoratorApplied = true;
+    initPropMeta.type = _abstract;
+    initPropMeta.name ??= name;
+    initPropMeta.private ??= private;
+    initPropMeta.static ??= static;
+    initPropMeta.isMethod = false;
+ 
+    const initializer = generateAccessorInitializer(initPropMeta);
+
+    // const propMeta = typeMetadata.metaOf(init);
+
+    // propMeta.typeDecoratorApplied = true;
+    // propMeta.type = _abstract;
+
+    return {
+        get: defaultGetter,
+        set: generateAccessorSetter(initPropMeta, defaultSetter),
+        init: generateAccessorInitializer(initPropMeta)
+    }
+
+}
+
 function handleTypeForMethod(_method, context, _abstract) { 
     
     if (typeof _method !== 'function') {
@@ -144,9 +176,10 @@ function handleTypeForMethod(_method, context, _abstract) {
         return;
     }
 
-    const metadata = propertyDecorator.initMetadata(context);
+    /**@type {property_metadata_t} */
+    const propMeta = propertyDecorator.initMetadata(context);
 
-    if (!metadata) {
+    if (!propMeta) {
 
         return;
     }
@@ -155,26 +188,33 @@ function handleTypeForMethod(_method, context, _abstract) {
 
         const result = _method.call(this, ...arguments);
 
-        const error = new TypeError('The return value of function is not match return type');
-        
-        if (result === undefined || result === null) {
-
-            throw error;
+        const invocationContext = {
+            expectReturnType: _abstract, 
+            isAsync: false,
         }
 
-        if (!matchType(_abstract, result)) {
+        if (result instanceof Promise) {
 
-            throw error;
+            invocationContext.isAsync = true;
+
+            result.then(checkReturnValue.bind(invocationContext));
+        }
+        else {
+
+            checkReturnValue.call(invocationContext, result);
         }
 
         return result;
     }
 
-    const methodTypeMeta = placeTypeToMethodMetadata(_method, context);
+    //const methodTypeMeta = placeTypeToMethodMetadata(_method, context);
 
-    decoratedMethod[METADATA] = metadata;
+    decoratedMethod[METADATA] = _method[METADATA];
 
-    methodTypeMeta.type = _abstract;
+    propMeta.type = _abstract;
+    propMeta.typeDecoratorApplied = true;
+
+    // methodTypeMeta.type = _abstract;
 
     return decoratedMethod;
 }
@@ -223,8 +263,30 @@ function placeTypeToMethodMetadata(_target, context) {
 
 function matchType(_type, value) {
 
-    return isPrimitive(value) ? (isPrimitive(_type) ? _type(value) : false)
-    : (value[IS_CHECKABLE]) ? value.__is(_type) : value instanceof _type;
+    const transferToBoxedPrimitive = {
+        'string': 'String',
+        'boolean': 'Boolean',
+        'number': 'Number',
+        'bigint': 'BigInt'
+    }
+
+    // if _type is annotated as primitive types
+    // is must be a boxed primitive
+    if (isPrimitive(_type) && isPrimitive(value)) {
+
+        if (_type.name === value?.name) {
+            console.log(1)
+            return true;
+        }
+
+        const strictType = transferToBoxedPrimitive[typeof value];
+        
+        return strictType === _type.name;
+    }
+    else {
+
+        return (value[IS_CHECKABLE]) ? value.__is(_type) : value instanceof _type;
+    }
 }
 
 function preventImmediateValue(_target) {
@@ -233,6 +295,30 @@ function preventImmediateValue(_target) {
 
         throw new TypeError('require a constructor, immediate value given');
     }
+}
+
+function checkReturnValue(result) {
+
+    const {expectReturnType, isAsync} = this;
+
+    let error = false;
+
+    if (result === undefined || result === null) {
+
+        error = true;
+    }
+
+    if (!matchType(expectReturnType, result)) {
+        
+        error = true;
+    }
+
+    if (error) {
+
+        throw new TypeError('The return value of function is not match return type');
+    }
+    
+    return result;
 }
 
 
