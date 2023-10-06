@@ -1,8 +1,17 @@
 {
-  "name": "type-js",
+  "name": "reflectype",
   "version": "0.0.1",
-  "description": "Support types for Javascript using decorator feature",
+  "description": "Support types for Javascript class's property using decorator feature",
   "main": "src/",
+  "keywords": [
+    "type",
+    "types",
+    "decorator",
+    "reflection",
+    "metadata",
+    "type-metadata",
+    "interface"
+  ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
