@@ -107,8 +107,8 @@ function isInterfacePrototypeConflict(_class) {
     /**
      *  _class[INTERFACE_PROTOTYPE] is public static property
      *  Classes that extend other class will inherit that property
-     *  we need check for the existence of _class[INTERFACE_PROTOTYPE] 
-     *  in order to overload that property
+     *  we need to check for the existence of _class[INTERFACE_PROTOTYPE] 
+     *  in order to overide that property
      */
 
     const interfacePrototype = metaOf(_class).interfaces;

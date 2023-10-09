@@ -19,18 +19,22 @@ function allowNull(prop, _context) {
 
 function handleMethod(_method, _context) {
 
-    const propMeta = propertyDecorator.initMetadata(_context);
+    const propMeta = propertyDecorator.initMetadata(_method, _context);
 
     propMeta.allowNull = true;
 
     return _method;
 }
 
-function handleAccessor({get, set}, _context) {
+function handleAccessor(_accessor, _context) {
 
-    const propMeta = propertyDecorator.outerMetadataExist(_context) ? 
-                        propertyDecorator.initMetadata(_context) 
-                        : typeMetadata.metaOf(get) || new property_metadata_t();
+    const {get, set} = _accessor
+
+    // const propMeta = propertyDecorator.outerMetadataExist(_context) ? 
+    //                     propertyDecorator.initMetadata(_accessor, _context) 
+    //                     : typeMetadata.metaOf(get) || new property_metadata_t();
+
+    const propMeta = propertyDecorator.initMetadata(_accessor, _context);
 
     get[METADATA] ??= {};
     get[METADATA][TYPE_JS] = propMeta;

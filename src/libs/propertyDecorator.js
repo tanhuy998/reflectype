@@ -1,4 +1,7 @@
 const { metaOf, METADATA, TYPE_JS, metadata_t, property_metadata_t } = require("../reflection/metadata");
+const {decorateMethod, resolveMethodTypeMeta} = require('./methodDecorator.js');
+const {resolveAccessorTypeMetadata} = require('./accessorDecorator.js');
+const initTypeMetaFootPrint = require('./initFootPrint.js');
 
 function getTypeMetadataIn(target, _context) {
 
@@ -40,7 +43,7 @@ function getMetadataOf(_obj) {
  * @param {*} _context 
  * @returns {property_metadata_t}
  */
-function initMetadata(_context) {
+function initMetadata(_object, _context) {
 
     const {access, kind, name} = _context;
 
@@ -76,32 +79,38 @@ function initMetadata(_context) {
     propMeta.private = _context.private;
     propMeta.name = name;
 
+    initTypeMetaFootPrint(propMeta);
+
     if (kind === 'method') {
 
-        const theProp = access?.get();
-
-        theProp[METADATA] ??= {};
-
-        theProp[METADATA][TYPE_JS] ??= propMeta;
-
-        metaOf(theProp).isMethod = true;
-
-        return metaOf(theProp);
+        return resolveMethodTypeMeta(_object, propMeta);
     } 
-    // else {
 
-    //     _context.metadata = meta;
+    if (kind === 'accessor') {
 
-    //     return meta;
-    // }
+        return resolveAccessorTypeMetadata(_object, propMeta);
+    }
 
     return propMeta;
 }
+
 
 function outerMetadataExist(context) {
 
     return (Symbol.metadata !== undefined || Symbol.metadata !== null) && typeof context.metadata === 'object';
 }
 
+/**
+ * 
+ * @param {property_metadata_t} propMeta 
+ * @param {string || Symbol} _decorator
+ * @returns 
+ */
+function hasFootPrint(propMeta, _decorator) {
 
-module.exports = {getTypeMetadataIn, initMetadata, outerMetadataExist, getMetadataOf};
+    //const propMeta = getTypeMetadataIn(prop, _context);
+
+    return typeof propMeta === 'object' && propMeta.footPrint[_decorator] === true;
+}
+
+module.exports = {getTypeMetadataIn, initMetadata, outerMetadataExist, getMetadataOf, hasFootPrint};
