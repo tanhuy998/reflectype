@@ -40,13 +40,15 @@
 
 const {type, allowNull} = require('./src/decorators');
 const defaultArguments = require('./src/decorators/defaultArguments');
+const paramsType = require('./src/decorators/paramsType');
 
 class A {
 
     @type(String)
     accessor prop;
 
-    @defaultArguments(1, 3, 2)
+    @paramsType(String)
+    @defaultArguments('a', 3, 2)
     @allowNull
     @type(Boolean)
     func() {
@@ -59,6 +61,6 @@ class A {
 
 const obj = new A();
 
-obj.func();
+obj.func(2,3,4);
 
 obj.prop = 1;

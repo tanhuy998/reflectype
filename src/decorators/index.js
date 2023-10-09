@@ -5,4 +5,5 @@ module.exports = {
     allowNull: require('./allowNull.js'),
     defaultArguments: require('./defaultArguments.js'),
     implement: require('./implement.js'),
+    paramsType: require('./paramsType.js'),
 }

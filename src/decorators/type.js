@@ -23,7 +23,7 @@ function type(_abstract) {
 
         if (alreadyApplied) {
 
-            throw new Error('cannot assign @type multiple times');
+            throw new Error('cannot apply @type multiple times');
         }
 
         switch(kind) {

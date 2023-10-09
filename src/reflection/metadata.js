@@ -30,6 +30,7 @@ function property_metadata_t() {
     this.static = undefined;
     this.type = undefined;
     this.value = undefined;
+    this.defaultParamsType = undefined;
     this.isMethod = undefined;
     this.name = undefined;
     this.allowNull = undefined;

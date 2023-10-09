@@ -1,15 +1,17 @@
 const propertyDecorator = require('../libs/propertyDecorator.js');
 const { TYPE_JS } = require('../reflection/metadata.js');
-const {hasFootPrint} = require('../libs/propertyDecorator.js')
+const { hasFootPrint } = require('../libs/propertyDecorator.js')
+
+const { compareArgsWithType } = require('../libs/argumentType.js')
 /**
  * 
  * @param  {...any} values 
  */
 function defaultArguments(...args) {
 
-    return function(_method, _context) {
+    return function (_method, _context) {
 
-        const {kind, name} = _context;
+        const { kind, name } = _context;
 
         if (kind !== 'method') {
 
@@ -25,9 +27,12 @@ function defaultArguments(...args) {
             throw new Error('cannot apply @type multiple times');
         }
 
+        compareArgsWithType(propMeta);
+
         propMeta.value = args;
 
         return _method;
+
     }
 }
 

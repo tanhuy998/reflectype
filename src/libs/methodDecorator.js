@@ -2,6 +2,7 @@ const {metaOf} = require('../reflection/metadata.js');
 const {METADATA, TYPE_JS} = require('../constants.js');
 const initFootPrint = require('./initFootPrint.js');
 const matchType = require('./matchType.js');
+const {compareArgsWithType} = require('../libs/argumentType.js');
 
 function decorateMethod(_method) {
 
@@ -12,7 +13,9 @@ function decorateMethod(_method) {
 
         const defaultArguments = propMeta.value;
 
-        const args = defaultArguments ?? arguments;
+        const args = arguments.length !== 0 ? [...arguments] : defaultArguments;
+
+        compareArgsWithType(propMeta, args);
 
         const returnValue = _method.call(this, ...args);
         
@@ -106,4 +109,4 @@ function resolveMethodTypeMeta(_method, _propMeta) {
 }
 
 
-module.exports = {resolveMethodTypeMeta, decorateMethod, checkReturnTypeAndResolve, matchType, checkReturnValueWith};
+module.exports = {resolveMethodTypeMeta, decorateMethod, checkReturnTypeAndResolve, checkReturnValueWith};
