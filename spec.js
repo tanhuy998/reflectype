@@ -42,6 +42,7 @@ const {type, allowNull, returnType} = require('./src/decorators');
 const defaultArguments = require('./src/decorators/defaultArguments');
 const paramsType = require('./src/decorators/paramsType');
 const Void = require('./src/type/void');
+const {ReflectionPrototypeMethod} = require('./src/metadata');
 
 class A {
 
@@ -52,7 +53,7 @@ class A {
     // @defaultArguments('a', 3, 2)
     @allowNull
     @returnType(Void)
-    func() {
+    async func() {
 
         //throw new Error();
 
@@ -62,21 +63,28 @@ class A {
     }
 }
 
+const meta = new ReflectionPrototypeMethod(A, 'func');
+
+console.log('is valid', meta.isValid)
 
 const obj = new A();
 
-obj.func('');
+obj.func(1, 3, 4)
 
-// async function func() {
+async function func() {
     
-//     try {
+    try {
 
-//         obj.func(2, 3, 4);
-//     }
-//     catch {
+        const ret = await obj.func('', 3, 4);
 
+        console.log(ret)
+    }
+    catch {
 
-//     }
-// }
+        console.log(4)
+    }
+}
+
+func();
 
 

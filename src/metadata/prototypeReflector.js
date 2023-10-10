@@ -43,7 +43,7 @@ class PrototypeReflector extends Reflector{
 
     #init() {
 
-        if (!super.isValidReflection || super.reflectionContext === ReflectorContext.OTHER || !super.metadata.prototype) {
+        if (!super.isValidReflection || super.reflectionContext === ReflectorContext.OTHER || !super.metadata?.prototype) {
 
             this.#isValid = false;
 

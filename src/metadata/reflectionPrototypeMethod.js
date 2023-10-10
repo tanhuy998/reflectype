@@ -1,16 +1,27 @@
+const ReflectionFunction = require("./reflectionFunction");
 const ReflectionPrototypeProperty = require("./reflectionPrototypeProperty");
 
 class ReflectionPrototypeMethod extends ReflectionPrototypeProperty {
 
     #isValid = false;
 
-    #isInterface;
+    #isMethod;
 
+    #returnType;
     #defaultArgs;
+    #argsType;
+    #allowNull;
+
+    #isInterface;
 
     get isValid() {
 
         return this.#isValid;
+    }
+
+    get isMethod() {
+
+        return this.#isMethod;
     }
 
     get defaultValue() {
@@ -18,19 +29,24 @@ class ReflectionPrototypeMethod extends ReflectionPrototypeProperty {
         return undefined;
     }
 
-    get returnType() {
+    get isValid() {
 
-        return super.type;
+        return this.#isValid;
     }
 
-    get defaultArgs() {
+    get returnType() {
 
-        return this.isValid ? super.value : undefined;
+        return this.#returnType;
     }
 
     get defaultArguments() {
 
-        this.defaultValue;
+        return this.#defaultArgs;
+    }
+
+    get parameters() {
+
+
     }
 
     constructor(_target, _methodKey) {
@@ -44,7 +60,7 @@ class ReflectionPrototypeMethod extends ReflectionPrototypeProperty {
 
         if (!super.isValid) {
 
-            return;
+            this.#readOnActualMethod();
         } 
 
         if (!super.isMethod) {
@@ -55,6 +71,36 @@ class ReflectionPrototypeMethod extends ReflectionPrototypeProperty {
         //this.#defaultArgs = super.value;
 
         this.#isValid = true;
+    }
+
+    #readOnActualMethod() {
+
+        const methodName = this.name;
+
+        const actualMethod = this.originClass.prototype[methodName];
+
+        if (typeof actualMethod !== 'function') {
+
+            this.#isMethod = false;
+            this.#isValid = false;
+            return;
+        }
+
+        const reflection = new ReflectionFunction(actualMethod);
+
+        if (!reflection.isValid) {
+
+            this.#isMethod = false;
+            this.#isValid = false;
+            return;
+        }
+
+        this.#isMethod = true;
+        this.#isValid = true;
+
+        this.#defaultArgs = reflection.defaultArguments;
+        this.#allowNull = reflection.allowReturnNull;
+        this.#returnType = reflection.returnType;
     }
 
     invoke(...args) {

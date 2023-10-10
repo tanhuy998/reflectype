@@ -39,20 +39,9 @@ function decorateMethod(_method) {
 
 function checkReturnTypeAndResolve(_returnValue, _expectType, _propMeta) {
 
-    // const args = arguments.length !== 0 ? arguments : propMeta.value || [];
-
-    // const result = _method.call(this, ...args);
-
-    // const invocationContext = {
-    //     expectReturnType: _abstract, 
-    //     isAsync: false,
-    // }
-
     const handleReturnType = checkReturnValueWith(_expectType, _propMeta);
 
     if (_returnValue instanceof Promise) {
-
-        //invocationContext.isAsync = true;
 
         _returnValue = _returnValue.then(handleReturnType);
     }
@@ -74,7 +63,7 @@ function checkReturnValueWith(expectReturnType, _propMeta) {
         const valueIsNull = returnValue === undefined || returnValue === null;
 
         const match = matchType(expectReturnType, returnValue);
-        // undefined and null are treated as primitive values
+        // undefined and null are treated as primitive value called Void
         if (match) {
 
             return returnValue;
