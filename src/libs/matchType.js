@@ -1,4 +1,5 @@
 const isPrimitive = require('../utils/isPrimitive.js');
+const Void = require('../type/void.js');
 
 function matchType(_type, value) {
     
@@ -6,9 +7,10 @@ function matchType(_type, value) {
         'string': 'String',
         'boolean': 'Boolean',
         'number': 'Number',
-        'bigint': 'BigInt'
+        'bigint': 'BigInt',
+        'undefined': Void.name,
     }
-
+    
     // if _type is annotated as primitive types
     // is must be a boxed primitive
     if (isPrimitive(_type) && isPrimitive(value)) {
@@ -17,8 +19,8 @@ function matchType(_type, value) {
             
             return true;
         }
-
-        const strictType = transferToBoxedPrimitive[typeof value];
+        
+        const strictType = value === null ? Void.name : transferToBoxedPrimitive[typeof value];
         
         return strictType === _type.name;
     }

@@ -28,15 +28,19 @@ function compareArgsWithType(_propMeta, _args) {
         error = true;
     }
 
+    let currentArgValue;
+    let currentExpectecType;
+
     if (!error) {
 
         const arg = defaultArgs.values();
 
         for (const type of defaultTypes) {
-            
-            const {value} = arg.next();
 
-            if (!matchType(type, value)) {
+            currentExpectecType = type;
+            currentArgValue = arg.next().value;
+
+            if (!matchType(type, currentArgValue)) {
 
                 error = true;
 
@@ -53,7 +57,7 @@ function compareArgsWithType(_propMeta, _args) {
         }
         else {
 
-            throw new ArgumentsNotMatchError();
+            throw new ArgumentsNotMatchError(currentExpectecType, currentArgValue);
         }
     }
 }

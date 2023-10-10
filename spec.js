@@ -38,9 +38,10 @@
  *  }
  */
 
-const {type, allowNull} = require('./src/decorators');
+const {type, allowNull, returnType} = require('./src/decorators');
 const defaultArguments = require('./src/decorators/defaultArguments');
 const paramsType = require('./src/decorators/paramsType');
+const Void = require('./src/type/void');
 
 class A {
 
@@ -48,19 +49,34 @@ class A {
     accessor prop;
 
     @paramsType(String)
-    @defaultArguments('a', 3, 2)
+    // @defaultArguments('a', 3, 2)
     @allowNull
-    @type(Boolean)
+    @returnType(Void)
     func() {
+
+        //throw new Error();
 
         console.log(arguments);
 
-        return 
+        return 1;
     }
 }
 
+
 const obj = new A();
 
-obj.func(2,3,4);
+obj.func('');
 
-obj.prop = 1;
+// async function func() {
+    
+//     try {
+
+//         obj.func(2, 3, 4);
+//     }
+//     catch {
+
+
+//     }
+// }
+
+

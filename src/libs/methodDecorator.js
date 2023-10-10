@@ -3,8 +3,15 @@ const {METADATA, TYPE_JS} = require('../constants.js');
 const initFootPrint = require('./initFootPrint.js');
 const matchType = require('./matchType.js');
 const {compareArgsWithType} = require('../libs/argumentType.js');
+const isIterable = require('../utils/isIterable.js');
+const ReturnValueNotMatchType = require('../error/returnValueNotMatchTypeError.js');
 
 function decorateMethod(_method) {
+
+    if (typeof _method !== 'function') {
+
+        throw new TypeError('the object passed as argument to _method is not a function');
+    }
 
     /**@type {property_metadata_t} */
     const propMeta = metaOf(_method) ?? new property_metadata_t();
@@ -13,7 +20,7 @@ function decorateMethod(_method) {
 
         const defaultArguments = propMeta.value;
 
-        const args = arguments.length !== 0 ? [...arguments] : defaultArguments;
+        const args = arguments.length !== 0 ? [...arguments] : isIterable(defaultArguments) ? defaultArguments : [];
 
         compareArgsWithType(propMeta, args);
 
@@ -21,7 +28,7 @@ function decorateMethod(_method) {
         
         const {allowNull, type} = propMeta;
 
-        return checkReturnTypeAndResolve(returnValue, type, allowNull);
+        return checkReturnTypeAndResolve(returnValue, type, propMeta);
     }
 
     const decoratedMethod = propMeta.footPrint.decoratedMethod ??= func;
@@ -30,7 +37,7 @@ function decorateMethod(_method) {
     decoratedMethod[METADATA][TYPE_JS] ??= propMeta;
 }
 
-function checkReturnTypeAndResolve(_retunrValue, _expectType, allowNull) {
+function checkReturnTypeAndResolve(_returnValue, _expectType, _propMeta) {
 
     // const args = arguments.length !== 0 ? arguments : propMeta.value || [];
 
@@ -41,53 +48,44 @@ function checkReturnTypeAndResolve(_retunrValue, _expectType, allowNull) {
     //     isAsync: false,
     // }
 
-    if (_retunrValue instanceof Promise) {
+    const handleReturnType = checkReturnValueWith(_expectType, _propMeta);
+
+    if (_returnValue instanceof Promise) {
 
         //invocationContext.isAsync = true;
 
-        _retunrValue.then(checkReturnValueWith(_expectType, allowNull));
+        _returnValue = _returnValue.then(handleReturnType);
     }
     else {
 
-        checkReturnValueWith(_expectType, allowNull)(_retunrValue);
+        handleReturnType(_returnValue);
     }
 
-    return _retunrValue;
+    return _returnValue;
 }
 
-function checkReturnValueWith(expectReturnType, allowNull = false) {
-
+function checkReturnValueWith(expectReturnType, _propMeta) {
+    
+    const {allowNull} = _propMeta;
     return function (returnValue) {
 
         //const { expectReturnType, isAsync } = this;
 
-        let error = false;
+        const valueIsNull = returnValue === undefined || returnValue === null;
 
-        const isNull = returnValue === undefined || returnValue === null;
+        const match = matchType(expectReturnType, returnValue);
+        // undefined and null are treated as primitive values
+        if (match) {
 
-        if (isNull) {
+            return returnValue;
+        }
+
+        if (valueIsNull && allowNull) {
             
-            if (allowNull) {
-
-                return returnValue;
-            }
-            else {
-
-                error = true;
-            }
+            return returnValue;
         }
 
-        if (!matchType(expectReturnType, returnValue)) {
-
-            error = true;
-        }
-
-        if (error) {
-
-            throw new TypeError('The return value of function is not match return type');
-        }
-
-        return returnValue;
+        throw new ReturnValueNotMatchType(expectReturnType, returnValue, _propMeta);
     }
 }
 
@@ -109,4 +107,4 @@ function resolveMethodTypeMeta(_method, _propMeta) {
 }
 
 
-module.exports = {resolveMethodTypeMeta, decorateMethod, checkReturnTypeAndResolve, checkReturnValueWith};
+module.exports = {resolveMethodTypeMeta, decorateMethod};

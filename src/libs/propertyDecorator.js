@@ -45,24 +45,47 @@ function getMetadataOf(_obj) {
  */
 function initMetadata(_object, _context) {
 
-    const {access, kind, name} = _context;
+    const {kind} = _context;
 
     //const isMethod = typeof theProp === 'function' && kind === 'method';
 
     let wrapperMetadata;
 
-    // outerMetadata means that the decorator metadata proposal has been approved
+    // outerMetadata means that the TC39 decorator metadata proposal has been approved
     // then we can get the class[Symbol.metadata] inside context of property decorators
     if (outerMetadataExist(_context)) {
 
         wrapperMetadata = _context.metadata;
     }
     else {
+        // if TC39 decorator metadata proposal not present, just assign a substitution object
+        // to _context.metadata
 
-        wrapperMetadata = {};
+        //wrapperMetadata = {};
 
-        _context.metadata = wrapperMetadata;
+        _context.metadata = wrapperMetadata = {};
     }
+
+    const propMeta = resolvePropMeta(wrapperMetadata, _context);
+    
+    initTypeMetaFootPrint(propMeta);
+
+    if (kind === 'method') {
+
+        return resolveMethodTypeMeta(_object, propMeta);
+    } 
+
+    if (kind === 'accessor') {
+
+        return resolveAccessorTypeMetadata(_object, propMeta);
+    }
+
+    return propMeta;
+}
+
+function resolvePropMeta(wrapperMetadata, _context) {
+
+    const {name} = _context;
 
     wrapperMetadata[TYPE_JS] ??= new metadata_t();
 
@@ -78,18 +101,6 @@ function initMetadata(_object, _context) {
     propMeta.static = _context.static;
     propMeta.private = _context.private;
     propMeta.name = name;
-
-    initTypeMetaFootPrint(propMeta);
-
-    if (kind === 'method') {
-
-        return resolveMethodTypeMeta(_object, propMeta);
-    } 
-
-    if (kind === 'accessor') {
-
-        return resolveAccessorTypeMetadata(_object, propMeta);
-    }
 
     return propMeta;
 }

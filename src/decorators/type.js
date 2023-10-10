@@ -8,6 +8,7 @@ const typeMetadata = require('../reflection/metadata.js');
 const {TYPE_JS, property_metadata_t, metadata_t} = require('../reflection/metadata.js');
 const {IS_CHECKABLE} = require('../constants.js');
 const { decorateMethod } = require('../libs/methodDecorator.js');
+const Void = require('../type/void.js');
 
 function type(_abstract) {
 
@@ -39,6 +40,11 @@ function type(_abstract) {
 }
 
 function handleAccessor(_accessor, context, _abstract) {
+
+    if (_abstract === Void) {
+
+        throw new TypeError('class field could not be type of [Void]');
+    }
 
     const defaultGetter = _accessor.get;
     const defaultSetter = _accessor.set;

@@ -6,4 +6,5 @@ module.exports = {
     defaultArguments: require('./defaultArguments.js'),
     implement: require('./implement.js'),
     paramsType: require('./paramsType.js'),
+    returnType: require('./returnType.js'),
 }
