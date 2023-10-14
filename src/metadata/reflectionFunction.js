@@ -49,7 +49,7 @@ class ReflectionFunction extends Reflector {
     #init() {
 
         if (!this.isValidReflection || this.reflectionContext !== ReflectorContext.OTHER) {
-
+            
             this.#isValid = false;
 
             return;
@@ -59,7 +59,7 @@ class ReflectionFunction extends Reflector {
         const meta = this.metadata;
 
         if (!(meta instanceof property_metadata_t)) {
-
+            
             this.#isValid = false;
 
             return;
@@ -67,19 +67,19 @@ class ReflectionFunction extends Reflector {
 
         const {type, value, defaultParamsType, allowNull} = meta;
 
-        this.returnType = type;
+        this.#returnType = type;
         this.#allowNull = allowNull;
         
         try {
-
+            
             compareArgsWithType(meta);
-
+            
             this.#defaultArgs = value;
             
-            this.isValid = true;
+            this.#isValid = true;
         }
-        catch {
-
+        catch (error) {
+            
             this.#isValid = false;
         }   
     }

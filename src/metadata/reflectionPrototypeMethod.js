@@ -80,7 +80,7 @@ class ReflectionPrototypeMethod extends ReflectionPrototypeProperty {
         const actualMethod = this.originClass.prototype[methodName];
 
         if (typeof actualMethod !== 'function') {
-
+            
             this.#isMethod = false;
             this.#isValid = false;
             return;
@@ -89,7 +89,7 @@ class ReflectionPrototypeMethod extends ReflectionPrototypeProperty {
         const reflection = new ReflectionFunction(actualMethod);
 
         if (!reflection.isValid) {
-
+            
             this.#isMethod = false;
             this.#isValid = false;
             return;

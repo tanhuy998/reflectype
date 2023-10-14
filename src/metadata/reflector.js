@@ -3,6 +3,7 @@ const isAbStract = require('../utils/isAbstract.js');
 const getMetadata = require('../reflection/getMetadata.js');
 const ReflectorContext = require('./reflectorContext.js');
 const { metadata_t, metaOf, property_metadata_t } = require('../reflection/metadata.js');
+const { type } = require('os');
 
 /**
  *  Reflector is the atomic unit of the reflecting progress.
@@ -77,10 +78,12 @@ class Reflector extends IDisposable{
     #resolveMetadata(_target) {
 
         if (isAbStract(_target)) {
-            
-            this.#metadata = getMetadata(_target);
 
-            this.#context = ReflectorContext.ABSTRACT;
+            const typeMeta = metaOf(_target);
+
+            this.#metadata = typeMeta;
+
+            this.#context =  (typeMeta instanceof metadata_t) ? ReflectorContext.ABSTRACT : ReflectorContext.OTHER;
 
             this.#originClass = _target;
 
@@ -104,8 +107,6 @@ class Reflector extends IDisposable{
             this.#metadata = metaOf(_target)
 
             this.#context = ReflectorContext.OTHER;
-
-            this.#target = _target;
 
             return;
         }

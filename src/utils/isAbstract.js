@@ -10,4 +10,11 @@ function isAbStract(_unknown) {
     return false;
 }
 
+function isInstantiate(_func) {
+
+    const prototypeKeys = Reflect.ownKeys(_func.prototype);
+
+    return prototypeKeys.includes('constructor') && prototypeKeys.length > 1;
+}
+
 module.exports = isAbStract;

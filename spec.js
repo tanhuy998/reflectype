@@ -44,6 +44,7 @@ const paramsType = require('./src/decorators/paramsType');
 const Void = require('./src/type/void');
 const {ReflectionPrototypeMethod} = require('./src/metadata');
 
+// The code defines a class A with a property and a method. The method is asynchronous and logs the arguments passed to it before returning a value of 1.
 class A {
 
     @type(String)
@@ -65,7 +66,7 @@ class A {
 
 const meta = new ReflectionPrototypeMethod(A, 'func');
 
-console.log('is valid', meta.isValid)
+console.log('is valid', meta.returnType)
 
 const obj = new A();
 
