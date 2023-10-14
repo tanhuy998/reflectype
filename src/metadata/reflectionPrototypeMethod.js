@@ -1,5 +1,6 @@
 const ReflectionFunction = require("./reflectionFunction");
 const ReflectionPrototypeProperty = require("./reflectionPrototypeProperty");
+const {reflectParameters} = require('./traitfunctionReflection.js');
 
 class ReflectionPrototypeMethod extends ReflectionPrototypeProperty {
 
@@ -12,11 +13,18 @@ class ReflectionPrototypeMethod extends ReflectionPrototypeProperty {
     #argsType;
     #allowNull;
 
+    #target
+
     #isInterface;
 
     get isValid() {
 
         return this.#isValid;
+    }
+
+    get target() {
+
+        return this.#target;
     }
 
     get isMethod() {
@@ -46,7 +54,7 @@ class ReflectionPrototypeMethod extends ReflectionPrototypeProperty {
 
     get parameters() {
 
-
+        return reflectParameters.call(this);
     }
 
     constructor(_target, _methodKey) {
@@ -85,6 +93,8 @@ class ReflectionPrototypeMethod extends ReflectionPrototypeProperty {
             this.#isValid = false;
             return;
         }
+
+        this.#target = actualMethod;
 
         const reflection = new ReflectionFunction(actualMethod);
 

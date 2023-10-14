@@ -2,6 +2,7 @@ const ReflectorContext = require("./reflectorContext.js");
 const { property_metadata_t } = require("../reflection/metadata.js");
 const Reflector = require("./reflector");
 const {compareArgsWithType} = require('../libs/argumentType.js');
+const {reflectParameters} = require('./traitfunctionReflection.js')
 
 class ReflectionFunction extends Reflector {
 
@@ -34,7 +35,7 @@ class ReflectionFunction extends Reflector {
 
     get parameters() {
 
-
+        return reflectParameters.call(this);
     }
  
     constructor(_function) {

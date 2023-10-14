@@ -29,6 +29,13 @@ class ReflectionPrototypeProperty extends PrototypeReflector {
 
     #isStatic;
 
+    #target;
+
+    get target() {
+
+        return this.#isValid ? this.#target : undefined;
+    }
+
     get isStatic() {
 
         return this.#isStatic;

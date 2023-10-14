@@ -43,6 +43,8 @@ const defaultArguments = require('./src/decorators/defaultArguments');
 const paramsType = require('./src/decorators/paramsType');
 const Void = require('./src/type/void');
 const {ReflectionPrototypeMethod} = require('./src/metadata');
+const ReflectionParameter = require('./src/metadata/ReflectionParameter');
+const ReflectionFunction = require('./src/metadata/reflectionFunction');
 
 // The code defines a class A with a property and a method. The method is asynchronous and logs the arguments passed to it before returning a value of 1.
 class A {
@@ -50,7 +52,7 @@ class A {
     @type(String)
     accessor prop;
 
-    @paramsType(String)
+    //@paramsType(String)
     // @defaultArguments('a', 3, 2)
     @allowNull
     @returnType(Void)
@@ -66,11 +68,18 @@ class A {
 
 const meta = new ReflectionPrototypeMethod(A, 'func');
 
-console.log('is valid', meta.returnType)
-
 const obj = new A();
 
-obj.func(1, 3, 4)
+const method = obj.func;
+
+const paramMeta = new ReflectionParameter(method, 1);
+
+const funcMeta = new ReflectionFunction(method);
+
+for (const param of funcMeta.parameters) {
+
+    console.log(param.type);
+}
 
 async function func() {
     
