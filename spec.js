@@ -38,15 +38,24 @@
  *  }
  */
 
-const {type, allowNull, returnType} = require('./src/decorators');
+const {type, allowNull, returnType, implement} = require('./src/decorators');
 const defaultArguments = require('./src/decorators/defaultArguments');
 const paramsType = require('./src/decorators/paramsType');
 const Void = require('./src/type/void');
 const {ReflectionPrototypeMethod} = require('./src/metadata');
 const ReflectionParameter = require('./src/metadata/ReflectionParameter');
 const ReflectionFunction = require('./src/metadata/reflectionFunction');
+const {Interface} = require('./src/interface');
+
+
+
+class ILog extends Interface {
+
+    log() {}
+}
 
 // The code defines a class A with a property and a method. The method is asynchronous and logs the arguments passed to it before returning a value of 1.
+@implement(ILog)
 class A {
 
     @type(String)

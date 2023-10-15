@@ -54,14 +54,19 @@ class InterfacePrototype {
         /**@type {property_metadata_t} */
         const funcMeta = metaOf(_func);
 
-        if (!funcMeta) {
+        // if (!funcMeta) {
 
-            return _name ?? _func.name;
-        }
+        //     return _name ?? _func.name;
+        // }
         
-        const {name, allowNull, type, value} = funcMeta;
+        //const {name, allowNull, type, value} = funcMeta;
 
-        const encoded = `${allowNull}-${type.name}-${name ?? _name ?? _func.name}-${Array.isArray(value) ? value.length : 0}`;
+        const allowNull = funcMeta?.allowNull;
+        const type  = funcMeta?.type;
+        const name = funcMeta?.name;
+        const value = funcMeta?.value;
+
+        const encoded = `${allowNull}-${type?.name}-${name ?? _name ?? _func.name}-${Array.isArray(value) ? value.length : 0}`;
 
         /** the pattern is '[allowNull]-[type]-[funcName]-[args.length]' */
         return encoded;
@@ -90,12 +95,12 @@ class InterfacePrototype {
 
             /**@type {String} */
             for (const token of this.#methods.values()) {
-
+                console.log(token)
                 const [allowNull, type, methodName, argsLength] = token.split('-');
 
                 if (methodName == "constructor") continue;
 
-                if (!prototype[methodName]) throw new TypeError(`class [${_object.name}] implements [${intf.name}] but not defines '${method}' method`);
+                if (!prototype[methodName]) throw new TypeError(`class [${_object.name}] implements [${intf.name}] but not defines ${methodName}() method`);
 
                 if (typeof prototype[methodName] !== 'function')  throw new TypeError(`class [${_object.name}] implements [${intf.name}] but defines '${method}' is not type of function`);
                 

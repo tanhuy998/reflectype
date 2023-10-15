@@ -1,1 +1,5 @@
-module.exports = require('./decorators');
+module.exports = {
+    ...require('./decorators'), 
+    ...require('./type'), 
+    ...require('./interface')
+};
