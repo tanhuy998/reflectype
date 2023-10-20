@@ -1,4 +1,4 @@
-const { metaOf } = require('../reflection/metadata.js');
+const { metaOf, property_metadata_t, metadata_t} = require('../reflection/metadata.js');
 const { METADATA, TYPE_JS } = require('../constants.js');
 //const isPrimitive = require('../utils/isPrimitive.js');
 const initFootPrint = require('./initFootPrint.js');
@@ -33,11 +33,6 @@ function generateAccessorInitializer(_propMeta) {
     const propName = _propMeta.name;
     const {type} = _propMeta;
     return function(initValue) {
-        
-        if (initValue === undefined || initValue === null) {
-
-            return initValue;
-        }
 
         const wrapper = this[METADATA] ??= {};
 
@@ -45,6 +40,11 @@ function generateAccessorInitializer(_propMeta) {
         const typeMeta = wrapper[TYPE_JS] ??= new metadata_t();
 
         typeMeta.properties[propName] = _propMeta;
+
+        if (initValue === undefined || initValue === null) {
+
+            return initValue;
+        }
 
         if (!matchType(type, initValue)) {
 

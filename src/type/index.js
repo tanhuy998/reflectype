@@ -1,4 +1,4 @@
 
 module.exports = {
-    Void: require('./void/js'), 
+    Void: require('./void.js'), 
 }

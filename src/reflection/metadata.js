@@ -14,27 +14,61 @@ const TYPE_JS = Symbol(Date.now);
 // }
 
 /**@class */
-function metadata_t(_abstract) {
+function metadata_t(_abstract, _ref) {
 
-    this.abstract = _abstract;
+    this.abstract = _ref?.abstract ?? _abstract;
     this.properties = {};
-    this.interfaces = undefined;
+    this.interfaces = _ref?.interfaces;
     //this.inheritance = null;
 }
 
 
 /**@class */
-function property_metadata_t() {
+function property_metadata_t(_ref) {
 
-    this.private = undefined;
-    this.static = undefined;
-    this.type = undefined;
-    this.value = undefined;
-    this.defaultParamsType = undefined;
-    this.isMethod = undefined;
-    this.name = undefined;
-    this.allowNull = undefined;
+    this.private = _ref?.private;
+    this.static = _ref?.static;
+    this.type = _ref?.type;
+    this.value = _ref?.value;
+    this.defaultParamsType = _ref?.defaultParamsType;
+    this.isMethod = _ref?.isMethod;
+    this.name = _ref?.name;
+    this.allowNull = _ref?.allowNull;
 }
+
+// function cloneTypeMeta(_ref) {
+
+//     const type = _ref?.constructor;
+
+//     if (typeof type !== 'function') {
+
+//         return;
+//     }
+
+//     switch(type) {
+
+//         case metadata_t:
+//             return clone_metadata_t(_ref);
+//         case property_metadata_t:
+//             return clone_property_metadata_t(_ref);
+//         default
+//             return undefined;
+//     }
+// }
+
+// function clone_metadata_t(_ref) {
+
+//     return new metadata_t()
+// }
+
+// function clone_property_metadata_t (_ref) {
+
+//     const ret = new property_metadata_t();
+
+//     ret
+
+//     return ret;
+// }
 
 function metaOf(_unknown) {
 

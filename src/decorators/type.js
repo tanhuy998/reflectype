@@ -75,11 +75,16 @@ function handleAccessor(_accessor, context, _abstract) {
     initPropMeta.isMethod = false;
     initPropMeta.allowNull ??= false;
 
-    return {
+    const newAccessor = {
         get: defaultGetter,
         set: accessorDecorator.generateAccessorSetter(initPropMeta, defaultSetter),
         init: accessorDecorator.generateAccessorInitializer(initPropMeta)
     }
+
+    initPropMeta.footPrint.typeDecoratorApplied = true;
+    initPropMeta.footPrint.accessor = newAccessor;
+
+    return newAccessor;
 }
 
 function handleTypeForMethod(_method, context, _abstract) { 

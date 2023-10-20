@@ -95,7 +95,7 @@ class InterfacePrototype {
 
             /**@type {String} */
             for (const token of this.#methods.values()) {
-                console.log(token)
+                
                 const [allowNull, type, methodName, argsLength] = token.split('-');
 
                 if (methodName == "constructor") continue;

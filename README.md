@@ -1,8 +1,21 @@
-# REFLECTYPE
+# ReflecType
 
 Type support for javascript
 
-## USAGE
+### .babelrc setup
+
+```json
+{
+    "presets": [
+        "@babel/preset-env"
+    ],
+    "plugins": [
+        ["@babel/plugin-proposal-decorators", { "version": "2022-03" }]
+    ]
+}
+```
+
+## Usage
 
 ### Type hint to class property
 
@@ -56,7 +69,7 @@ class ILog extends Interface {
 }
 
 /**
- * would throw error because this class has not dedine log() method
+ * would throw error because this class has not been defined log() method
  */
 @implement(ILog)
 class SomeClass {

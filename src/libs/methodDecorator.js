@@ -1,10 +1,12 @@
-const {metaOf} = require('../reflection/metadata.js');
+const {metaOf, metadata_t, property_metadata_t} = require('../reflection/metadata.js');
 const {METADATA, TYPE_JS} = require('../constants.js');
 const initFootPrint = require('./initFootPrint.js');
 const matchType = require('./matchType.js');
 const {compareArgsWithType} = require('../libs/argumentType.js');
 const isIterable = require('../utils/isIterable.js');
 const ReturnValueNotMatchType = require('../error/returnValueNotMatchTypeError.js');
+const isAbStract = require('../utils/isAbstract.js');
+
 
 function decorateMethod(_method) {
 
@@ -18,9 +20,11 @@ function decorateMethod(_method) {
 
     const func =  function() {
 
+        const injectedArgs = getInjectedArguments(this, propMeta.name ?? _method.name);
+
         const defaultArguments = propMeta.value;
 
-        const args = arguments.length !== 0 ? [...arguments] : isIterable(defaultArguments) ? defaultArguments : [];
+        const args = arguments.length !== 0 ? arguments : injectedArgs ?? (isIterable(defaultArguments) ? defaultArguments : [defaultArguments]);
 
         compareArgsWithType(propMeta, args);
 
@@ -35,6 +39,42 @@ function decorateMethod(_method) {
 
     decoratedMethod[METADATA] ??= {};
     decoratedMethod[METADATA][TYPE_JS] ??= propMeta;
+}
+
+/**
+ * 
+ * @param {Object} _object 
+ * @param {string || Symbol} _methodName 
+ * 
+ * @returns {Array?}
+ */
+function getInjectedArguments(_object, _methodName) {
+
+    /**@type {metadata_t} */
+    const meta = metaOf(_object);
+
+    if (meta?.constructor !== metadata_t) {
+
+        return undefined;
+    }
+
+    const wrapper = meta.properties[_methodName];
+    
+    if (!Array.isArray(wrapper)) {
+
+        return undefined;
+    }
+    
+    const [extraMeta, propMeta] = wrapper;
+
+    if (propMeta?.constructor !== property_metadata_t) {
+
+        return undefined;
+    }
+
+    const injectedArgs = extraMeta?.defaultArguments;
+
+    return Array.isArray(injectedArgs) && injectedArgs.length > 0 ? injectedArgs : undefined;
 }
 
 function checkReturnTypeAndResolve(_returnValue, _expectType, _propMeta) {
@@ -62,7 +102,8 @@ function checkReturnValueWith(expectReturnType, _propMeta) {
 
         const valueIsNull = returnValue === undefined || returnValue === null;
 
-        const match = matchType(expectReturnType, returnValue);
+        // expectReturnType must be a class, if undefined, the return type is unnecessary
+        const match = isAbStract(expectReturnType) ? matchType(expectReturnType, returnValue) : true;
         // undefined and null are treated as primitive value called Void
         if (match) {
 
