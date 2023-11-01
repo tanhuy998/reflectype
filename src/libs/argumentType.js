@@ -23,22 +23,27 @@ function compareArgsWithType(_propMeta, _args) {
         return true;
     }
 
-    if (defaultArgs.length < defaultTypes.length) {
+    // if (defaultArgs.length < defaultTypes.length) {
 
-        error = true;
-    }
-
+    //     error = true;
+    // }
+    
     let currentArgValue;
     let currentExpectecType;
 
     if (!error) {
 
-        const arg = defaultArgs.values();
+        const arg = defaultArgs[Symbol.iterator]();
 
         for (const type of defaultTypes) {
 
             currentExpectecType = type;
             currentArgValue = arg.next().value;
+
+            if (currentArgValue === undefined || currentArgValue === null) {
+                
+                continue;
+            }
 
             if (!matchType(type, currentArgValue)) {
 
@@ -48,7 +53,7 @@ function compareArgsWithType(_propMeta, _args) {
             }
         }
     }
-
+    
     if (error) {
 
         if (!_args) {
@@ -56,10 +61,12 @@ function compareArgsWithType(_propMeta, _args) {
             throw new TypeError('default arguments not match the default parameters\'s type');
         }
         else {
-
+            
             throw new ArgumentsNotMatchError(currentExpectecType, currentArgValue);
         }
     }
+
+    return true;
 }
 
 
