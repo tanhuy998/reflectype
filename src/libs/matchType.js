@@ -1,9 +1,20 @@
 const isPrimitive = require('../utils/isPrimitive.js');
 const Void = require('../type/void.js');
 const {IS_CHECKABLE} = require('../constants.js');
+const Any = require('reflectype/src/type/any.js');
 
 function matchType(_type, value) {
     
+    if (_type instanceof Any || _type?.prototype instanceof Any) {
+
+        return true;
+    }
+
+    if (value instanceof _type) {
+
+        return true;
+    }
+
     const transferToBoxedPrimitive = {
         'string': 'String',
         'boolean': 'Boolean',
@@ -11,11 +22,13 @@ function matchType(_type, value) {
         'bigint': 'BigInt',
         'undefined': Void.name,
     }
-    
+
     // if _type is annotated as primitive types
     // is must be a boxed primitive
     if (isPrimitive(_type) && isPrimitive(value)) {
         
+        console.log(_type, value)
+
         if (_type.name === value?.name) {
             
             return true;
