@@ -1,8 +1,8 @@
 {
   "name": "reflectype",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Support types for Javascript class's property using decorator feature",
-  "main": "./src/*",
+  "main": "./index.js",
   "repository": "https://github.com/tanhuy998/reflectype",
   "keywords": [
     "type",
