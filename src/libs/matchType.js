@@ -1,7 +1,7 @@
 const isPrimitive = require('../utils/isPrimitive.js');
 const Void = require('../type/void.js');
 const {IS_CHECKABLE} = require('../constants.js');
-const Any = require('reflectype/src/type/any.js');
+const Any = require('../type/any.js');
 
 function matchType(_type, value) {
     
