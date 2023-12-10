@@ -19,12 +19,12 @@
   "author": "tanhuy998",
   "license": "MIT",
   "devDependencies": {
-    "@babel/cli": "^7.21.0",
-    "@babel/core": "^7.20.12",
-    "@babel/node": "^7.20.7",
-    "@babel/plugin-proposal-decorators": "^7.20.13",
-    "@babel/preset-env": "^7.20.2",
-    "@babel/register": "^7.18.9",
-    "@types/node": "^20.6.0"
+    "@babel/cli": "^7.23.4",
+    "@babel/core": "^7.23.5",
+    "@babel/node": "^7.22.19",
+    "@babel/plugin-proposal-decorators": "^7.23.5",
+    "@babel/preset-env": "^7.23.5",
+    "@babel/register": "^7.22.15",
+    "@types/node": "^20.10.4"
   }
 }
