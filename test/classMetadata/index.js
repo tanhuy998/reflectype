@@ -5,5 +5,7 @@
 // })
 
 const {A, B} = require('./compiled.js');
+const {METADATA} = require('../../src/constants.js');
 
-console.log(Symbol.metadata);
+
+console.log(B[METADATA]);
