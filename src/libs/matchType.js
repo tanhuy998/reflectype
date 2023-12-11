@@ -26,8 +26,6 @@ function matchType(_type, value) {
     // if _type is annotated as primitive types
     // is must be a boxed primitive
     if (isPrimitive(_type) && isPrimitive(value)) {
-        
-        console.log(_type, value)
 
         if (_type.name === value?.name) {
             

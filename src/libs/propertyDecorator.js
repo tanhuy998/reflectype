@@ -2,33 +2,8 @@ const { metaOf, METADATA, TYPE_JS, metadata_t, property_metadata_t } = require("
 const {decorateMethod, resolveMethodTypeMeta} = require('./methodDecorator.js');
 const {resolveAccessorTypeMetadata} = require('./accessorDecorator.js');
 const initTypeMetaFootPrint = require('./initFootPrint.js');
+const { traceAndInitContextMetadata } = require("./metadata/metadataTrace.js");
 
-//const metadataDecorator = require('./metadataDecorator.js');
-const GlobalMetadataType = require("./globalMetadataType.js");
-
-function resolveGlobalMetadata(target, _context) {
-
-    const {access, kind, name} = _context;
-
-    const globalType = GlobalMetadataType.OFFICIAL;
-
-    /**@type {Object} */
-    let metaWrapper;
-
-    /**
-     * emulating the TC39-proposal decorator metadata
-     */
-    switch (globalType) {
-        case GlobalMetadataType.VIRTUAL:
-            metaWrapper = _context.metadata = outerMetadataExist(_context) ? metadataDecorator.current() : {};
-            break;
-        case GlobalMetadataType.OFFICIAL:
-            metaWrapper = _context.metadata;
-            break;
-    }
-
-    metaWrapper[TYPE_JS] = metaWrapper[TYPE_JS] instanceof metadata_t ? metaWrapper[TYPE_JS] : new metadata_t();
-}
 
 function getMetadataOf(_obj) {
 
@@ -45,74 +20,38 @@ function getMetadataOf(_obj) {
  * @param {*} _context 
  * @returns {property_metadata_t}
  */
-function initMetadata(_object, _context) {
-
+function initMetadata(_, _context) {
+    
     const {kind} = _context;
-
-    //const isMethod = typeof theProp === 'function' && kind === 'method';
-
-    resolveGlobalMetadata(_object, _context)
-
-    const wrapperMetadata = _context.metadata;
-
-
-    // // outerMetadata means that the TC39 decorator metadata proposal has been approved
-    // // then we can get the class[Symbol.metadata] inside context of property decorators
-    // if (outerMetadataExist(_context)) {
-
-    //     wrapperMetadata = _context.metadata;
-    // }
-    // else {
-    //     // if TC39 decorator metadata proposal not present, just assign a substitution object
-    //     // to _context.metadata
-
-    //     //wrapperMetadata = {};
-
-    //     _context.metadata = wrapperMetadata = {};
-    // }
-
-    const propMeta = resolvePropMeta(wrapperMetadata, _context);
+    const propMeta = resolvePropMeta(_context);
     
     initTypeMetaFootPrint(propMeta);
 
-    if (kind === 'method') {
-
-        return resolveMethodTypeMeta(_object, propMeta);
-    } 
-
-    if (kind === 'accessor') {
-
-        return resolveAccessorTypeMetadata(_object, propMeta);
+    switch(kind) {
+        case 'method':
+            return resolveMethodTypeMeta(_, propMeta);
+        case 'accessor':
+            return resolveAccessorTypeMetadata(_, propMeta);
+        default:
+            return propMeta;
     }
-
-    return propMeta;
 }
 
-function resolvePropMeta(wrapperMetadata, _context) {
+function resolvePropMeta(_context) {
 
-    const {name} = _context;
-
-    //wrapperMetadata[TYPE_JS] ??= new metadata_t();
-
-    const classMeta = wrapperMetadata[TYPE_JS];
-
-    classMeta.properties ??= {};
-
-    classMeta.properties[name] ??= new property_metadata_t();
-
-    /**@type {property_metadata_t} */
-    const propMeta = classMeta.properties[name];
+    const {name, metadata} = _context;
+    const propMeta = traceAndInitContextMetadata(_context);
 
     propMeta.static = _context.static;
     propMeta.private = _context.private;
     propMeta.name = name;
-
+    
     return propMeta;
 }
 
 
 function outerMetadataExist(context) {
-
+    Symbol
     const hasAppliedMetadataDecorator = typeof metadataDecorator.current() === 'object';
 
     if (hasAppliedMetadataDecorator) {
@@ -132,7 +71,7 @@ function outerMetadataExist(context) {
 function hasFootPrint(propMeta, _decorator) {
 
     //const propMeta = getTypeMetadataIn(prop, _context);
-
+    
     return typeof propMeta === 'object' && propMeta.footPrint[_decorator] === true;
 }
 

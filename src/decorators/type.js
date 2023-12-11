@@ -30,7 +30,7 @@ function type(_abstract) {
         switch(kind) {
 
             case 'accessor':
-                return handleAccessor(prop, context, _abstract);
+                return handleAccessor(prop, propMeta, context, _abstract);
             case 'method':
                 return handleTypeForMethod(prop, context, _abstract);
             default:
@@ -39,7 +39,7 @@ function type(_abstract) {
     }
 }
 
-function handleAccessor(_accessor, context, _abstract) {
+function handleAccessor(_accessor, initPropMeta, context, _abstract) {
 
     if (_abstract === Void) {
 
@@ -57,7 +57,7 @@ function handleAccessor(_accessor, context, _abstract) {
     //                 : typeMetadata.metaOf(defaultGetter) || new property_metadata_t();
 
     /**@type {property_metadata_t} */
-    const initPropMeta = propertyDecorator.initMetadata(_accessor, context);
+    //const initPropMeta = propertyDecorator.initMetadata(_accessor, context);
 
     if (!initPropMeta) {
 

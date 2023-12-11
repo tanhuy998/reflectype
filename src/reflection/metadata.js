@@ -1,7 +1,7 @@
 /** @type {Symbol} */
 const METADATA = Symbol.metadata || Symbol.for('Symbol.metadata') || Symbol(Date.now());
 
-const TYPE_JS = Symbol(Date.now);
+const TYPE_JS = Symbol(Date.now());
 
 // const Interface = require('../interface/interface.js');
 // try {
@@ -17,7 +17,7 @@ const TYPE_JS = Symbol(Date.now);
 function metadata_t(_abstract, _ref) {
 
     this.abstract = _ref?.abstract ?? _abstract;
-    this.properties = {};
+    this.properties = Object.assign({}, _ref?.properties);
     this.interfaces = _ref?.interfaces;
     //this.inheritance = null;
 }
