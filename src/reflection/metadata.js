@@ -1,29 +1,34 @@
+const InterfacePrototype = require("../interface/interfacePrototype");
+const isIterable = require("../utils/isIterable");
+
 /** @type {Symbol} */
 const METADATA = Symbol.metadata || Symbol.for('Symbol.metadata') || Symbol(Date.now());
-
 const TYPE_JS = Symbol(Date.now());
 
-// const Interface = require('../interface/interface.js');
-// try {
 
-//     METADATA = require('@tanhuy998/context-js');
-// }
-// catch {
-
-//     METADATA = Symbol(Date.now());
-// }
-
-/**@class */
+/**
+ * @class
+ * 
+ * @param {Function} _abstract 
+ * @param {metadata_t} _ref 
+ */
 function metadata_t(_abstract, _ref) {
 
     this.abstract = _ref?.abstract ?? _abstract;
     this.properties = Object.assign({}, _ref?.properties);
-    this.interfaces = _ref?.interfaces;
-    //this.inheritance = null;
+
+    const interfaces = _ref?.interfaces;
+
+    this.interfaces = isIterable(interfaces) ? 
+                        new InterfacePrototype(_abstract, Array.from(interfaces)) : 
+                        undefined;
 }
 
 
-/**@class */
+/**
+ * @class
+ * @param {property_metadata_t} _ref 
+ */
 function property_metadata_t(_ref) {
 
     this.private = _ref?.private;
@@ -35,40 +40,6 @@ function property_metadata_t(_ref) {
     this.name = _ref?.name;
     this.allowNull = _ref?.allowNull;
 }
-
-// function cloneTypeMeta(_ref) {
-
-//     const type = _ref?.constructor;
-
-//     if (typeof type !== 'function') {
-
-//         return;
-//     }
-
-//     switch(type) {
-
-//         case metadata_t:
-//             return clone_metadata_t(_ref);
-//         case property_metadata_t:
-//             return clone_property_metadata_t(_ref);
-//         default
-//             return undefined;
-//     }
-// }
-
-// function clone_metadata_t(_ref) {
-
-//     return new metadata_t()
-// }
-
-// function clone_property_metadata_t (_ref) {
-
-//     const ret = new property_metadata_t();
-
-//     ret
-
-//     return ret;
-// }
 
 function metaOf(_unknown) {
 
