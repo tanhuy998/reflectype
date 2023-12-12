@@ -35,6 +35,9 @@
 
 
 const { property_metadata_t, metadata_t, TYPE_JS } = require('../../reflection/metadata.js');
+const { resolveAccessorTypeMetadata } = require('../accessorDecorator.js');
+const { hasFootPrint } = require('../footPrint.js');
+const { resolveMethodTypeMeta } = require('../methodDecorator.js');
 const {classStack, propStack} = require('./initialStack.js');
 
 function currentClassMeta() {
@@ -73,31 +76,42 @@ function registerClassMeta(classMeta) {
  * @param {Object} decoratorContext 
  * @returns 
  */
-function traceAndInitContextMetadata(decoratorContext) {
+function traceAndInitContextMetadata(_, decoratorContext) {
 
     const {kind, name, metadata} = decoratorContext;
-    const typeMeta = new metadata_t(undefined, metadata[TYPE_JS]);
-    const propMeta = typeMeta.properties[name];
+    const oldTypeMeta = metadata[TYPE_JS];
+    // refresh metadata_t
+    const refreshedTypeMeta = metadata[TYPE_JS] = new metadata_t(undefined, oldTypeMeta);
 
-    if (noPropMetaOrSubClassOverride(propMeta)) {
+    let propMeta = refreshedTypeMeta.properties[name];
 
-        const newPropMeta = typeMeta.properties[name] = new property_metadata_t();
+    if (noPropMetaOrSubClassOverride(_, decoratorContext)) {
 
-        registerPropMeta(newPropMeta);
+        propMeta = refreshedTypeMeta.properties[name] = new property_metadata_t();
 
-        return newPropMeta;
+        registerPropMeta(propMeta);
     }
-    else {
-
-        return propMeta;
+    
+    switch(kind) {
+        case 'method':
+            return resolveMethodTypeMeta(_, propMeta);
+        case 'accessor':
+            return resolveAccessorTypeMetadata(_, propMeta);
+        default:
+            return propMeta;
     }
 }
 
 /**
- * 
+ * dh
  * @param {property_metadata_t} propMeta 
  */
-function noPropMetaOrSubClassOverride(propMeta) {
+function noPropMetaOrSubClassOverride(_, decoratorContext) {
+
+    const {name, metadata} = decoratorContext;
+    const typeMeta = metadata[TYPE_JS];
+
+    const propMeta = typeMeta?.properties[name];
 
     /**
      * when the property meta haven't exist yet, it's mean this is the first decorator,
@@ -111,7 +125,10 @@ function noPropMetaOrSubClassOverride(propMeta) {
     /**
      * subclass override the property
      */
-    if (propStack.exist(propMeta) && propMeta !== propStack.head) {
+    if (propStack.exist(propMeta) && 
+    propMeta !== propStack.head &&
+    !hasFootPrint(_, decoratorContext)) {
+    
 
         return true;
     }

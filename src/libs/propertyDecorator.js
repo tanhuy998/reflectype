@@ -1,7 +1,7 @@
 const { metaOf, METADATA, TYPE_JS, metadata_t, property_metadata_t } = require("../reflection/metadata");
 const {decorateMethod, resolveMethodTypeMeta} = require('./methodDecorator.js');
 const {resolveAccessorTypeMetadata} = require('./accessorDecorator.js');
-const initTypeMetaFootPrint = require('./initFootPrint.js');
+const initTypeMetaFootPrint = require('./footPrint.js');
 const { traceAndInitContextMetadata } = require("./metadata/metadataTrace.js");
 
 
@@ -22,25 +22,26 @@ function getMetadataOf(_obj) {
  */
 function initMetadata(_, _context) {
     
-    const {kind} = _context;
-    const propMeta = resolvePropMeta(_context);
+    //const {kind} = _context;
+    const propMeta = resolvePropMeta(_, _context);
     
     initTypeMetaFootPrint(propMeta);
 
-    switch(kind) {
-        case 'method':
-            return resolveMethodTypeMeta(_, propMeta);
-        case 'accessor':
-            return resolveAccessorTypeMetadata(_, propMeta);
-        default:
-            return propMeta;
-    }
+    return propMeta;
+    // switch(kind) {
+    //     case 'method':
+    //         return resolveMethodTypeMeta(_, propMeta);
+    //     case 'accessor':
+    //         return resolveAccessorTypeMetadata(_, propMeta);
+    //     default:
+    //         return propMeta;
+    // }
 }
 
-function resolvePropMeta(_context) {
+function resolvePropMeta(_, _context) {
 
-    const {name, metadata} = _context;
-    const propMeta = traceAndInitContextMetadata(_context);
+    const {name} = _context;
+    const propMeta = traceAndInitContextMetadata(_, _context);
 
     propMeta.static = _context.static;
     propMeta.private = _context.private;
