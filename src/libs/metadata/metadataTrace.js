@@ -36,7 +36,7 @@
 
 const { property_metadata_t, metadata_t, TYPE_JS } = require('../../reflection/metadata.js');
 const { resolveAccessorTypeMetadata } = require('../accessorDecorator.js');
-const { hasFootPrint } = require('../footPrint.js');
+const { hasFootPrint, initTypeMetaFootPrint } = require('../footPrint.js');
 const { resolveMethodTypeMeta } = require('../methodDecorator.js');
 const {classStack, propStack} = require('./initialStack.js');
 
@@ -92,14 +92,19 @@ function traceAndInitContextMetadata(_, decoratorContext) {
         registerPropMeta(propMeta);
     }
     
-    switch(kind) {
-        case 'method':
-            return resolveMethodTypeMeta(_, propMeta);
-        case 'accessor':
-            return resolveAccessorTypeMetadata(_, propMeta);
-        default:
-            return propMeta;
-    }
+    //initTypeMetaFootPrint(_, decoratorContext);
+    // switch(kind) {
+    //     case 'method':
+    //         resolveMethodTypeMeta(_, propMeta);
+    //         break;
+    //     case 'accessor':
+    //         resolveAccessorTypeMetadata(_, propMeta);
+    //         break;
+    //     default:
+    //         break;
+    // }
+
+    return propMeta;
 }
 
 /**

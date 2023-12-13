@@ -4,7 +4,7 @@ const { METADATA, TYPE_JS } = require('../constants.js');
 const {initTypeMetaFootPrint} = require('./footPrint.js');
 const matchType = require('./matchType.js');
 
-
+// will be obsolete
 function resolveAccessorTypeMetadata(_accessor, _propMeta) {
 
     const { get } = _accessor;

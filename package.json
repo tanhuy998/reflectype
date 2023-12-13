@@ -15,7 +15,7 @@
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "test-metadata": "npx babel ./test/classMetadata/class.js > ./test/classMetadata/compiled.js && node ./test/classMetadata"
+    "test-metadata": "npx babel ./test/classMetadata/class.js > ./test/classMetadata/compiled.js && node --trace-warnings ./test/classMetadata"
   },
   "author": "tanhuy998",
   "license": "MIT",

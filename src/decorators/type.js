@@ -9,6 +9,7 @@ const {TYPE_JS, property_metadata_t, metadata_t} = require('../reflection/metada
 const {IS_CHECKABLE} = require('../constants.js');
 const { decorateMethod } = require('../libs/methodDecorator.js');
 const Void = require('../type/void.js');
+const footprint = require('../libs/footPrint.js');
 
 function type(_abstract) {
 
@@ -20,7 +21,7 @@ function type(_abstract) {
         const {kind, name, static} = context;
 
         const propMeta = propertyDecorator.initMetadata(prop, context);
-        const alreadyApplied = propertyDecorator.hasFootPrint(propMeta, 'typeDecoratorApplied')
+        const alreadyApplied = footprint.hasFootPrint(prop, context, 'typeDecoratorApplied')//propertyDecorator.hasFootPrint(propMeta, 'typeDecoratorApplied')
 
         if (alreadyApplied) {
 
@@ -81,14 +82,17 @@ function handleAccessor(_accessor, initPropMeta, context, _abstract) {
         init: accessorDecorator.generateAccessorInitializer(initPropMeta)
     }
 
-    initPropMeta.footPrint.typeDecoratorApplied = true;
-    initPropMeta.footPrint.accessor = newAccessor;
+    // initPropMeta.footPrint.typeDecoratorApplied = true;
+    // initPropMeta.footPrint.accessor = newAccessor;
+
+    footprint.setFootPrint(newAccessor, context, 'typeDecoratorApplied');
+    footprint.setFootPrint(newAccessor, context, 'accessor', newAccessor);
 
     return newAccessor;
 }
 
 function handleTypeForMethod(_method, context, _abstract) { 
-    
+
     if (typeof _method !== 'function') {
 
         return;
@@ -102,10 +106,28 @@ function handleTypeForMethod(_method, context, _abstract) {
         return;
     }
 
-    propMeta.footPrint.typeDecoratorApplied = true;
+    const {addInitializer, name} = context;
+
+    //propMeta.footPrint.typeDecoratorApplied = true;
     propMeta.type = _abstract;
 
-    return propMeta.footPrint.decoratedMethod ??= decorateMethod(_method);
+    const newMethod = decorateMethod(_method);
+
+    footprint.setFootPrint(_method, context, 'typeDecoratorApplied');
+    footprint.setFootPrint(_method, context, 'decoratedMethod', newMethod);
+
+    addInitializer(function () {
+        // not test for the case that subclass override the method
+        Object.defineProperty(this, name, {
+            enumerable: true,
+            configurable: false,
+            writable: false,
+            value: newMethod,
+        })
+    })
+
+    //return propMeta.footPrint.decoratedMethod ??= decorateMethod(_method);
+    return newMethod;
 }
 
 

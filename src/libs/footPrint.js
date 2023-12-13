@@ -188,4 +188,10 @@ function setFootPrintToFunction(_func, _footPrint) {
 }
 
 
-module.exports = {initTypeMetaFootPrint, hasFootPrint, retrieveFootPrintObject, setFootPrint};
+module.exports = {
+    initTypeMetaFootPrint, 
+    hasFootPrint, 
+    retrieveFootPrintObject, 
+    setFootPrint,
+    initFootPrint: initTypeMetaFootPrint
+}

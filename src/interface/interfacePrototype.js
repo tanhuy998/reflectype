@@ -1,4 +1,5 @@
 const { metaOf, property_metadata_t } = require("../reflection/metadata");
+const self = require("../utils/self");
 const Interface = require("./interface");
 
 class InterfacePrototype {
@@ -28,6 +29,11 @@ class InterfacePrototype {
 
         this.#origin = _origin;
         this.#init();
+    }
+
+    clone() {
+
+        return new self(this)(this.#origin, Array.from(this.#interfaces))
     }
 
     #init() {

@@ -1,4 +1,4 @@
-const InterfacePrototype = require("../interface/interfacePrototype");
+//const InterfacePrototype = require("../interface/interfacePrototype");
 const isIterable = require("../utils/isIterable");
 
 /** @type {Symbol} */
@@ -17,11 +17,7 @@ function metadata_t(_abstract, _ref) {
     this.abstract = _ref?.abstract ?? _abstract;
     this.properties = Object.assign({}, _ref?.properties);
 
-    const interfaces = _ref?.interfaces;
-
-    this.interfaces = isIterable(interfaces) ? 
-                        new InterfacePrototype(_abstract, Array.from(interfaces)) : 
-                        undefined;
+    this.interfaces = _ref?.interfaces?.clone();
 }
 
 
