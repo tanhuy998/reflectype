@@ -1,8 +1,9 @@
 const { metaOf, property_metadata_t, metadata_t} = require('../reflection/metadata.js');
 const { METADATA, TYPE_JS } = require('../constants.js');
 //const isPrimitive = require('../utils/isPrimitive.js');
-const {initTypeMetaFootPrint} = require('./footPrint.js');
+const {initTypeMetaFootPrint, hasFootPrint, setFootPrint} = require('./footPrint.js');
 const matchType = require('./matchType.js');
+const { DECORATED_VALUE } = require('./constant.js');
 
 // will be obsolete
 function resolveAccessorTypeMetadata(_accessor, _propMeta) {
@@ -61,6 +62,7 @@ function generateAccessorInitializer(_propMeta) {
 function generateAccessorSetter(_propMeta, _defaultSet) {
 
     const {type, allowNull} = _propMeta;
+
     return function (_value) {
 
         const isNull = _value === undefined || _value === null;
@@ -82,4 +84,39 @@ function generateAccessorSetter(_propMeta, _defaultSet) {
     }
 }
 
-module.exports = {resolveAccessorTypeMetadata, generateAccessorInitializer, generateAccessorSetter};
+function decorateAccessor(_accessor, context, initPropMeta) {
+
+    if (_abstract === Void) {
+
+        throw new TypeError('class field could not be type of [Void]');
+    }
+
+    if (!initPropMeta) {
+
+        return;
+    }
+
+    if (hasFootPrint(_accessor, context, DECORATED_VALUE)) {
+
+        return;
+    }
+
+    const {addInitializer} = context;
+
+    addInitializer(function() {
+
+        if (initPropMeta.initialized === true) {
+
+            return;
+        } 
+
+        initPropMeta.initialized = true;
+    })
+
+    setFootPrint(_accessor, context, DECORATED_VALUE, {
+        init: generateAccessorInitializer(initPropMeta),
+        set: generateAccessorSetter(initPropMeta),
+    });
+}
+
+module.exports = {resolveAccessorTypeMetadata, generateAccessorInitializer, generateAccessorSetter, decorateAccessor};

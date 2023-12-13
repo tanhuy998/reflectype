@@ -7,7 +7,7 @@ const entries = new Set();
 class A {
     @dec
     @type(Number)
-    accessor prop;
+    accessor #prop;
 }
 
 class B extends A {

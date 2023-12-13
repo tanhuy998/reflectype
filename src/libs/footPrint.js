@@ -187,11 +187,18 @@ function setFootPrintToFunction(_func, _footPrint) {
     meta[FOOTPRINT] = _footPrint;
 }
 
+function retrieveFootPrintByKey(_, context, _key) {
+
+    const footPrintObject = retrieveFootPrintObject(_, context);
+
+    return footPrintObject[_key];
+}
 
 module.exports = {
     initTypeMetaFootPrint, 
     hasFootPrint, 
     retrieveFootPrintObject, 
     setFootPrint,
+    retrieveFootPrintByKey,
     initFootPrint: initTypeMetaFootPrint
 }

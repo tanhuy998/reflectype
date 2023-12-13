@@ -1,14 +1,15 @@
 const {metaOf, metadata_t, property_metadata_t} = require('../reflection/metadata.js');
 const {METADATA, TYPE_JS} = require('../constants.js');
-const {initTypeMetaFootPrint} = require('./footPrint.js');
+const {initTypeMetaFootPrint, hasFootPrint, setFootPrint} = require('./footPrint.js');
 const matchType = require('./matchType.js');
 const {compareArgsWithType} = require('../libs/argumentType.js');
 const isIterable = require('../utils/isIterable.js');
 const ReturnValueNotMatchType = require('../error/returnValueNotMatchTypeError.js');
 const isAbStract = require('../utils/isAbstract.js');
+const { DECORATED_VALUE } = require('./constant.js');
 
 
-function decorateMethod(_method) {
+function generateDecorateMethod(_method, propMeta) {
 
     if (typeof _method !== 'function') {
 
@@ -16,7 +17,7 @@ function decorateMethod(_method) {
     }
 
     /**@type {property_metadata_t} */
-    const propMeta = metaOf(_method) ?? new property_metadata_t();
+    //const propMeta = metaOf(_method) ?? new property_metadata_t();
 
     const func =  function() {
 
@@ -119,22 +120,56 @@ function checkReturnValueWith(expectReturnType, _propMeta) {
     }
 }
 
-function resolveMethodTypeMeta(_method, _propMeta) {
+// function resolveMethodTypeMeta(_method, _propMeta) {
 
-    _method[METADATA] ??= {};
+//     _method[METADATA] ??= {};
 
-    const actualMeta = _method[METADATA][TYPE_JS] ??= _propMeta;
+//     const actualMeta = _method[METADATA][TYPE_JS] ??= _propMeta;
 
-    actualMeta.isMethod = true;
+//     actualMeta.isMethod = true;
 
-    initFootPrint(actualMeta);
+//     initFootPrint(actualMeta);
 
-    decorateMethod(_method);
+//     decorateMethod(_method);
 
-    //actualMeta.footPrint.decoratedMethod = decorateMethod;
+//     return actualMeta;
+// }
 
-    return actualMeta;
+function decorateMethod(_method, context, propMeta) { 
+
+    if (typeof _method !== 'function') {
+
+        return;
+    }
+
+    if (!propMeta) {
+
+        return;
+    }
+
+    if (hasFootPrint(_method, context, DECORATED_VALUE)) {
+
+        return;
+    }
+
+    const {addInitializer, name} = context;
+    const newMethod = generateDecorateMethod(_method, propMeta);
+
+    setFootPrint(_method, context, DECORATED_VALUE, newMethod);
+
+    addInitializer(function () {
+        
+        if (propMeta.initialized === true) {
+
+            return;
+        }
+
+        this[name] = newMethod;
+        propMeta.initialized = true;
+    })
+
+    return newMethod;
 }
 
 
-module.exports = {resolveMethodTypeMeta, decorateMethod};
+module.exports = {decorateMethod};

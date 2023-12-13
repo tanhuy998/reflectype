@@ -10,6 +10,8 @@ const {IS_CHECKABLE} = require('../constants.js');
 const { decorateMethod } = require('../libs/methodDecorator.js');
 const Void = require('../type/void.js');
 const footprint = require('../libs/footPrint.js');
+const { TYPE, DECORATED_VALUE } = require('../libs/constant.js');
+const footPrint = require('../libs/footPrint.js');
 
 function type(_abstract) {
 
@@ -18,25 +20,30 @@ function type(_abstract) {
     const isInterface = _abstract.__proto__ === Interface;
 
     return function handle(prop, context) {
+
         const {kind, name, static} = context;
 
         const propMeta = propertyDecorator.initMetadata(prop, context);
-        const alreadyApplied = footprint.hasFootPrint(prop, context, 'typeDecoratorApplied')//propertyDecorator.hasFootPrint(propMeta, 'typeDecoratorApplied')
+        const alreadyApplied = footprint.hasFootPrint(prop, context, TYPE)//propertyDecorator.hasFootPrint(propMeta, 'typeDecoratorApplied')
 
         if (alreadyApplied) {
 
             throw new Error('cannot apply @type multiple times');
         }
 
-        switch(kind) {
+        propMeta.type = _abstract;
 
-            case 'accessor':
-                return handleAccessor(prop, propMeta, context, _abstract);
-            case 'method':
-                return handleTypeForMethod(prop, context, _abstract);
-            default:
-                throw new Error('Decorator @type just applied to auto assessor, add \'accessor\' syntax before the class property');
-        }
+        footprint.setFootPrint(prop, context, TYPE);
+        console.log(footprint.retrieveFootPrintByKey(prop, context, DECORATED_VALUE))
+        return footprint.retrieveFootPrintByKey(prop, context, DECORATED_VALUE);
+        // switch(kind) {
+        //     case 'accessor':
+        //         return handleAccessor(prop, propMeta, context, _abstract);
+        //     case 'method':
+        //         return handleTypeForMethod(prop, context, _abstract);
+        //     default:
+        //         throw new Error('Decorator @type just applied to auto assessor, add \'accessor\' syntax before the class property');
+        // }
     }
 }
 
@@ -65,30 +72,23 @@ function handleAccessor(_accessor, initPropMeta, context, _abstract) {
         return;
     }
 
-    defaultGetter[METADATA] ??= {};
-    defaultGetter[METADATA][TYPE_JS] = initPropMeta;
+    // defaultGetter[METADATA] ??= {};
+    // defaultGetter[METADATA][TYPE_JS] = initPropMeta;
 
-    initPropMeta.typeDecoratorApplied = true;
-    initPropMeta.type = _abstract;
-    initPropMeta.name ??= name;
-    initPropMeta.private ??= private;
-    initPropMeta.static ??= static;
-    initPropMeta.isMethod = false;
-    initPropMeta.allowNull ??= false;
-
-    const newAccessor = {
-        get: defaultGetter,
-        set: accessorDecorator.generateAccessorSetter(initPropMeta, defaultSetter),
-        init: accessorDecorator.generateAccessorInitializer(initPropMeta)
-    }
+    // const newAccessor = {
+    //     get: defaultGetter,
+    //     set: accessorDecorator.generateAccessorSetter(initPropMeta, defaultSetter),
+    //     init: accessorDecorator.generateAccessorInitializer(initPropMeta)
+    // }
 
     // initPropMeta.footPrint.typeDecoratorApplied = true;
     // initPropMeta.footPrint.accessor = newAccessor;
 
-    footprint.setFootPrint(newAccessor, context, 'typeDecoratorApplied');
-    footprint.setFootPrint(newAccessor, context, 'accessor', newAccessor);
+    _accessor.init = accessorDecorator.generateAccessorInitializer(initPropMeta);
+    footprint.setFootPrint(_accessor, context, 'typeDecoratorApplied');
+    //footprint.setFootPrint(newAccessor, context, 'accessor', newAccessor);
 
-    return newAccessor;
+    return _accessor;
 }
 
 function handleTypeForMethod(_method, context, _abstract) { 
