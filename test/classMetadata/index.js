@@ -16,4 +16,5 @@ const objA = new A();
 const objB = new B();
 
 //objA.prop = 'asd';
-objB.prop = 1;
+//objB.prop = 1;
+objA.prop = '1'

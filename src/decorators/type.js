@@ -17,7 +17,7 @@ function type(_abstract) {
 
     preventImmediateValue(_abstract);
 
-    const isInterface = _abstract.__proto__ === Interface;
+    //const isInterface = _abstract.__proto__ === Interface;
 
     return function handle(prop, context) {
 
@@ -34,7 +34,7 @@ function type(_abstract) {
         propMeta.type = _abstract;
 
         footprint.setFootPrint(prop, context, TYPE);
-        console.log(footprint.retrieveFootPrintByKey(prop, context, DECORATED_VALUE))
+        //console.log(footprint.retrieveFootPrintByKey(prop, context, DECORATED_VALUE))
         return footprint.retrieveFootPrintByKey(prop, context, DECORATED_VALUE);
         // switch(kind) {
         //     case 'accessor':

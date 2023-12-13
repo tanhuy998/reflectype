@@ -4,6 +4,8 @@ const { METADATA, TYPE_JS } = require('../constants.js');
 const {initTypeMetaFootPrint, hasFootPrint, setFootPrint} = require('./footPrint.js');
 const matchType = require('./matchType.js');
 const { DECORATED_VALUE } = require('./constant.js');
+const Void = require('../type/void')
+
 
 // will be obsolete
 function resolveAccessorTypeMetadata(_accessor, _propMeta) {
@@ -59,9 +61,15 @@ function generateAccessorInitializer(_propMeta) {
     }
 }
 
+/**
+ * 
+ * @param {property_metadata_t} _propMeta 
+ * @param {Function} _defaultSet 
+ * @returns 
+ */
 function generateAccessorSetter(_propMeta, _defaultSet) {
 
-    const {type, allowNull} = _propMeta;
+    //const {type, allowNull} = _propMeta;
 
     return function (_value) {
 
@@ -71,25 +79,28 @@ function generateAccessorSetter(_propMeta, _defaultSet) {
 
             return _defaultSet.call(this, _value)
         }
-
-        if (!matchType(type, _value)) {
+        
+        if (!matchType(_propMeta.type, _value)) {
 
             const isStatic = _propMeta.static;
             const propName = _propMeta.name;
 
-            throw new TypeError(`Cannot set value to${(isStatic? ' static' : '') + ' attribute '}${isStatic ? this.name : this.constructor.name}.${propName} that is not type of [${type.name}]`);
+            throw new TypeError(`Cannot set value to${(isStatic? ' static' : '') + ' attribute '}${isStatic ? this.name : this.constructor.name}.${propName} that is not type of [${_propMeta.type.name}]`);
         }
 
         return _defaultSet.call(this, _value);
     }
 }
 
+
+/**
+ * 
+ * @param {Object} _accessor 
+ * @param {Object} context 
+ * @param {property_metadata_t} initPropMeta 
+ * @returns 
+ */
 function decorateAccessor(_accessor, context, initPropMeta) {
-
-    if (_abstract === Void) {
-
-        throw new TypeError('class field could not be type of [Void]');
-    }
 
     if (!initPropMeta) {
 
@@ -97,8 +108,15 @@ function decorateAccessor(_accessor, context, initPropMeta) {
     }
 
     if (hasFootPrint(_accessor, context, DECORATED_VALUE)) {
-
+        
         return;
+    }
+
+    const propType = initPropMeta.type;
+
+    if (propType === Void) {
+
+        throw new TypeError('class field could not be type of [Void]');
     }
 
     const {addInitializer} = context;
@@ -112,10 +130,11 @@ function decorateAccessor(_accessor, context, initPropMeta) {
 
         initPropMeta.initialized = true;
     })
-
+    
     setFootPrint(_accessor, context, DECORATED_VALUE, {
         init: generateAccessorInitializer(initPropMeta),
-        set: generateAccessorSetter(initPropMeta),
+        set: generateAccessorSetter(initPropMeta, _accessor.set),
+        get: _accessor.get
     });
 }
 
