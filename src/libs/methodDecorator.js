@@ -1,6 +1,6 @@
 const {metaOf, metadata_t, property_metadata_t} = require('../reflection/metadata.js');
 const {METADATA, TYPE_JS} = require('../constants.js');
-const {initTypeMetaFootPrint, hasFootPrint, setFootPrint} = require('./footPrint.js');
+const {hasFootPrint, setFootPrint} = require('./footPrint.js');
 const matchType = require('./matchType.js');
 const {compareArgsWithType} = require('../libs/argumentType.js');
 const isIterable = require('../utils/isIterable.js');
