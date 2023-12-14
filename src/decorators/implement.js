@@ -1,9 +1,11 @@
-const { IS_CHECKABLE } = require('../constants.js');
+const { IS_CHECKABLE, METADATA } = require('../constants.js');
 const Interface = require('../interface/interface.js');
 const InterfacePrototype = require('../interface/interfacePrototype.js');
-const initMetadata = require('../reflection/initMetadata');
-const initPrototypeMetadata = require('../reflection/initPrototypeMetadata');
+const { refreshTypeMetadata } = require('../libs/metadata/metadataTrace.js');
+//const initMetadata = require('../reflection/initMetadata');
+//const initPrototypeMetadata = require('../reflection/initPrototypeMetadata');
 const { metaOf, metadata_t } = require('../reflection/metadata');
+const self = require('../utils/self.js');
 
 function implement(...interfaces) {
 
@@ -17,11 +19,9 @@ function implement(...interfaces) {
 
             throw new Error('cannot apply @implement on non-class object'); 
         }
-
-        initPrototypeMetadata(_class);
-
-        handle(_class, interfaces);
-
+        
+        handle(_class, _context, interfaces);
+        
         return _class;
     }
 }
@@ -37,71 +37,59 @@ function checkInput(inputs) {
     }
 }
 
-function handle(_class, _interfaces = []) {
+function handle(_class, decoratorContext, _interfaces = []) {
 
     /**@type {metadata_t} */
-    const classMeta = metaOf(_class);
-
-    let interfaceProto;
-
-    //classMeta.interfaces = interfaceProto;
-
-    if (!classMeta.interfaces || isInterfacePrototypeConflict(_class)) {
-
-        interfaceProto = classMeta.interfaces = new InterfacePrototype(_class, _interfaces);
-
+    const classMeta = refreshTypeMetadata(_class, decoratorContext);
+    
+    if (!classMeta.interfaces) {
+    //|| isInterfacePrototypeConflict(_class)) {
+        
+        const interfaceProto = classMeta.interfaces = new InterfacePrototype(_class, _interfaces);
         interfaceProto.verify(_class);
     }
     else {
-
-        _interfaces.forEach(intf => {
-
-            classMeta.interfaces.list.add(intf);
-        })
+        
+        classMeta.interfaces.approve(_interfaces);
     }
 
     alterClass(_class);
-
     alterClassPrototype(_class);
 }
 
 function alterClass(_class) {
 
-    const classMeta = metaOf(_class);
-
-    _class['__implemented'] ??= function(_abstract) {
+    _class['__implemented'] = function(_abstract) {
 
         if (!isInterface(_abstract)) {
             
             return false;
         }
-
+        
         return metaOf(this)?.interfaces.list.has(_abstract);
     }
 
-    _class[IS_CHECKABLE] ??= true;
+    _class[IS_CHECKABLE] = true;
 }
 
 function alterClassPrototype(_class) {
 
     const classPrototype = _class.prototype;
 
-    const classMeta = metaOf(_class);
-    const interfaceProto = classMeta.interfaces;
-
     classPrototype[IS_CHECKABLE] ??= true;
 
-    classPrototype['__is'] ??= function(_abstract) {
+    classPrototype['__is'] = function(_abstract) {
         
         if (!isInterface(_abstract)) {
 
             return this instanceof _abstract;
         }
 
-        return _class.__implemented(_abstract);
+        return self(this).__implemented(_abstract);
     }
 }
 
+// Obsoleted, refreshTypeMetadata() do this thing
 function isInterfacePrototypeConflict(_class) {
 
     /**

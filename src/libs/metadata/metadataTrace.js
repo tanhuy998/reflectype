@@ -66,11 +66,9 @@ function registerPropMeta(propMeta) {
  */
 function traceAndInitContextMetadata(_, decoratorContext) {
 
-    const {kind, name, metadata} = decoratorContext;
-    const oldTypeMeta = metadata[TYPE_JS];
-    // refresh metadata_t
-    const refreshedTypeMeta = metadata[TYPE_JS] = new metadata_t(undefined, oldTypeMeta);
-    
+    const {name} = decoratorContext;
+    const refreshedTypeMeta = refreshTypeMetadata(_, decoratorContext);
+
     let propMeta = refreshedTypeMeta.properties[name];
 
     if (noPropMetaOrSubClassOverride(_, decoratorContext)) {
@@ -115,33 +113,38 @@ function noPropMetaOrSubClassOverride(_, decoratorContext) {
     return false;
 }
 
-module.exports = {
-    currentPropMeta, currentClassMeta, traceAndInitContextMetadata
+/**
+ * 
+ * @param {Function|Object} _ 
+ * @param {Object} decoratorContext 
+ * @returns 
+ */
+function refreshTypeMetadata(_, decoratorContext) {
+
+    const {kind, metadata} = decoratorContext;
+    /**@type {metadata_t} */
+    const oldTypeMeta = metadata[TYPE_JS];
+
+    if (kind === 'class' && oldTypeMeta?.abstract === _) {
+
+        return;
+    }
+
+    // refresh metadata_t first
+    const newTypeMeta = metadata[TYPE_JS] = new metadata_t(undefined, oldTypeMeta);
+
+    if (kind === 'class') {
+
+        newTypeMeta.abstract = _;
+    }
+
+    return newTypeMeta;
 }
 
-// /**
-//  * 
-//  * @param {string | Symbol} propName
-//  * @param {metadata_t} classMeta 
-//  */
-// function initProp(propName, classMeta) {
-
-//     const propMeta = classMeta.properties[propName];
-
-//     if (propMeta instanceof property_metadata_t) {
-
-
-//     }
-// }
-
-
-// /**
-//  * 
-//  * @param {metadata_t} classMeta 
-//  * @throws
-//  */
-// function registerClassMeta(classMeta) {
-
-//     return classStack.push(classMeta);
-// }
+module.exports = {
+    currentPropMeta, 
+    currentClassMeta, 
+    traceAndInitContextMetadata,
+    refreshTypeMetadata,
+}
 

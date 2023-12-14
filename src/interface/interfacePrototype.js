@@ -1,10 +1,14 @@
+const { isIterable } = require("../libs/type");
 const { metaOf, property_metadata_t } = require("../reflection/metadata");
 const self = require("../utils/self");
 const Interface = require("./interface");
 
 class InterfacePrototype {
 
+    /**@type {Set<Interface>} */
     #interfaces;
+
+    /**@type {Set<Interface>} */
     get list() {
         return this.#interfaces;
     }
@@ -31,14 +35,49 @@ class InterfacePrototype {
         this.#init();
     }
 
-    clone() {
+    
+    clone(_additionalIntfs = []) {
 
-        return new self(this)(this.#origin, Array.from(this.#interfaces))
+        if (!isIterable(_additionalIntfs)) {
+
+            throw new TypeError('_additionalIntfs must be an array of Interface classes');
+        }
+
+        return new (self(this))(this.#origin, [...Array.from(this.#interfaces), ..._additionalIntfs])
+    }
+
+    approve(_additionalIntfs = []) {
+
+        if (!isIterable(_additionalIntfs)) {
+
+            throw new TypeError('_additionalIntfs must be an array of Interface classes');
+        }
+
+        if (_additionalIntfs.length === 0) {
+
+            return;
+        }
+
+        for (const intf of _additionalIntfs) {
+
+            this.#interfaces.add(intf);
+        }
+        
+        this.#prepareInformations(_additionalIntfs);
     }
 
     #init() {
-        /**@type {Interface} */
-        for (const intf of this.#interfaces.values()) {
+        
+        this.#prepareInformations(this.#interfaces.values());
+    }
+
+    /**
+     * 
+     * @param {Iterable<Interface>} _Iterable 
+     */
+    #prepareInformations(_Iterable) {
+
+        for (const intf of _Iterable) {
 
             const prototype = intf.prototype;
 
@@ -55,6 +94,7 @@ class InterfacePrototype {
             }
         }
     }
+
     #encodeMethod(_func, _name) {
 
         /**@type {property_metadata_t} */

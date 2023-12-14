@@ -1,9 +1,28 @@
 const {paramsType, returnType, type} = require('../../src/');
 const {METADATA, TYPE_JS} = require('../../src/constants.js');
+const implement = require('../../src/decorators/implement.js');
+const Interface = require('../../src/interface/interface.js');
 
 const stack = [];
 const entries = new Set();
 
+class ITestA extends Interface {
+
+    testA() {
+
+
+    }
+}
+
+class ITestB extends Interface {
+
+    testB() {
+
+
+    }
+}
+
+@implement(ITestA)
 class A {
     
     @type(Number)
@@ -20,8 +39,14 @@ class A {
 
         this.func(...arguments);
     }
+
+    testA() {
+
+
+    }
 }
 
+@implement(ITestB)
 class B extends A {
 
     
@@ -32,6 +57,10 @@ class B extends A {
     @returnType(String)
     func() {
 
+
+    }
+
+    testB() {
 
     }
 }
@@ -55,4 +84,4 @@ function decorator(_, context) {
 }
 
 
-module.exports = {A, B};
+module.exports = {A, B, ITestB, ITestA};

@@ -15,6 +15,7 @@
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "test-interface": "npx babel ./test/interface/class.js > ./test/interface/compiled.js && node --trace-warnings ./test/interface",
     "test-metadata": "npx babel ./test/classMetadata/class.js > ./test/classMetadata/compiled.js && node --trace-warnings ./test/classMetadata"
   },
   "author": "tanhuy998",

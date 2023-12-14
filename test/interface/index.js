@@ -4,9 +4,10 @@
 //     ]
 // })
 
-const {A, B} = require('./compiled.js');
+const {A, B, ITestA, ITestB} = require('./compiled.js');
 const {METADATA} = require('../../src/constants.js');
 const { TYPE_JS } = require('../../src/reflection/metadata.js');
+const matchType = require('../../src/libs/matchType.js');
 
 
 
@@ -20,5 +21,7 @@ const objB = new B();
 // objB.prop = '1';
 // objA.prop = 1
 
-console.log(objA.func())
-console.log(objB.func('1'))
+// console.log(objA.func())
+// console.log(objB.func('1'))
+
+console.log(matchType(ITestA, objA))
