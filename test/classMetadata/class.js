@@ -5,14 +5,14 @@ const stack = [];
 const entries = new Set();
 
 class A {
-    @dec
+    
     @type(Number)
-    accessor #prop;
+    accessor prop;
 }
 
 class B extends A {
 
-    @dec
+    
     @type(String)
     accessor prop
 }

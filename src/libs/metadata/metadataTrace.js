@@ -82,27 +82,15 @@ function traceAndInitContextMetadata(_, decoratorContext) {
     const oldTypeMeta = metadata[TYPE_JS];
     // refresh metadata_t
     const refreshedTypeMeta = metadata[TYPE_JS] = new metadata_t(undefined, oldTypeMeta);
-
+    
     let propMeta = refreshedTypeMeta.properties[name];
 
     if (noPropMetaOrSubClassOverride(_, decoratorContext)) {
-
+        
         propMeta = refreshedTypeMeta.properties[name] = new property_metadata_t();
 
         registerPropMeta(propMeta);
     }
-    
-    //initTypeMetaFootPrint(_, decoratorContext);
-    // switch(kind) {
-    //     case 'method':
-    //         resolveMethodTypeMeta(_, propMeta);
-    //         break;
-    //     case 'accessor':
-    //         resolveAccessorTypeMetadata(_, propMeta);
-    //         break;
-    //     default:
-    //         break;
-    // }
 
     return propMeta;
 }
@@ -123,7 +111,7 @@ function noPropMetaOrSubClassOverride(_, decoratorContext) {
      * just instantiate new one
      */
     if (!(propMeta instanceof property_metadata_t)) {
-
+        
         return true;
     }
 
@@ -131,13 +119,11 @@ function noPropMetaOrSubClassOverride(_, decoratorContext) {
      * subclass override the property
      */
     if (propStack.exist(propMeta) && 
-    propMeta !== propStack.head &&
     !hasFootPrint(_, decoratorContext)) {
     
-
         return true;
     }
-
+    
     return false;
 }
 
@@ -157,6 +143,5 @@ function initProp(propName, classMeta) {
 }
 
 module.exports = {
-
     currentPropMeta, currentClassMeta, traceAndInitContextMetadata
 }
