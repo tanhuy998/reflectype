@@ -1,5 +1,6 @@
 const {paramsType, returnType, type} = require('../../src/');
 const {METADATA, TYPE_JS} = require('../../src/constants.js');
+const allowNull = require('../../src/decorators/allowNull.js');
 
 const stack = [];
 const entries = new Set();
@@ -9,6 +10,7 @@ class A {
     @type(Number)
     accessor prop;
 
+    @allowNull
     @returnType(Number)
     @paramsType(Number)
     func() {

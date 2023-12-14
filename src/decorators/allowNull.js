@@ -1,55 +1,68 @@
+const { DECORATED_VALUE } = require('../libs/constant.js');
+const { retrieveFootPrintByKey } = require('../libs/footPrint.js');
 const propertyDecorator = require('../libs/propertyDecorator.js');
 const {METADATA, TYPE_JS} = require('../reflection/metadata.js');
 const typeMetadata = require('../reflection/metadata.js');
 
-function allowNull(prop, _context) {
+function allowNull(_, _context) {
 
     const {kind, name} = _context;
 
-    switch(kind) {
+    if (kind === 'class') {
 
-        case 'method':
-            return handleMethod(prop, _context);
-        case 'accessor':
-            return handleAccessor(prop, _context);
-        default:
-            throw new Error('Decorator @allowNull just applied to auto assessor, add \'accessor\' syntax before the class property');
+        throw new TypeError('cannot apply @allowNull on class');
     }
-}
 
-function handleMethod(_method, _context) {
-
-    const propMeta = propertyDecorator.initMetadata(_method, _context);
+    const propMeta = propertyDecorator.initMetadata(_, _context);
 
     propMeta.allowNull = true;
+    console.log(propMeta)
+    return retrieveFootPrintByKey(_, _context, DECORATED_VALUE);
 
-    return _method;
+    // switch(kind) {
+
+    //     case 'method':
+    //         return handleMethod(prop, _context);
+    //     case 'accessor':
+    //         return handleAccessor(prop, _context);
+    //     default:
+    //         throw new Error('Decorator @allowNull just applied to auto assessor, add \'accessor\' syntax before the class property');
+    // }
 }
 
-function handleAccessor(_accessor, _context) {
+// function handleMethod(_method, _context) {
 
-    const {get, set} = _accessor
+//     const propMeta = propertyDecorator.initMetadata(_method, _context);
 
-    // const propMeta = propertyDecorator.outerMetadataExist(_context) ? 
-    //                     propertyDecorator.initMetadata(_accessor, _context) 
-    //                     : typeMetadata.metaOf(get) || new property_metadata_t();
+//     propMeta.allowNull = true;
 
-    const propMeta = propertyDecorator.initMetadata(_accessor, _context);
+//     return _method;
+// }
 
-    get[METADATA] ??= {};
-    get[METADATA][TYPE_JS] = propMeta;
+// function handleAccessor(_accessor, _context) {
 
-    const {private, static, name} = _context;
+//     const {get, set} = _accessor
 
-    propMeta.allowNull = true;
-    propMeta.name ??= name;
-    propMeta.private ??= private;
-    propMeta.static ??= static;
-    propMeta.isMethod = false;
+//     // const propMeta = propertyDecorator.outerMetadataExist(_context) ? 
+//     //                     propertyDecorator.initMetadata(_accessor, _context) 
+//     //                     : typeMetadata.metaOf(get) || new property_metadata_t();
 
-    return {
-        get, set
-    }
-}
+//     const propMeta = propertyDecorator.initMetadata(_accessor, _context);
+
+//     get[METADATA] ??= {};
+//     get[METADATA][TYPE_JS] = propMeta;
+
+//     const {private, static, name} = _context;
+
+//     propMeta.allowNull = true;
+//     propMeta.name ??= name;
+//     propMeta.private ??= private;
+//     propMeta.static ??= static;
+//     propMeta.isMethod = false;
+
+//     return {
+//         get, set
+//     }
+// }
 
 module.exports = allowNull;
