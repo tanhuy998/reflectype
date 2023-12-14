@@ -1,6 +1,8 @@
-const {initMetadata, hasFootPrint} = require('../libs/propertyDecorator.js');
+const {initMetadata} = require('../libs/propertyDecorator.js');
 const { property_metadata_t } = require('../reflection/metadata.js');
 const {compareArgsWithType} = require('../libs/argumentType.js');
+const {isInstantiable} = require('../libs/type.js');
+const { hasFootPrint } = require('../libs/footPrint.js');
 
 function paramsType(..._types) {
 
@@ -9,7 +11,7 @@ function paramsType(..._types) {
         throw new Error('@paramsType must be passed at least 1 argument');
     }
 
-    return function (_method, _context) {
+    return function (_, _context) {
 
         const {kind} = _context;
 
@@ -19,9 +21,8 @@ function paramsType(..._types) {
         }
 
         /**@type {property_metadata_t} */
-        const propMeta = initMetadata(_method, _context);
-
-        const isApplied = hasFootPrint(propMeta, 'paramsTypeDecoratorApplied');
+        const propMeta = initMetadata(_, _context);
+        const isApplied = hasFootPrint(_, _context, 'paramsTypeDecoratorApplied');
 
         if (isApplied) {
 
@@ -34,22 +35,15 @@ function paramsType(..._types) {
         
         compareArgsWithType(propMeta);
 
-        const {decoratedMethod} = propMeta.footPrint;
-
-        return decoratedMethod;
+        return _;
     }
-}
-
-function isInstantiate(_type) {
-
-    return typeof _type === 'function' && typeof _type.prototype === 'object';
 }
 
 function validateInput(_types = []) {   
 
     for (const type of _types) {
 
-        if (!isInstantiate(type)) {
+        if (!isInstantiable(type)) {
 
             throw new TypeError('parameter\'s type must be a class');
         }

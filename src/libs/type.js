@@ -1,4 +1,3 @@
-// const isPrimitive = require('../utils/isPrimitive.js');
 const Void = require('../type/void.js');
 const {IS_CHECKABLE} = require('../constants.js');
 const Any = require('../type/any.js');
@@ -111,6 +110,20 @@ function isValuableOrFalse(_unknown) {
     return true;
 }
 
+
+function isInstantiable(_type) {
+
+    return typeof _type === 'function' && typeof _type.prototype === 'object';
+}
+
+function isInstantiableOrFalse(_type) {
+
+    if (!isInstantiable(_type)) {
+
+        throw new TypeError();
+    }
+}
+ 
 module.exports = { 
     matchType, 
     isPrimitive, 
@@ -119,5 +132,7 @@ module.exports = {
     isObjectOrFasle, 
     isIterableOrFalse, 
     isPrimitiveOrFalse, 
-    isValuableOrFalse
+    isValuableOrFalse,
+    isInstantiable,
+    isInstantiableOrFalse
 }  

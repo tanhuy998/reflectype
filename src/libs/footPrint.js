@@ -3,6 +3,12 @@ const { FOOTPRINT } = require("./constant");
 const {isObjectOrFasle, isValuable} = require('./type.js');
 
 /**
+ * Foot print is the way decorators detect if they took effect on a class's property.
+ * It is a n object that store information of decorators and it is the important factor 
+ * for decorators on determining the current property is owned by base class or derived class
+ */
+
+/**
  * 
  * @param {Function|Object} _ 
  * @param {Object} context 

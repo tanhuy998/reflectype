@@ -35,9 +35,7 @@
 
 
 const { property_metadata_t, metadata_t, TYPE_JS } = require('../../reflection/metadata.js');
-const { resolveAccessorTypeMetadata } = require('../accessorDecorator.js');
-const { hasFootPrint, initTypeMetaFootPrint } = require('../footPrint.js');
-const { resolveMethodTypeMeta } = require('../methodDecorator.js');
+const { hasFootPrint } = require('../footPrint.js');
 const {classStack, propStack} = require('./initialStack.js');
 
 function currentClassMeta() {
@@ -58,16 +56,6 @@ function currentPropMeta() {
 function registerPropMeta(propMeta) {
 
     return propStack.push(propMeta)
-}
-
-/**
- * 
- * @param {metadata_t} classMeta 
- * @throws
- */
-function registerClassMeta(classMeta) {
-
-    return classStack.push(classMeta);
 }
 
 /**
@@ -96,7 +84,7 @@ function traceAndInitContextMetadata(_, decoratorContext) {
 }
 
 /**
- * dh
+ * 
  * @param {property_metadata_t} propMeta 
  */
 function noPropMetaOrSubClassOverride(_, decoratorContext) {
@@ -127,21 +115,33 @@ function noPropMetaOrSubClassOverride(_, decoratorContext) {
     return false;
 }
 
-/**
- * 
- * @param {string | Symbol} propName
- * @param {metadata_t} classMeta 
- */
-function initProp(propName, classMeta) {
-
-    const propMeta = classMeta.properties[propName];
-
-    if (propMeta instanceof property_metadata_t) {
-
-
-    }
-}
-
 module.exports = {
     currentPropMeta, currentClassMeta, traceAndInitContextMetadata
 }
+
+// /**
+//  * 
+//  * @param {string | Symbol} propName
+//  * @param {metadata_t} classMeta 
+//  */
+// function initProp(propName, classMeta) {
+
+//     const propMeta = classMeta.properties[propName];
+
+//     if (propMeta instanceof property_metadata_t) {
+
+
+//     }
+// }
+
+
+// /**
+//  * 
+//  * @param {metadata_t} classMeta 
+//  * @throws
+//  */
+// function registerClassMeta(classMeta) {
+
+//     return classStack.push(classMeta);
+// }
+

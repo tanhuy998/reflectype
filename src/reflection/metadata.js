@@ -1,5 +1,3 @@
-//const InterfacePrototype = require("../interface/interfacePrototype");
-const isIterable = require("../utils/isIterable");
 
 /** @type {Symbol} */
 const METADATA = Symbol.metadata || Symbol.for('Symbol.metadata') || Symbol(Date.now());
@@ -35,8 +33,16 @@ function property_metadata_t(_ref) {
     this.isMethod = _ref?.isMethod;
     this.name = _ref?.name;
     this.allowNull = _ref?.allowNull;
+
+    // this field is for configuration, not need to be copied from the _ref
+    this.isInitialized = undefined;
 }
 
+/**
+ * 
+ * @param {Object|Function} _unknown 
+ * @returns {metadata_t|property_metadata_t}
+ */
 function metaOf(_unknown) {
 
     if (!_unknown) {

@@ -1,9 +1,8 @@
 const {metaOf, metadata_t, property_metadata_t} = require('../reflection/metadata.js');
-const {METADATA, TYPE_JS} = require('../constants.js');
 const {hasFootPrint, setFootPrint} = require('./footPrint.js');
 const matchType = require('./matchType.js');
 const {compareArgsWithType} = require('../libs/argumentType.js');
-const isIterable = require('../utils/isIterable.js');
+const {isIterable} = require('./type.js');
 const ReturnValueNotMatchType = require('../error/returnValueNotMatchTypeError.js');
 const isAbStract = require('../utils/isAbstract.js');
 const { DECORATED_VALUE } = require('./constant.js');
@@ -15,31 +14,20 @@ function generateDecorateMethod(_method, propMeta) {
 
         throw new TypeError('the object passed as argument to _method is not a function');
     }
-
-    /**@type {property_metadata_t} */
-    //const propMeta = metaOf(_method) ?? new property_metadata_t();
-
-    const func =  function() {
+    
+    return function() {
 
         const injectedArgs = getInjectedArguments(this, propMeta.name ?? _method.name);
-
         const defaultArguments = propMeta.value;
-
         const args = arguments.length !== 0 ? arguments : injectedArgs ?? (isIterable(defaultArguments) ? defaultArguments : [defaultArguments]);
 
         compareArgsWithType(propMeta, args);
 
         const returnValue = _method.call(this, ...args);
-        
-        const {allowNull, type} = propMeta;
+        const {type} = propMeta;
 
         return checkReturnTypeAndResolve(returnValue, type, propMeta);
     }
-
-    const decoratedMethod = propMeta.footPrint.decoratedMethod ??= func;
-
-    decoratedMethod[METADATA] ??= {};
-    decoratedMethod[METADATA][TYPE_JS] ??= propMeta;
 }
 
 /**
@@ -97,12 +85,10 @@ function checkReturnTypeAndResolve(_returnValue, _expectType, _propMeta) {
 function checkReturnValueWith(expectReturnType, _propMeta) {
     
     const {allowNull} = _propMeta;
+    
     return function (returnValue) {
 
-        //const { expectReturnType, isAsync } = this;
-
         const valueIsNull = returnValue === undefined || returnValue === null;
-
         // expectReturnType must be a class, if undefined, the return type is unnecessary
         const match = isAbStract(expectReturnType) ? matchType(expectReturnType, returnValue) : true;
         // undefined and null are treated as primitive value called Void
@@ -120,21 +106,13 @@ function checkReturnValueWith(expectReturnType, _propMeta) {
     }
 }
 
-// function resolveMethodTypeMeta(_method, _propMeta) {
-
-//     _method[METADATA] ??= {};
-
-//     const actualMeta = _method[METADATA][TYPE_JS] ??= _propMeta;
-
-//     actualMeta.isMethod = true;
-
-//     initFootPrint(actualMeta);
-
-//     decorateMethod(_method);
-
-//     return actualMeta;
-// }
-
+/**
+ * 
+ * @param {Function} _method 
+ * @param {Object} context 
+ * @param {property_metadata_t} propMeta 
+ * @returns 
+ */
 function decorateMethod(_method, context, propMeta) { 
 
     if (typeof _method !== 'function') {
@@ -159,16 +137,14 @@ function decorateMethod(_method, context, propMeta) {
 
     addInitializer(function () {
         
-        if (propMeta.initialized === true) {
+        if (propMeta.isInitialized === true) {
 
             return;
         }
-
+        
         this[name] = newMethod;
-        propMeta.initialized = true;
+        propMeta.isInitialized = true;
     })
-
-    return newMethod;
 }
 
 

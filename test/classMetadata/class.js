@@ -8,6 +8,18 @@ class A {
     
     @type(Number)
     accessor prop;
+
+    @returnType(Number)
+    @paramsType(Number)
+    func() {
+
+        console.log('func', ...arguments)
+    }
+
+    test() {
+
+        this.func(...arguments);
+    }
 }
 
 class B extends A {
@@ -15,6 +27,13 @@ class B extends A {
     
     @type(String)
     accessor prop
+
+    @paramsType(String)
+    @returnType(String)
+    func() {
+
+
+    }
 }
 
 function dec(_, context) {

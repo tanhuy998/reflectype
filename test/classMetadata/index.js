@@ -19,3 +19,5 @@ const objB = new B();
 //objA.prop = 'asd';
 objB.prop = '1';
 objA.prop = 1
+
+console.log(objB.func('1'))
