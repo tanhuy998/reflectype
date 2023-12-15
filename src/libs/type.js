@@ -47,6 +47,16 @@ function matchType(_type, value) {
     }
 }
 
+function matchTypeOrFail(_type, value) {
+
+    if (!matchType(_type, value)) {
+
+        throw new TypeError();
+    }
+
+    return true;
+}
+
 function isPrimitive(value) {
 
     const boxedPrimitiveTypes = ['Boolean', 'String', 'Number', 'BigInt', Void.name];
@@ -60,14 +70,19 @@ function isIterable(_object) {
     return typeof _object === 'object' && typeof _object[Symbol.iterator] === 'function';
 }
 
+function isObject(_unknown) {
+
+    return typeof _unknown === 'object';
+}
+
 /**
  * 
  * @param {Object?} _target 
  * @throws {TypeError}
  */
-function isObjectOrFasle(_target) {
+function isObjectOrFail(_target) {
 
-    if (typeof _target !== 'object') {
+    if (isObject(_target)) {
 
         throw new TypeError();
     }
@@ -75,7 +90,7 @@ function isObjectOrFasle(_target) {
     return true;
 }
 
-function isIterableOrFalse(_object) {
+function isIterableOrFail(_object) {
 
     if (!isIterable(_object)) {
 
@@ -85,7 +100,7 @@ function isIterableOrFalse(_object) {
     return true;
 }
 
-function isPrimitiveOrFalse(_value) {
+function isPrimitiveOrFail(_value) {
 
     if (!isPrimitive(_value)) {
 
@@ -100,7 +115,7 @@ function isValuable(_unknown) {
     return _unknown !== undefined && _unknown !== null;
 }
 
-function isValuableOrFalse(_unknown) {
+function isValuableOrFail(_unknown) {
 
     if (!isValuable(_unknown)) {
 
@@ -116,23 +131,79 @@ function isInstantiable(_type) {
     return typeof _type === 'function' && typeof _type.prototype === 'object';
 }
 
-function isInstantiableOrFalse(_type) {
+function isInstantiableOrFail(_type) {
 
     if (!isInstantiable(_type)) {
 
         throw new TypeError();
     }
+
+    return true;
+}
+
+function isFuntion(_unknown) {
+
+    return typeof _unknown === 'function';
+}
+
+function isFunctionOrFail(_unknown) {
+
+    if (!isFuntion(_unknown)) {
+
+        throw new TypeError();
+    }
+    return true;
+}
+
+function isObjectLike(_unknown) {
+
+    return isObject(_unknown) || isFuntion(_unknown);
+}
+
+function isObjectLikeOrFail(_unknown) {
+
+    if (!isObjectLike(_unknown)) {
+
+        throw new TypeError();
+    }
+
+    return true;
+}
+
+function isObjectKey(_unknown) {
+
+    const type = typeof _unknown;
+
+    return ['number', 'string', 'symbol'].includes(type);
+}
+
+function isObjectKeyOrFail(_unknown) {
+
+    if (!isObjectKey(_unknown)) {
+
+        throw new TypeError();
+    }
+
+    return true;
 }
  
 module.exports = { 
     matchType, 
+    matchTypeOrFail,
     isPrimitive, 
     isIterable, 
     isValuable,
-    isObjectOrFasle, 
-    isIterableOrFalse, 
-    isPrimitiveOrFalse, 
-    isValuableOrFalse,
+    isObject,
+    isObjectOrFail, 
+    isIterableOrFail, 
+    isPrimitiveOrFail, 
+    isValuableOrFail,
     isInstantiable,
-    isInstantiableOrFalse
-}  
+    isInstantiableOrFail,
+    isFuntion,
+    isFunctionOrFail,
+    isObjectLike,
+    isObjectLikeOrFail,
+    isObjectKey,
+    isObjectKeyOrFail
+}
