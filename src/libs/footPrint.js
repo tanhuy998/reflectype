@@ -1,6 +1,6 @@
 const { TYPE_JS, METADATA } = require("../reflection/metadata");
 const { FOOTPRINT } = require("./constant");
-const {isObjectOrFasle, isValuable} = require('./type.js');
+const {isObjectKeyOrFail, isValuable, isObjectKey} = require('./type.js');
 
 /**
  * Foot print is the way decorators detect if they took effect on a class's property.
@@ -34,16 +34,16 @@ function initTypeMetaFootPrint(_, context) {
 
     const footPrint = _propMeta.footPrint ??= {};
 
-    switch (kind) {
-        case 'method':
-            setFootPrintToFunction(_, footPrint);
-            break;
-        case 'accessor':
-            setFootPrintToFunction(_.get, footPrint);
-            break;
-        default: 
-            break;
-    }
+    // switch (kind) {
+    //     case 'method':
+    //         setFootPrintToFunction(_, footPrint);
+    //         break;
+    //     case 'accessor':
+    //         setFootPrintToFunction(_.get, footPrint);
+    //         break;
+    //     default: 
+    //         break;
+    // }
 
     return footPrint;
 }
@@ -68,31 +68,41 @@ function hasFootPrint(_, context, _key = undefined) {
 
     try {
 
-        const typeMeta = metadata[TYPE_JS];
-        isObjectOrFasle(typeMeta);
+        // const typeMeta = metadata[TYPE_JS];
+        // isObjectOrFasle(typeMeta);
 
-        const properties = typeMeta.properties;
-        isObjectOrFasle(properties);
+        // const properties = typeMeta.properties;
+        // isObjectOrFasle(properties);
 
-        const propMeta = properties[name];
-        isObjectOrFasle(propMeta);
+        // const propMeta = properties[name];
+        // isObjectOrFasle(propMeta);
 
-        const footPrint = propMeta[FOOTPRINT];
-        isObjectOrFasle(footPrint);
+        // const footPrint = propMeta[FOOTPRINT];
+        // isObjectOrFasle(footPrint);
 
-        if(_key === undefined) {
-            // if code pointer reach here, the footprint object exists
+        // if(_key === undefined) {
+        //     // if code pointer reach here, the footprint object exists
+        //     return true;
+        // }
+
+        // switch(kind) {
+        //     case 'method':
+        //         return checkFootPrintOnMethod(_, footPrint, _key);
+        //     case 'accessor':
+        //         return checkFootPrintOnAccessor(_, footPrint, _key);
+        //     default: 
+        //         return footPrint[_key] === true;
+        // }
+
+        const footPrintObj = retrieveFootPrintObject(_, context);
+        isObjectKeyOrFail(footPrintObj);
+
+        if (!isObjectKey(_key)) {
+
             return true;
         }
 
-        switch(kind) {
-            case 'method':
-                return checkFootPrintOnMethod(_, footPrint, _key);
-            case 'accessor':
-                return checkFootPrintOnAccessor(_, footPrint, _key);
-            default: 
-                return footPrint[_key] === true;
-        }
+        return isValuable(footPrintObj[_key]);
     }
     catch(e) {
 
@@ -102,16 +112,18 @@ function hasFootPrint(_, context, _key = undefined) {
 
 function retrieveFootPrintObject(_, context) {
 
-    const {kind} = context;
+    const {metadata, name} = context;
+    console.log(metadata[TYPE_JS]?.properties[name])
+    return (metadata[TYPE_JS]?.properties[name])?.[FOOTPRINT];
 
-    switch(kind) {
-        case 'method':
-            return getFootPrint(_);
-        case 'accessor':
-            return getFootPrint(_.get);
-        default:
-            return;
-    }
+    // switch(kind) {
+    //     case 'method':
+    //         return getFootPrint(_);
+    //     case 'accessor':
+    //         return getFootPrint(_.get);
+    //     default:
+    //         return;
+    // }
 }
 
 /**

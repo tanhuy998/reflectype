@@ -1,7 +1,6 @@
 const {paramsType, returnType, type} = require('../../src/');
 const {METADATA, TYPE_JS} = require('../../src/constants.js');
 const allowNull = require('../../src/decorators/allowNull.js');
-const { ORIGIN } = require('../../src/libs/metadata/constant.js');
 
 const stack = [];
 const entries = new Set();
@@ -28,22 +27,33 @@ class A {
 class B extends A {
 
     
-    @type(String)
-    accessor prop
+    // @type(String)
+    // accessor prop
 
-    @paramsType(String)
-    @returnType(String)
-    func() {
+    // @paramsType(String)
+    // @returnType(String)
+    // func() {
 
 
-    }
+    // }
 }
 
 function dec(_, context) {
+    console.log(1);
+    const {metadata} = context;
 
-    const {name, metadata} = context;
+    console.log(metadata[TYPE_JS]);
 
-    console.log(name, metadata[ORIGIN] === metadata)
+    return _;
+}
+
+function decorator(_, context) {
+
+    const {metadata} = context;
+
+    const your_custom_meta = metadata[your_props] = {}
+
+    return _;
 }
 
 

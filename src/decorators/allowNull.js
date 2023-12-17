@@ -16,18 +16,8 @@ function allowNull(_, _context) {
     const propMeta = propertyDecorator.initMetadata(_, _context);
 
     propMeta.allowNull = true;
-    console.log(propMeta)
+    
     return retrieveFootPrintByKey(_, _context, DECORATED_VALUE);
-
-    // switch(kind) {
-
-    //     case 'method':
-    //         return handleMethod(prop, _context);
-    //     case 'accessor':
-    //         return handleAccessor(prop, _context);
-    //     default:
-    //         throw new Error('Decorator @allowNull just applied to auto assessor, add \'accessor\' syntax before the class property');
-    // }
 }
 
 // function handleMethod(_method, _context) {

@@ -6,6 +6,7 @@ const {isIterable} = require('./type.js');
 const ReturnValueNotMatchType = require('../error/returnValueNotMatchTypeError.js');
 const isAbStract = require('../utils/isAbstract.js');
 const { DECORATED_VALUE } = require('./constant.js');
+const MethodDecoratorFootPrint = require('./footprint/methodDecoratorFootPrint.js');
 
 
 function generateDecorateMethod(_method, propMeta) {
@@ -131,9 +132,9 @@ function decorateMethod(_method, context, propMeta) {
     }
 
     const {addInitializer, name} = context;
-    const newMethod = generateDecorateMethod(_method, propMeta);
+    //const newMethod = generateDecorateMethod(_method, propMeta);
 
-    setFootPrint(_method, context, DECORATED_VALUE, newMethod);
+    //setFootPrint(_method, context, DECORATED_VALUE, newMethod);
 
     addInitializer(function () {
         
@@ -141,8 +142,10 @@ function decorateMethod(_method, context, propMeta) {
 
             return;
         }
-        
-        this[name] = newMethod;
+
+        const oldMethod = this[name];
+
+        this[name] = generateDecorateMethod(oldMethod, propMeta);
         propMeta.isInitialized = true;
     })
 }

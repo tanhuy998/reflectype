@@ -119,17 +119,19 @@ function decorateAccessor(_accessor, context, initPropMeta) {
         throw new TypeError('class field could not be type of [Void]');
     }
 
-    const {addInitializer} = context;
+    const {addInitializer, name} = context;
 
-    addInitializer(function() {
+    // addInitializer(function() {
 
-        if (initPropMeta.initialized === true) {
+    //     if (initPropMeta.initialized === true) {
 
-            return;
-        } 
+    //         return;
+    //     } 
 
-        initPropMeta.initialized = true;
-    })
+    //     this[name];
+
+    //     initPropMeta.initialized = true;
+    // })
     
     setFootPrint(_accessor, context, DECORATED_VALUE, {
         init: generateAccessorInitializer(initPropMeta),

@@ -21,4 +21,4 @@ const objB = new B();
 // objA.prop = 1
 
 console.log(objA.func())
-console.log(objB.func('1'))
+//console.log(objB.func('1'))

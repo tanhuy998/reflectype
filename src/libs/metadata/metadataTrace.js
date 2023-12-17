@@ -35,7 +35,7 @@
 
 
 const { property_metadata_t, metadata_t, TYPE_JS } = require('../../reflection/metadata.js');
-const { hasFootPrint } = require('../footPrint.js');
+const { ORIGIN } = require('./constant.js');
 const {classStack, propStack} = require('./initialStack.js');
 
 function currentClassMeta() {
@@ -68,7 +68,7 @@ function traceAndInitContextMetadata(_, decoratorContext) {
 
     const {name} = decoratorContext;
     const refreshedTypeMeta = refreshTypeMetadata(_, decoratorContext);
-
+    
     let propMeta = refreshedTypeMeta.properties[name];
 
     if (noPropMetaOrSubClassOverride(_, decoratorContext)) {
@@ -78,7 +78,16 @@ function traceAndInitContextMetadata(_, decoratorContext) {
         registerPropMeta(propMeta);
     }
 
+    refreshMetadata(decoratorContext);
+
     return propMeta;
+}
+
+function refreshMetadata(decoraotorContext) {
+    
+    const {metadata} = decoraotorContext;
+
+    metadata[ORIGIN] = metadata;
 }
 
 /**
@@ -88,9 +97,14 @@ function traceAndInitContextMetadata(_, decoratorContext) {
 function noPropMetaOrSubClassOverride(_, decoratorContext) {
 
     const {name, metadata} = decoratorContext;
+    /**@type {metadata_t} */
     const typeMeta = metadata[TYPE_JS];
+    const propMeta = typeMeta.properties[name];
 
-    const propMeta = typeMeta?.properties[name];
+    if (metadata[ORIGIN] !== metadata) {
+
+        return true;        
+    }
 
     /**
      * when the property meta haven't exist yet, it's mean this is the first decorator,
@@ -104,8 +118,8 @@ function noPropMetaOrSubClassOverride(_, decoratorContext) {
     /**
      * subclass override the property
      */
-    if (propStack.exist(propMeta) && 
-    !hasFootPrint(_, decoratorContext)) {
+    if (propStack.exist(propMeta) &&
+    propStack.head !== propMeta) {
     
         return true;
     }
