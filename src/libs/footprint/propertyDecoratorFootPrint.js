@@ -1,7 +1,8 @@
 const { TYPE_JS } = require("../../constants");
 const { METADATA, metadata_t, property_metadata_t } = require("../../reflection/metadata");
-const { FOOTPRINT } = require("../constant");
+const { FOOTPRINT, DECORATED_VALUE } = require("../constant");
 const { isFunctionOrFail, isObjectOrFail, isObjectLike, isObject, isValuable, isObjectKey, isObjectKeyOrFail } = require("../type");
+const { UPDATE } = require("./constant");
 
 module.exports = class PropertyDecoratorFootPrint {
 
@@ -83,7 +84,23 @@ module.exports = class PropertyDecoratorFootPrint {
     #decoratorTarget;
     #decoratorContext;
 
+
     #footPrint;
+
+    get decoratedValue() {
+
+        return this.get(DECORATED_VALUE);
+    }
+
+    get decoratorTarget() {
+
+        return this.#decoratorTarget;
+    }
+
+    get decoratorContext() {
+
+        return this.#decoratorContext;
+    }
 
     get hasFootPrint() {
 
@@ -131,14 +148,23 @@ module.exports = class PropertyDecoratorFootPrint {
 
         propMeta[FOOTPRINT] = {};
 
-        this._initialize();
+        this[UPDATE]();
     }
 
-    _intialize() {
+    [UPDATE]() {
 
 
     }
 
+    has(_key) {
+
+        if (!isObjectKey(_key)) {
+
+            throw new TypeError();
+        }
+
+        return isValuable(this.get(_key));
+    }
 
     set(_key, _value = true) {
 
@@ -148,6 +174,8 @@ module.exports = class PropertyDecoratorFootPrint {
         }
 
         this.#footPrint[_key] = _value;
+
+        this[UPDATE]();
     }
 
     get(_key) {
@@ -160,5 +188,10 @@ module.exports = class PropertyDecoratorFootPrint {
         }
 
         return this.#footPrint[_key];
+    }
+
+    setDecoratedValue(_value) {
+
+        this.set(DECORATED_VALUE, _value);
     }
 }
