@@ -8,8 +8,8 @@ const entries = new Set();
 
 class A {
     
-    // @type(Number)
-    // accessor prop;
+    @type(Number)
+    accessor prop;
 
     @allowNull
     @returnType(Number)
@@ -28,8 +28,8 @@ class A {
 class B extends A {
 
     
-    @type(String)
-    accessor prop
+    // @type(String)
+    // accessor prop
 
     @paramsType(String)
     @returnType(String)

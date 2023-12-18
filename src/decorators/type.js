@@ -20,7 +20,7 @@ function type(_abstract) {
 
         footprint.setFootPrint(prop, context, TYPE);
         
-        return prop;
+        return footprint.retrieveFootPrintByKey(prop, context, DECORATED_VALUE);
     }
 }
 
