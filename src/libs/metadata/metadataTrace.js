@@ -35,6 +35,7 @@
 
 
 const { property_metadata_t, metadata_t, TYPE_JS } = require('../../reflection/metadata.js');
+const self = require('../../utils/self.js');
 const { ORIGIN } = require('./constant.js');
 const {classStack, propStack} = require('./initialStack.js');
 
@@ -66,21 +67,53 @@ function registerPropMeta(propMeta) {
  */
 function traceAndInitContextMetadata(_, decoratorContext) {
 
-    const {name} = decoratorContext;
-    const refreshedTypeMeta = refreshTypeMetadata(_, decoratorContext);
+    refreshTypeMetadata(_, decoratorContext);
     
-    let propMeta = refreshedTypeMeta.properties[name];
+    const propMeta = resolvePropMeta(_, decoratorContext);
+        
+    refreshMetadata(decoratorContext);
+    
+    return propMeta;
+}
+
+function resolvePropMeta(_, decoratorContext) {
+
+    const {name} = decoratorContext;
+    const properties = retrieveProperties(_, decoratorContext);
+    let propMeta = properties[name];
 
     if (noPropMetaOrSubClassOverride(_, decoratorContext)) {
         
-        propMeta = refreshedTypeMeta.properties[name] = new property_metadata_t();
-
+        propMeta = properties[name] = new property_metadata_t();
+        
         registerPropMeta(propMeta);
     }
 
-    refreshMetadata(decoratorContext);
-
     return propMeta;
+}
+
+function retrieveProperties(_, decoratorContext) {
+
+    const {metadata, static} = decoratorContext;
+    /**@type {metadata_t} */
+    const refreshedTypeMeta = metadata[TYPE_JS];
+
+    try {
+        return static ? refreshedTypeMeta.properties :
+            refreshedTypeMeta.prototype.properties;
+    }
+    catch {
+
+        throw new Error('there is no type metadata on this context');
+    }
+}
+
+function retrievePropMeta(_, decoratorContext) {
+
+    const {name} = decoratorContext;
+    const properties = retrieveProperties(_, decoratorContext);
+
+    return properties[name];
 }
 
 function refreshMetadata(decoraotorContext) {
@@ -96,15 +129,16 @@ function refreshMetadata(decoraotorContext) {
  */
 function noPropMetaOrSubClassOverride(_, decoratorContext) {
 
-    const {name, metadata} = decoratorContext;
-    /**@type {metadata_t} */
-    const typeMeta = metadata[TYPE_JS];
-    const propMeta = typeMeta.properties[name];
-
+    const {metadata} = decoratorContext;
+    
     if (metadata[ORIGIN] !== metadata) {
-
+        /**
+         * check if current decorator is the first that affects on a class
+         */
         return true;        
     }
+
+    const propMeta = retrievePropMeta(_, decoratorContext);
 
     /**
      * when the property meta haven't exist yet, it's mean this is the first decorator,
@@ -120,7 +154,7 @@ function noPropMetaOrSubClassOverride(_, decoratorContext) {
      */
     if (propStack.exist(propMeta) &&
     propStack.head !== propMeta) {
-    
+        
         return true;
     }
     
@@ -160,5 +194,6 @@ module.exports = {
     currentClassMeta, 
     traceAndInitContextMetadata,
     refreshTypeMetadata,
+    retrievePropMeta,
 }
 

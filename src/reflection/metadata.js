@@ -23,6 +23,24 @@ function metadata_t(_abstract, _ref) {
 
     /**@type {InterfacePrototype} */
     this.interfaces = _ref?.interfaces?.clone();
+
+    /**@type {prototype_metadata_t} */
+    this.prototype = new prototype_metadata_t(_ref);
+}
+
+/**
+ * 
+ * @param {metadata_t} _ref 
+ */
+function prototype_metadata_t(_ref) {
+
+    const _refProto = _ref?.prototype;
+
+    /**@type {Function} */
+    this.abstract = _ref?.abstract;
+    
+    /**@type {Object} */
+    this.properties = Object.assign({}, _refProto?.properties);
 }
 
 
@@ -78,5 +96,5 @@ function isAbstract(_unknown) {
 }
 
 module.exports = {
-    METADATA, TYPE_JS, metaOf, metadata_t, property_metadata_t
+    METADATA, TYPE_JS, metaOf, metadata_t, property_metadata_t, prototype_metadata_t
 };

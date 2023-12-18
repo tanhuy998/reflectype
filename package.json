@@ -1,6 +1,6 @@
 {
   "name": "reflectype",
-  "version": "0.0.9",
+  "version": "0.0.10-beta.1",
   "description": "Support types for Javascript class's property using decorator feature",
   "main": "./index.js",
   "repository": "https://github.com/tanhuy998/reflectype",
@@ -15,6 +15,7 @@
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "test-reflection": "npx babel ./test/reflection/class.js > ./test/reflection/compiled.js && node --trace-warnings ./test/reflection",
     "test-footprint": "npx babel ./test/decoratorfootprint/class.js > ./test/decoratorfootprint/compiled.js && node --trace-warnings ./test/decoratorfootprint",
     "test-interface": "npx babel ./test/interface/class.js > ./test/interface/compiled.js && node --trace-warnings ./test/interface",
     "test-metadata": "npx babel ./test/classMetadata/class.js > ./test/classMetadata/compiled.js && node --trace-warnings ./test/classMetadata"

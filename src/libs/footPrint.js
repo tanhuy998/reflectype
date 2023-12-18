@@ -1,5 +1,6 @@
 const { TYPE_JS, METADATA } = require("../reflection/metadata");
 const { FOOTPRINT } = require("./constant");
+const { retrievePropMeta } = require("./metadata/metadataTrace.js");
 const {isObjectKeyOrFail, isValuable, isObjectKey} = require('./type.js');
 
 /**
@@ -16,8 +17,7 @@ const {isObjectKeyOrFail, isValuable, isObjectKey} = require('./type.js');
  */
 function initTypeMetaFootPrint(_, context) {
 
-    const {name, metadata} = context;
-    const _propMeta = metadata[TYPE_JS]?.properties[name];
+    const _propMeta = retrievePropMeta(_, context);
 
     if (typeof _propMeta !== 'object') {
 
@@ -71,10 +71,8 @@ function hasFootPrint(_, context, _key = undefined) {
 }
 
 function retrieveFootPrintObject(_, context) {
-
-    const {metadata, name} = context;
     
-    return (metadata[TYPE_JS]?.properties[name])?.[FOOTPRINT];
+    return retrievePropMeta(_, context)?.[FOOTPRINT];
 }
 
 /**
