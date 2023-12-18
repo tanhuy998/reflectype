@@ -1,8 +1,7 @@
 const propertyDecorator = require('../libs/propertyDecorator.js');
-const { TYPE_JS } = require('../reflection/metadata.js');
-const { hasFootPrint } = require('../libs/propertyDecorator.js')
-
-const { compareArgsWithType } = require('../libs/argumentType.js')
+const { compareArgsWithType } = require('../libs/argumentType.js');
+const { hasFootPrint, setFootPrint } = require('../libs/footPrint.js');
+const { DEFAULT_ARGS } = require('../libs/constant.js');
 /**
  * 
  * @param  {...any} values 
@@ -11,7 +10,7 @@ function defaultArguments(...args) {
 
     return function (_method, _context) {
 
-        const { kind, name } = _context;
+        const { kind } = _context;
 
         if (kind !== 'method') {
 
@@ -20,7 +19,7 @@ function defaultArguments(...args) {
 
         const propMeta = propertyDecorator.initMetadata(_method, _context);
 
-        const isApplied = hasFootPrint(propMeta, 'defaultArgumentMetadataApplied');
+        const isApplied = hasFootPrint(propMeta, DEFAULT_ARGS);
 
         if (isApplied) {
 
@@ -31,8 +30,9 @@ function defaultArguments(...args) {
 
         propMeta.value = args;
 
-        return _method;
+        setFootPrint(_method, _context, DEFAULT_ARGS);
 
+        return _method;
     }
 }
 
