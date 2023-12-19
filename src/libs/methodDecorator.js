@@ -140,15 +140,19 @@ function decorateMethod(_method, context, propMeta) {
 
             return;
         }
+        
+        /**
+         * just call this once when the first instance of a class initialized
+         */
+        detectProtoypeAndGenerateMethod(this, name, propMeta, context);
 
-        this[name] = detectProtoypeAndGenerateMethod(this, name, propMeta, context)
         propMeta.isInitialized = true;
     })
 }
 
 /**
  * decorator AddInitializer() is called before class constructors so it overrides the object 
- * property into a form that is different from class's prototype
+ * property into a form that is different from class's prototype.
  * 
  * @param {Object} _obj 
  * @param {string|Symbol} _methodName 
@@ -166,10 +170,10 @@ function detectProtoypeAndGenerateMethod(_obj, _methodName, propMeta, decoratorC
          *  to ensure the current decorator context belongs to the top derived class's prototype
          *  in order to prevent base class decorators override subclass's prototype.
          */
-        return generateDecorateMethod(prototypeMethod, propMeta);
+        abstract.prototype[_methodName] = generateDecorateMethod(prototypeMethod, propMeta);
     }
 
-    return prototypeMethod;
+    //abstract.prototype[_methodName] =  prototypeMethod;
 }
 
 
