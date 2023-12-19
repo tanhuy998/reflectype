@@ -6,7 +6,8 @@ const {isIterable} = require('./type.js');
 const ReturnValueNotMatchType = require('../error/returnValueNotMatchTypeError.js');
 const isAbStract = require('../utils/isAbstract.js');
 const { DECORATED_VALUE } = require('./constant.js');
-const MethodDecoratorFootPrint = require('./footprint/methodDecoratorFootPrint.js');
+const self = require('../utils/self.js');
+const { METADATA } = require('../constants.js');
 
 
 function generateDecorateMethod(_method, propMeta) {
@@ -132,9 +133,6 @@ function decorateMethod(_method, context, propMeta) {
     }
 
     const {addInitializer, name} = context;
-    //const newMethod = generateDecorateMethod(_method, propMeta);
-
-    //setFootPrint(_method, context, DECORATED_VALUE, newMethod);
 
     addInitializer(function () {
         
@@ -143,11 +141,35 @@ function decorateMethod(_method, context, propMeta) {
             return;
         }
 
-        const oldMethod = this[name];
-
-        this[name] = generateDecorateMethod(oldMethod, propMeta);
+        this[name] = detectProtoypeAndGenerateMethod(this, name, propMeta, context)
         propMeta.isInitialized = true;
     })
+}
+
+/**
+ * decorator AddInitializer() is called before class constructors so it overrides the object 
+ * property into a form that is different from class's prototype
+ * 
+ * @param {Object} _obj 
+ * @param {string|Symbol} _methodName 
+ * @param {property_metadata_t} propMeta 
+ * @returns 
+ */
+function detectProtoypeAndGenerateMethod(_obj, _methodName, propMeta, decoratorContext) {
+
+    const abstract = self(_obj);
+    const {metadata} = decoratorContext;
+    const prototypeMethod = _obj[_methodName];
+
+    if (abstract[METADATA] === metadata) {
+        /**
+         *  to ensure the current decorator context belongs to the top derived class's prototype
+         *  in order to prevent base class decorators override subclass's prototype.
+         */
+        return generateDecorateMethod(prototypeMethod, propMeta);
+    }
+
+    return prototypeMethod;
 }
 
 
