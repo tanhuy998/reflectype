@@ -1,13 +1,13 @@
-const {metaOf, metadata_t, property_metadata_t} = require('../reflection/metadata.js');
-const {hasFootPrint, setFootPrint} = require('./footPrint.js');
+const {metaOf, metadata_t, property_metadata_t, PROP_META_INITIALIZED} = require('../reflection/metadata.js');
+const {hasFootPrint} = require('./footPrint.js');
 const matchType = require('./matchType.js');
 const {compareArgsWithType} = require('../libs/argumentType.js');
-const {isIterable} = require('./type.js');
+const {isIterable, isInstantiable} = require('./type.js');
 const ReturnValueNotMatchType = require('../error/returnValueNotMatchTypeError.js');
 const isAbStract = require('../utils/isAbstract.js');
 const { DECORATED_VALUE } = require('./constant.js');
 const self = require('../utils/self.js');
-const { METADATA } = require('../constants.js');
+const { belongsToCurrentMetadataSession } = require('./metadata/metadataTrace.js');
 
 
 function generateDecorateMethod(_method, propMeta) {
@@ -132,25 +132,51 @@ function decorateMethod(_method, context, propMeta) {
         return;
     }
 
-    const {addInitializer, name} = context;
+    const {addInitializer} = context;
 
-    addInitializer(function () {
-        
+    propMeta.isInitialized = false;
+    propMeta.decoratorContext = context;
+
+    addInitializer(overrideClassPrototype(propMeta))
+}
+
+/**
+ * @description
+ *  Override class's prototype when decorators take effect on a particular class.
+ *  This method has multiple use cases, it can be invoke when a new (method) decorated object
+ *  is created or is invoked by Reflection objects if they noticed that the class which they reflect
+ *  is not (fully) initialized. The Initilization is just established once and is marked "isInitialized" 
+ *  when the initialization is done.
+ * 
+ * @param {property_metadata_t} propMeta
+ * 
+ * @returns {Function}
+ */
+function overrideClassPrototype(propMeta) {
+
+    /**
+     * @this {Function|Object}
+     */
+    return function () {
+        /**
+         *  *this method must be bound to any object
+         */
+
         if (propMeta.isInitialized === true) {
 
             return;
         }
         
-        /**
-         * just call this once when the first instance of a class initialized
-         */
-        detectProtoypeAndGenerateMethod(this, name, propMeta, context);
+        detectProtoypeAndGenerateMethod(this, propMeta);
 
-        propMeta.isInitialized = true;
-    })
+        delete propMeta.decoratorContext;
+
+        Object.defineProperty(propMeta, 'isInitialized', PROP_META_INITIALIZED);
+    }
 }
 
 /**
+ * @description
  * decorator AddInitializer() is called before class constructors so it overrides the object 
  * property into a form that is different from class's prototype.
  * 
@@ -159,22 +185,59 @@ function decorateMethod(_method, context, propMeta) {
  * @param {property_metadata_t} propMeta 
  * @returns 
  */
-function detectProtoypeAndGenerateMethod(_obj, _methodName, propMeta, decoratorContext) {
+function detectProtoypeAndGenerateMethod(_unknown, propMeta) {
 
-    const abstract = self(_obj);
-    const {metadata} = decoratorContext;
-    const prototypeMethod = _obj[_methodName];
+    const abstract = !isInstantiable(_unknown) ? self(_unknown) : _unknown;
+    const decoratorContext = propMeta.decoratorContext;
+    const {name} = decoratorContext;
+    const isStaticMethod = decoratorContext.static;
+    const oldMethod = isStaticMethod ? abstract[name] : abstract.prototype[name];
 
-    if (abstract[METADATA] === metadata) {
+    let newMethod;
+    
+    if (belongsToCurrentMetadataSession(decoratorContext)) {
+        
+        newMethod = generateDecorateMethod(oldMethod, propMeta);
+    }
+    else {
         /**
-         *  to ensure the current decorator context belongs to the top derived class's prototype
-         *  in order to prevent base class decorators override subclass's prototype.
+         * otherwise, rearrange the propMeta of the subclass because the inherited propMeta 
+         * is not subclass actual propMeta
          */
-        abstract.prototype[_methodName] = generateDecorateMethod(prototypeMethod, propMeta);
+        unlinkPropMeta(abstract, decoratorContext);
+
+        newMethod = oldMethod;
     }
 
-    //abstract.prototype[_methodName] =  prototypeMethod;
+    /**
+     *  to ensure the current decorator context belongs to the top derived class's prototype
+     *  in order to prevent base class decorators override subclass's prototype.
+     */
+    if (isStaticMethod) {
+
+        abstract[name] = newMethod;
+    }
+    else {
+
+        abstract.prototype[name] = newMethod;
+    }
+}
+
+function unlinkPropMeta(_class, decoratorContext) {
+
+    const {name} = decoratorContext;
+    const isStatic = decoratorContext.static;
+    const typeMeta = metaOf(_class);
+
+    const typeMetaProtoProperties = isStatic ? typeMeta?.properties : typeMeta?.prototype?.properties;
+
+    if (typeof typeMetaProtoProperties !== 'object') {
+
+        return;
+    }
+
+    delete typeMetaProtoProperties[name];
 }
 
 
-module.exports = {decorateMethod};
+module.exports = {decorateMethod, overrideClassPrototype};

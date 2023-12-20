@@ -71,7 +71,7 @@ function traceAndInitContextMetadata(_, decoratorContext) {
     
     const propMeta = resolvePropMeta(_, decoratorContext);
         
-    refreshMetadata(decoratorContext);
+    refreshDecoratorMetadataSession(decoratorContext);
     
     return propMeta;
 }
@@ -79,7 +79,7 @@ function traceAndInitContextMetadata(_, decoratorContext) {
 function resolvePropMeta(_, decoratorContext) {
 
     const {name} = decoratorContext;
-    const properties = retrieveProperties(_, decoratorContext);
+    const properties = retrieveTypeMetaProperties(_, decoratorContext);
     let propMeta = properties[name];
 
     if (noPropMetaOrSubClassOverride(_, decoratorContext)) {
@@ -92,7 +92,7 @@ function resolvePropMeta(_, decoratorContext) {
     return propMeta;
 }
 
-function retrieveProperties(_, decoratorContext) {
+function retrieveTypeMetaProperties(_, decoratorContext) {
 
     const {metadata, static} = decoratorContext;
     /**@type {metadata_t} */
@@ -111,29 +111,44 @@ function retrieveProperties(_, decoratorContext) {
 function retrievePropMeta(_, decoratorContext) {
 
     const {name} = decoratorContext;
-    const properties = retrieveProperties(_, decoratorContext);
+    const properties = retrieveTypeMetaProperties(_, decoratorContext);
 
     return properties[name];
 }
 
-function refreshMetadata(decoraotorContext) {
+/**
+ * Refresh the derator metadata session when the subclass reaches first property decorator
+ * 
+ * @param {Object} decoraotorContext 
+ */
+function refreshDecoratorMetadataSession(decoraotorContext) {
     
     const {metadata} = decoraotorContext;
 
-    metadata[ORIGIN] = metadata;
+    if (isSubclassFirstDecorator(decoraotorContext)) {
+
+        metadata[ORIGIN] = metadata;
+    }
 }
 
 /**
+ * Detect whether or not subclass decorator overriden.
+ * Otherwise, check for the existence of propMeta on the property which is decorated by a decorator
  * 
- * @param {property_metadata_t} propMeta 
+ * @param {any} _
+ * @param {Object} decoratorContext 
+ * 
+ * @returns {boolean}
  */
 function noPropMetaOrSubClassOverride(_, decoratorContext) {
 
-    const {metadata} = decoratorContext;
+    //const {metadata} = decoratorContext;
     
-    if (metadata[ORIGIN] !== metadata) {
+    if (isSubclassFirstDecorator(decoratorContext)) {
         /**
-         * check if current decorator is the first that affects on a class
+         *  when a subclass reaches it's first decorator,
+         *  just create new propMeta no matter what the existence of propMeta
+         *  on the property which is the decorator takes effect.
          */
         return true;        
     }
@@ -169,6 +184,11 @@ function noPropMetaOrSubClassOverride(_, decoratorContext) {
  */
 function refreshTypeMetadata(_, decoratorContext) {
 
+    if (!isSubclassFirstDecorator(decoratorContext)) {
+
+        return;
+    }
+
     const {kind, metadata} = decoratorContext;
     /**@type {metadata_t} */
     const oldTypeMeta = metadata[TYPE_JS];
@@ -189,11 +209,32 @@ function refreshTypeMetadata(_, decoratorContext) {
     return newTypeMeta;
 }
 
+/**
+ * 
+ * @param {Object} decoraotorContext 
+ * @returns 
+ */
+function isSubclassFirstDecorator(decoraotorContext) {
+
+    const {metadata} = decoraotorContext;
+
+    return metadata[ORIGIN] !== metadata;
+}
+
+function belongsToCurrentMetadataSession(decoraotorContext) {
+
+    const {metadata} = decoraotorContext;
+
+    return metadata[ORIGIN] === metadata;
+}
+
 module.exports = {
     currentPropMeta, 
     currentClassMeta, 
     traceAndInitContextMetadata,
     refreshTypeMetadata,
     retrievePropMeta,
+    retrieveTypeMetaProperties,
+    belongsToCurrentMetadataSession
 }
 

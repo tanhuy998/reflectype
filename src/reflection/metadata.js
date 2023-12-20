@@ -70,6 +70,14 @@ function property_metadata_t(_ref) {
     // this field is for configuration, not need to be copied from the _ref
     /**@type {boolean} */
     this.isInitialized = undefined;
+
+    /**
+     *  when isInitialized equals to false,
+     *  decoratorContext will be set to the decorator context which is 
+     *  applied by a particular method decorator 
+     */
+    /**@type {Object} */
+    this.decoratorContext = undefined;
 }
 
 /**
@@ -96,5 +104,16 @@ function isAbstract(_unknown) {
 }
 
 module.exports = {
-    METADATA, TYPE_JS, metaOf, metadata_t, property_metadata_t, prototype_metadata_t
+    METADATA, 
+    TYPE_JS, 
+    PROP_META_INITIALIZED: {
+        configurable: false,
+        enumerable: true,
+        writable: false,
+        value: true            
+    },
+    metaOf, 
+    metadata_t,
+    property_metadata_t, 
+    prototype_metadata_t
 };
