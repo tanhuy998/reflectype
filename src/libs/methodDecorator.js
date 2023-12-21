@@ -1,4 +1,4 @@
-const {metaOf, metadata_t, property_metadata_t, PROP_META_INITIALIZED} = require('../reflection/metadata.js');
+const {metaOf, metadata_t, property_metadata_t, prototype_metadata_t, PROP_META_INITIALIZED} = require('../reflection/metadata.js');
 const {hasFootPrint} = require('./footPrint.js');
 const matchType = require('./matchType.js');
 const {compareArgsWithType} = require('../libs/argumentType.js');
@@ -167,11 +167,7 @@ function overrideClassPrototype(propMeta) {
             return;
         }
         
-        detectProtoypeAndGenerateMethod(this, propMeta);
-
-        delete propMeta.decoratorContext;
-
-        Object.defineProperty(propMeta, 'isInitialized', PROP_META_INITIALIZED);
+        establishClassPrototypeMethod(this, propMeta);
     }
 }
 
@@ -185,7 +181,12 @@ function overrideClassPrototype(propMeta) {
  * @param {property_metadata_t} propMeta 
  * @returns 
  */
-function detectProtoypeAndGenerateMethod(_unknown, propMeta) {
+function establishClassPrototypeMethod(_unknown, propMeta) {
+
+    if (propMeta.isInitialized === true) {
+
+        return;
+    }
 
     const abstract = !isInstantiable(_unknown) ? self(_unknown) : _unknown;
     const decoratorContext = propMeta.decoratorContext;
@@ -198,6 +199,7 @@ function detectProtoypeAndGenerateMethod(_unknown, propMeta) {
     if (belongsToCurrentMetadataSession(decoratorContext)) {
         
         newMethod = generateDecorateMethod(oldMethod, propMeta);
+        unlinkDecoratorContext(propMeta);
     }
     else {
         /**
@@ -208,6 +210,8 @@ function detectProtoypeAndGenerateMethod(_unknown, propMeta) {
 
         newMethod = oldMethod;
     }
+
+    linkTypeMetaAbstract(abstract);
 
     /**
      *  to ensure the current decorator context belongs to the top derived class's prototype
@@ -221,6 +225,36 @@ function detectProtoypeAndGenerateMethod(_unknown, propMeta) {
 
         abstract.prototype[name] = newMethod;
     }
+
+    Object.defineProperty(propMeta, 'isInitialized', PROP_META_INITIALIZED);
+}
+
+function linkTypeMetaAbstract(_class) {
+
+    const typeMeta = metaOf(_class);
+
+    if (!(typeMeta instanceof metadata_t)) {
+
+        return;
+    }
+
+    typeMeta.abstract = _class;
+
+    if (!(typeMeta.prototype instanceof prototype_metadata_t)) {
+
+        return;
+    }
+
+    typeMeta.prototype.abstract = _class;
+}
+
+/**
+ * 
+ * @param {property_metadata_t} propMeta 
+ */
+function unlinkDecoratorContext(propMeta) {
+
+    delete propMeta.decoratorContext;
 }
 
 function unlinkPropMeta(_class, decoratorContext) {
@@ -240,4 +274,4 @@ function unlinkPropMeta(_class, decoratorContext) {
 }
 
 
-module.exports = {decorateMethod, overrideClassPrototype};
+module.exports = {decorateMethod, establishClassPrototypeMethod};

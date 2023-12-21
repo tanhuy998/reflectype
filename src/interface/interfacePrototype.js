@@ -25,6 +25,21 @@ class InterfacePrototype {
         return this.#origin;
     }
 
+    /**
+     * for Reflection query
+     */
+    get properties() {
+
+        const ret = {};
+
+        for (const intf of this.#interfaces.values()) {
+
+            ret[intf.name] = intf;
+        }
+
+        return ret;
+    }
+
 
     constructor(_origin , _interfaces = []) {
 

@@ -15,6 +15,7 @@
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "test-reflect-query": "npx babel ./test/reflectionQuery/class.js > ./test/reflectionQuery/compiled.js && node --trace-warnings ./test/reflectionQuery",
     "test-reflection": "npx babel ./test/reflection/class.js > ./test/reflection/compiled.js && node --trace-warnings ./test/reflection",
     "test-footprint": "npx babel ./test/decoratorfootprint/class.js > ./test/decoratorfootprint/compiled.js && node --trace-warnings ./test/decoratorfootprint",
     "test-interface": "npx babel ./test/interface/class.js > ./test/interface/compiled.js && node --trace-warnings ./test/interface",
