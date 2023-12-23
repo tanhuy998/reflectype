@@ -1,15 +1,18 @@
-const { isValuable, isObject, isObjectKey } = require("../libs/type.js");
-const { property_metadata_t } = require("../reflection/metadata.js");
-const ReflectionQueryBuilder = require("./query/reflectionQueryBuilder.js");
-const ReflectionQuerySubject = require("./query/reflectionQuerySubject.js");
-const methodDecorator = require('../libs/methodDecorator.js');
+const { isValuable, isObject, isObjectKey, isObjectLike } = require("../../libs/type.js");
+const { property_metadata_t } = require("../../reflection/metadata.js");
+const ReflectionQueryBuilder = require("../query/reflectionQueryBuilder.js");
+const ReflectionQuerySubject = require("../query/reflectionQuerySubject.js");
+const methodDecorator = require('../../libs/methodDecorator.js');
+const { ReflectionSubjectNotFoundError, ReflectionFieldNotFoundError } = require("../error/reflectionAspect.js");
+const Reflector = require("../reflector.js");
+const ReflectionQuery = require("../query/reflectionQuery.js");
 
 /**
- * @typedef {import('./query/reflectionQuery.js')} ReflectionQuery
- * @typedef {import("./reflector.js")} Reflector
- * @typedef {import('../reflection/metadata.js').metadata_t} metadata_t
- * @typedef {import('../reflection/metadata.js').prototype_metadata_t} prototype_metadata_t
- * @typedef {import('../interface/interfacePrototype.js')} InterfacePrototype
+ * @typedef {import('../query/reflectionQuery.js')} ReflectionQuery
+ * @typedef {import("../reflector.js")} Reflector
+ * @typedef {import('../../reflection/metadata.js').metadata_t} metadata_t
+ * @typedef {import('../../reflection/metadata.js').prototype_metadata_t} prototype_metadata_t
+ * @typedef {import('../../interface/interfacePrototype.js')} InterfacePrototype
  */
 
 /**
@@ -40,7 +43,10 @@ module.exports = class ReflectionAspect {
 
     #init() {
 
+        if (!(this.#reflector instanceof Reflector)) {
 
+            throw new TypeError('invalid reflector');
+        }
     }
 
     #isValidOrFail() {
@@ -69,6 +75,11 @@ module.exports = class ReflectionAspect {
      * @returns {metadata_t|prototype_metadata_t|InterfacePrototype|property_metadata_t|Object}
      */
     execQuery(_query) {
+
+        if (!(_query instanceof ReflectionQuery)) {
+
+            throw new TypeError('invalid query');
+        }
 
         this.#isValidOrFail();       
 
@@ -123,15 +134,16 @@ module.exports = class ReflectionAspect {
     #_resolveSubject(_query) {
 
         const reflector = this.#reflector;
-        const subject = _query.subject === ReflectionQuerySubject.STATIC ? 
+
+        return _query.subject === ReflectionQuerySubject.STATIC ? 
                         reflector.metadata : reflector.metadata[_query.subject];
 
-        if (!isObject(subject)) {
+        // if (!isObject(subject)) {
 
-            throw new Error();
-        }
+        //     throw new Error();
+        // }
         //console.log(['subject'], _query.subject, subject);
-        return subject;
+        //return subject;
     }
 
     /**
@@ -143,6 +155,11 @@ module.exports = class ReflectionAspect {
      */
     #_resolveField(_query, _metaSubject) {
 
+        if (!isObject(_metaSubject)) {
+
+            throw new ReflectionSubjectNotFoundError();
+        }
+
         const queryField = _query.field;
 
         if (!isObjectKey(queryField)) {
@@ -151,11 +168,6 @@ module.exports = class ReflectionAspect {
         }
 
         const metaField = _metaSubject[queryField];
-
-        if (!isObject(metaField)) {
-
-            throw new Error();
-        }
         //console.log(['field'], metaField)
         return metaField;
     }
@@ -169,6 +181,11 @@ module.exports = class ReflectionAspect {
      */
     #_resolvePropMeta(_query, _metaField) {
 
+        if (!isObject(_metaField)) {
+
+            throw new ReflectionFieldNotFoundError();
+        }
+
         const queryProp = _query.propName;
         
         if (!isObjectKey(queryProp)) {
@@ -177,12 +194,80 @@ module.exports = class ReflectionAspect {
         }
 
         const propMeta = _metaField[queryProp];
-
-        if (!isObject(propMeta)) {
-
-            throw new Error();
-        }
         //console.log(['prop'], propMeta)
         return propMeta;
+    }
+
+    /**
+     * 
+     * @param {ReflectionQuery} _query 
+     * @param {property_metadata_t|Object|Iterable} _any 
+     */
+    #_resolveCriteria(_query, _any) {
+
+        if (!isObject(_query)) {
+
+            return _any;
+        }
+
+        if (_any instanceof property_metadata_t) {
+
+            return this.#_checkCriteria(_any) ? _any : undefined;
+        }
+
+        const iterable = 
+    }
+
+    /**
+     * 
+     * @param {Iterable} iterable 
+     * @param {Object} criteria 
+     * 
+     * @returns {Iterable}
+     */
+    #_iterateCriteria(iterable, criteria) {
+
+        let ret;
+
+        for (const entry of iterable) {
+
+            if (!(this.#_checkCriteria(entry, criteria))) {
+
+                continue;
+            }
+
+            (ret ??= []).push(entry);
+        }
+
+        return ret;
+    }
+
+    /**
+     * 
+     * @param {Object|Function} _target 
+     * @param {Object} criteria 
+     * @returns {boolean}
+     */
+    #_checkCriteria(_target, criteria) {
+
+        if (!isObjectLike(_target)) {
+
+            return false;
+        }
+
+        for (const condition in criteria) {
+
+            if (!(condition in _target)) {
+
+                return false;
+            }
+
+            if (_target[condition] !== criteria[condition]) {
+
+                return false;
+            }
+        }
+
+        return true;
     }
 }
