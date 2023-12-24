@@ -13,20 +13,26 @@ const ReflectionAspect = require('../../src/metadata/aspect/reflectionAspect.js'
 const ReflectionQuerySubject = require('../../src/metadata/query/reflectionQuerySubject.js');
 const TypeMetadataReflection = require('../../src/metadata/typeMetaReflection.js');
 
-// const refl = new Reflector(A);
-// const reflAspect = new ReflectionAspect(refl);
+const refl = new Reflector(A);
+const reflAspect = new ReflectionAspect(refl);
 
-// const obj = reflAspect.query()
-//                         .select('func')
-//                         .from(ReflectionQuerySubject.PROTOTYPE)
-//                         .retrieve();
+const obj = reflAspect.query()
+                        .select('func')
+                        .where({
+                            isMethod: false
+                        })
+                        .from(ReflectionQuerySubject.PROTOTYPE)
+                        .on('properties')
+                        .retrieve();
+
+console.log(obj);
 
 // console.log(obj)
 
-const obj = new A();
+//const obj = new A();
 
 // console.log(obj)
 
-const refl = new TypeMetadataReflection(obj);
+// const refl = new TypeMetadataReflection(obj);
 
-console.log(refl.classPrototype)
+// console.log(refl.classPrototype)

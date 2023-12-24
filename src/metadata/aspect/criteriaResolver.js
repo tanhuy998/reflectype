@@ -3,7 +3,9 @@
  * @typedef {import('../../reflection/metadata').property_metadata_t} property_metadata_t
  */
 
-const { isObject } = require('../../libs/type');
+const { isObject, isObjectLike, isIterable, isPrimitive } = require('../../libs/type');
+const { property_metadata_t } = require('../../reflection/metadata');
+
 
 module.exports = class CriteriaResovler {
 
@@ -26,43 +28,55 @@ module.exports = class CriteriaResovler {
      * @param {ReflectionQuery} _query 
      * @param {property_metadata_t|Object|Iterable} _any 
      */
-    #_resolve() {
+    resolve() {
 
         const criteria = this.#query?.criteria
         const targetData = this.#targetData;
 
         if (!isObject(criteria)) {
-
+            
             return targetData;
         }
 
         if (targetData instanceof property_metadata_t) {
-
-            return this.#_checkCriteria(targetData, criteria) ? targetData : undefined;
+            
+            return this.#_checkCriteria(criteria)(targetData) ? targetData : undefined;
         }
 
-        const iterable = 
+        const queryList = this.#_convertIfIterable(targetData);
+
+        return this.#_iterateCriteria(queryList, criteria);
     }
 
     /**
      * 
-     * @param {Iterable} iterable 
-     * @param {Object} criteria 
-     * 
-     * @returns {Iterable}
+     * @param {Iterable?} _any 
+     * @returns {Array}
      */
-    #_iterateCriteria(iterable, criteria) {
+    #_convertIfIterable(_any) {
+
+        if (isObjectLike(_any)) {
+
+            return this.#_convertObject(_any);
+        }
+
+        if (isIterable(_any)) {
+
+            return this.#_convertArray(_any);
+        }
+    }
+
+    /**
+     * 
+     * @param {Object|Function} _obj 
+     */
+    #_convertObject(_obj) {
 
         let ret;
 
-        for (const entry of iterable) {
+        for (const key in _obj) {
 
-            if (!(this.#_checkCriteria(entry, criteria))) {
-
-                continue;
-            }
-
-            (ret ??= []).push(entry);
+            (ret ??= []).push(_obj[key]);
         }
 
         return ret;
@@ -70,30 +84,59 @@ module.exports = class CriteriaResovler {
 
     /**
      * 
-     * @param {Object|Function} _target 
+     * @param {*} _any 
+     * @returns 
+     */
+    #_convertArray(_any) {
+
+        if (!Array.isArray(_any)) {
+
+            return undefined;
+        }
+
+        return _any;
+    }
+
+    /**
+     * 
+     * @param {Array} list 
+     * @param {Object} criteria 
+     * 
+     * @returns {Iterable}
+     */
+    #_iterateCriteria(list, criteria) {
+
+        return list.filter(this.#_checkCriteria(criteria));
+    }
+
+    /**
+     * 
      * @param {Object} criteria 
      * @returns {boolean}
      */
-    #_checkCriteria(_target, criteria) {
-
-        if (!isObjectLike(_target)) {
-
-            return false;
-        }
-
-        for (const condition in criteria) {
-
-            if (!(condition in _target)) {
+    #_checkCriteria(criteria) {
+        
+        return function (element) {
+            
+            if (!isObjectLike(element)) {
 
                 return false;
             }
 
-            if (_target[condition] !== criteria[condition]) {
+            for (const [condIndex, condVal] of Object.entries(criteria)) {
+                
+                if (isIterable(element[condIndex]) || isIterable(condVal)) {
 
-                return false;
+                    continue;
+                }
+                
+                if (element[condIndex] !== condVal) {
+
+                    return false;
+                }
             }
+            
+            return true;
         }
-
-        return true;
     }
 }

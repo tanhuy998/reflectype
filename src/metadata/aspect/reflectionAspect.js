@@ -6,6 +6,7 @@ const methodDecorator = require('../../libs/methodDecorator.js');
 const { ReflectionSubjectNotFoundError, ReflectionFieldNotFoundError } = require("../error/reflectionAspect.js");
 const Reflector = require("../reflector.js");
 const ReflectionQuery = require("../query/reflectionQuery.js");
+const CriteriaResovler = require("./criteriaResolver.js");
 
 /**
  * @typedef {import('../query/reflectionQuery.js')} ReflectionQuery
@@ -84,13 +85,17 @@ module.exports = class ReflectionAspect {
         this.#isValidOrFail();       
 
         /**@type {property_metadata_t|Object} */
-        const metaObj = this.#_resolvePropMeta(_query,
-            this.#_resolveField(_query, 
-                this.#_resolveSubject(_query)));
+        const metaObj = new CriteriaResovler(_query, 
+            this.#_resolvePropMeta(_query,
+                this.#_resolveField(_query, 
+                    this.#_resolveSubject(_query))))
+                    .resolve();
         
 
-        if (_query.propName &&
-        metaObj instanceof property_metadata_t) {
+        if (
+            _query.propName &&
+        metaObj instanceof property_metadata_t
+        ) {
 
             return this.#_resovlePropMetaResolution(_query, metaObj);
         }
@@ -198,76 +203,5 @@ module.exports = class ReflectionAspect {
         return propMeta;
     }
 
-    /**
-     * 
-     * @param {ReflectionQuery} _query 
-     * @param {property_metadata_t|Object|Iterable} _any 
-     */
-    #_resolveCriteria(_query, _any) {
-
-        if (!isObject(_query)) {
-
-            return _any;
-        }
-
-        if (_any instanceof property_metadata_t) {
-
-            return this.#_checkCriteria(_any) ? _any : undefined;
-        }
-
-        const iterable = 
-    }
-
-    /**
-     * 
-     * @param {Iterable} iterable 
-     * @param {Object} criteria 
-     * 
-     * @returns {Iterable}
-     */
-    #_iterateCriteria(iterable, criteria) {
-
-        let ret;
-
-        for (const entry of iterable) {
-
-            if (!(this.#_checkCriteria(entry, criteria))) {
-
-                continue;
-            }
-
-            (ret ??= []).push(entry);
-        }
-
-        return ret;
-    }
-
-    /**
-     * 
-     * @param {Object|Function} _target 
-     * @param {Object} criteria 
-     * @returns {boolean}
-     */
-    #_checkCriteria(_target, criteria) {
-
-        if (!isObjectLike(_target)) {
-
-            return false;
-        }
-
-        for (const condition in criteria) {
-
-            if (!(condition in _target)) {
-
-                return false;
-            }
-
-            if (_target[condition] !== criteria[condition]) {
-
-                return false;
-            }
-        }
-
-        return true;
-    }
+    
 }

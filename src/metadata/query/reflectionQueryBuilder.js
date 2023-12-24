@@ -5,7 +5,7 @@ module.exports = class ReflectionQueryBuilder {
     #subject;
     #field;
     #prop;
-    #criterias;
+    #criteria;
 
     #reflectionObject
 
@@ -28,16 +28,16 @@ module.exports = class ReflectionQueryBuilder {
         return this;
     }
 
-    where(criterias) {
+    where(criteria) {
 
-        this.#criterias = criterias;
+        this.#criteria = criteria;
 
         return this;
     }
 
     on(_field) {
 
-        this.#field = _name;
+        this.#field = _field;
 
         return this;
     }
@@ -48,7 +48,7 @@ module.exports = class ReflectionQueryBuilder {
             subject: this.#subject,
             propName: this.#prop,
             field: this.#field,
-            criterias: this.#criterias
+            criteria: this.#criteria
         });
     }
 

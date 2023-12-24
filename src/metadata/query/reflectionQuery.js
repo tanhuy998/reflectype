@@ -1,4 +1,4 @@
-const { isObjectKey, isValuable } = require("../../libs/type");
+const { isObjectKey, isValuable, isObject } = require("../../libs/type");
 const { PROPERTIES } = require("./constant");
 const ReflectionQuerySubject = require("./reflectionQuerySubject");
 
@@ -52,6 +52,13 @@ module.exports = class ReflectionQuery {
     }
 
     #init() {
+        
+        this.#setDefaultSubjectIfUndefined();        
+        this.#setDefaultFieldIfUndefined();
+        this.#removeCriteriaIfNoMatchCondition();
+    }
+
+    #setDefaultSubjectIfUndefined() {
 
         if (not([
             ReflectionQuerySubject.PROTOTYPE,
@@ -61,15 +68,26 @@ module.exports = class ReflectionQuery {
 
             this.#subject = ReflectionQuerySubject.STATIC
         }
-    
+    }
+
+    #setDefaultFieldIfUndefined() {
+
         const fieldType = typeof this.#field;
         const propName = this.#propName;
-        
+
         this.#field = (fieldType !== 'string' && fieldType !== 'symbol') && 
                         isObjectKey(propName) ?
                         PROPERTIES : this.#field;
+    }
 
-        if (Object.keys(this.#criteria).length === 0) {
+    #removeCriteriaIfNoMatchCondition() {
+
+        if (
+            !isObjectKey(this.#field) || 
+            !isObject(this.#criteria) ||
+            isObject(this.#criteria) && 
+        Object.keys(this.#criteria).length === 0
+        ) {
 
             this.#criteria = undefined;
         }
