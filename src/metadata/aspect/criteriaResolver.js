@@ -106,7 +106,7 @@ module.exports = class CriteriaResovler {
      */
     #_iterateCriteria(list, criteria) {
 
-        return list.filter(this.#_checkCriteria(criteria));
+        return list?.filter(this.#_checkCriteria(criteria));
     }
 
     /**

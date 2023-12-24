@@ -4,48 +4,14 @@ const ReflectionQuerySubject = require("./query/reflectionQuerySubject");
 const ReflectionAspect = require("./aspect/reflectionAspect");
 const Reflector = require("./reflector");
 const ReflectorContext = require("./reflectorContext");
+const Reflection = require("./refelction");
 
-module.exports = class TypeMetadataReflection {
+module.exports = class TypeMetadataReflection extends Reflection {
 
-    #reflectionTarget;
-
-    /**@type {Reflector} */
-    #reflector;
-
-    /**@type {Reflector} */
-    get reflector() {
-
-        return this.#reflector;
-    }
-
-    get reflectionContext() {
-
-        return this.#reflector.reflectionContext;
-    }
-
-    get target() {
-        
-        this.#reflectionTarget;
-    }
-
-    get originClass() {
-
-        return this.#reflector.originClass;
-    }
-
-    get isValidReflection() {
-
-        return this.#reflector.isValidReflection
-    }
-
-    get isDisposed() {
-
-        return this.#reflector.isDisposed;
-    }
 
     get classPrototype() {
 
-        if (!this.#reflector.isValidReflection) {
+        if (!this.reflector.isValidReflection) {
 
             return undefined;
         }
@@ -70,14 +36,29 @@ module.exports = class TypeMetadataReflection {
                 return undefined;
         }
 
-        const reflector = this.#reflector;
+        //const reflector = this.reflector;
         
-        return new ReflectionAspect(reflector).execQuery(reflectionQuery);
+        return new ReflectionAspect(this.reflector).execQuery(reflectionQuery);
     }
 
     get classStatic() {
 
+        if (!this.reflector.isValidReflection) {
 
+            return undefined;
+        }
+
+        if (not([
+            ReflectorContext.ABSTRACT,
+            ReflectorContext.INSTANCE
+        ].includes(this.reflector.reflectionContext))) {
+
+            return undefined;
+        }
+
+        const reflector = this.reflector;
+        
+        return new ReflectionAspect(reflector).execQuery(new ReflectionQuery());
     }
 
     get interfaces() {
@@ -88,20 +69,18 @@ module.exports = class TypeMetadataReflection {
 
     constructor(_reflectionTarget) {
 
-        this.#reflectionTarget = _reflectionTarget;
+        super(_reflectionTarget);
 
         this.#init();
     }
 
     #init() {
 
-        const reflector = new Reflector(this.#reflectionTarget);
-
-        if (!reflector.isValidReflection) {
-
-            return;
-        }
-
-        this.#reflector = reflector;
+        
     }
+}
+
+function not(expr) {
+
+    return !expr;
 }

@@ -1,8 +1,12 @@
-const { property_metadata_t } = require('../reflection/metadata');
+const { isInstantiable, isObject, isFuntion } = require('../libs/type.js');
+const { property_metadata_t, metaOf } = require('../reflection/metadata');
 const isAbStract = require('../utils/isAbstract');
-const PrototypeReflector = require('./prototypeReflector');
+const self = require('../utils/self.js');
+const PrototypeReflector = require('./prototypeReflection.js');
+const ReflectionQuerySubject = require('./query/reflectionQuerySubject.js');
+const Reflection = require('./refelction.js');
 const reflectionContext = require('./reflectorContext');
-const {resolvePropertyMetadata, checkPropertyDescriptorState} = require('./traitPropertyReflection.js');
+const {resolvePropertyMetadata, checkPropertyDescriptorState, getMetadataFromProp} = require('./traitPropertyReflection.js');
 
 /**
  *  ReflectionPrototypeProperty focus on reading metadata of the prototype.
@@ -11,7 +15,7 @@ const {resolvePropertyMetadata, checkPropertyDescriptorState} = require('./trait
  *  ReflectionPrototypeProperty instantiating object is not neccessary, just directly apply reflection
  *  on class to get info about the class's prototype.
  */
-class ReflectionPrototypeProperty extends PrototypeReflector {
+class ReflectionPrototypeProperty extends Reflection {
 
     #name;
 
@@ -125,9 +129,20 @@ class ReflectionPrototypeProperty extends PrototypeReflector {
 
     #init() {
 
-        const targetPropMeta = resolvePropertyMetadata.call(this, this.#name);
-
+        //const targetPropMeta = resolvePropertyMetadata.call(this, this.#name);
         //this.#defaultValue = this.originClass?.prototype?.properties[this.#name].value;
+
+        if (!super.isValidReflection) {
+
+            this.#isValid = false;
+            return;
+        }
+
+        const targetPropMeta = super.mirror()
+                                .select(this.#name)
+                                .from(ReflectionQuerySubject.PROTOTYPE) 
+                                ?? resolvePropertyMetadata.call(this, this.#name);
+
         
         if (targetPropMeta instanceof property_metadata_t) {
 
