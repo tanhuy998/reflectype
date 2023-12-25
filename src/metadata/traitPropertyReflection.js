@@ -10,6 +10,8 @@ const ReflectorContext = require('./reflectorContext.js');
  * @typedef {import("./reflectionProperty.js")} ReflectionProperty
  * @typedef {import("./reflectionPrototypeProperty")} ReflectionPrototypeProperty
  * @typedef {ReflectionProperty|ReflectionPrototypeProperty} PropertyReflector
+ * 
+ * @typedef {import('./reflection.js')} Reflection
  */
 
 /**
@@ -18,7 +20,7 @@ const ReflectorContext = require('./reflectorContext.js');
  * @param {string | Symbol} prop 
  * @returns 
  * 
- * @this PropertyReflector
+ * @this Reflection
  */
 function resolvePropertyMetadata(prop) {
 
@@ -39,7 +41,7 @@ function resolvePropertyMetadata(prop) {
  * @param {*} prop 
  * @returns 
  * 
- * @this PropertyReflector
+ * @this Reflection
  */
 function getMetadataFromProp(prop) {
     
@@ -58,7 +60,7 @@ function getMetadataFromProp(prop) {
  * 
  * @param {*} _state 
  * 
- * @this PropertyReflector
+ * @this Reflection
  */
 function checkPropertyDescriptorState(_state) {
 
@@ -68,7 +70,7 @@ function checkPropertyDescriptorState(_state) {
 
     const descriptor = Object.getOwnPropertyDescriptor(obj, this.name);
 
-    console.log('has descriptor', descriptor)
+    //console.log('has descriptor', descriptor)
 
    return descriptor ? descriptor[_state] || false : false;
 }

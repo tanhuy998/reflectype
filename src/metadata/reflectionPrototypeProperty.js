@@ -4,9 +4,10 @@ const isAbStract = require('../utils/isAbstract');
 const self = require('../utils/self.js');
 const PrototypeReflector = require('./prototypeReflection.js');
 const ReflectionQuerySubject = require('./query/reflectionQuerySubject.js');
-const Reflection = require('./refelction.js');
+const Reflection = require('./reflection.js');
+const ReflectionPropertyAbstract = require('./reflectionPropertyAbstract.js');
 const reflectionContext = require('./reflectorContext');
-const {resolvePropertyMetadata, checkPropertyDescriptorState, getMetadataFromProp} = require('./traitPropertyReflection.js');
+const {resolvePropertyMetadata, checkPropertyDescriptorState} = require('./traitPropertyReflection.js');
 
 /**
  *  ReflectionPrototypeProperty focus on reading metadata of the prototype.
@@ -15,9 +16,9 @@ const {resolvePropertyMetadata, checkPropertyDescriptorState, getMetadataFromPro
  *  ReflectionPrototypeProperty instantiating object is not neccessary, just directly apply reflection
  *  on class to get info about the class's prototype.
  */
-class ReflectionPrototypeProperty extends Reflection {
+module.exports = class ReflectionPrototypeProperty extends ReflectionPropertyAbstract {
 
-    #name;
+    //#name;
 
     #type;
 
@@ -55,9 +56,9 @@ class ReflectionPrototypeProperty extends Reflection {
         return this.#isPrivate;
     }
 
-    get name() {
+    get type() {
 
-        return this.#name;
+        return this.#type;
     }
 
     get isValid() {
@@ -65,40 +66,14 @@ class ReflectionPrototypeProperty extends Reflection {
         return this.#isValid;
     }
 
-    get type() {
+    get defaultValue() {
 
-        return this.#type;
+        return this.isValid ? this.#defaultValue : undefined;
     }
 
-    // get isInstance() {
-
-    //     return super.reflectionContext === reflectionContext.INSTANCE;
-    // }
-
-    // get defaultValue() {
-
-    //     return this.isValid ? this.#defaultValue : undefined;
-    // }
-
-    //
     get value() {
 
         return this.#defaultValue;
-    }
-
-    get isWritable() {
-
-        return checkPropertyDescriptorState.call(this, 'writable');
-    }
-
-    get isEnumerable() {
-
-        return checkPropertyDescriptorState.call(this, 'enumerable');
-    }
-
-    get isConfigurable() {
-
-        return checkPropertyDescriptorState.call(this, 'configurable')
     }
 
     /**
@@ -108,45 +83,27 @@ class ReflectionPrototypeProperty extends Reflection {
      */
     constructor(_target, _attributeKey) {
 
-        if (!isAbStract(_target)) {
-
-            throw new TypeError('ReflectionPrototypeProperty just affect on class, invalid type of _target param');
-        }
-
-        if (!_attributeKey || typeof _attributeKey !== 'string' && typeof _attributeKey !== 'symbol') {
-
-            throw new TypeError('invalid type of _attribute parameter');
-        }
-
-        super(_target);   
-
-        this.#name = _attributeKey;
+        super(_target, _attributeKey);   
 
         this.#init();
-
-        super._dispose();
+        this.reflector._dispose();
     }
 
     #init() {
-
-        //const targetPropMeta = resolvePropertyMetadata.call(this, this.#name);
-        //this.#defaultValue = this.originClass?.prototype?.properties[this.#name].value;
-
+        
         if (!super.isValidReflection) {
-
+            
             this.#isValid = false;
             return;
         }
 
         const targetPropMeta = super.mirror()
-                                .select(this.#name)
-                                .from(ReflectionQuerySubject.PROTOTYPE) 
-                                ?? resolvePropertyMetadata.call(this, this.#name);
-
+                                .select(this.name)
+                                .from(ReflectionQuerySubject.PROTOTYPE)
+                                .retrieve()
+                                ?? resolvePropertyMetadata.call(this, this.name);
         
         if (targetPropMeta instanceof property_metadata_t) {
-
-            const theProp = this.originClass.prototype[this.#name];
 
             this.#type = targetPropMeta.type;
             this.#isPrivate = targetPropMeta.type || false;
@@ -154,7 +111,8 @@ class ReflectionPrototypeProperty extends Reflection {
             this.#defaultValue = targetPropMeta.value;
             this.#isStatic = targetPropMeta.static;
 
-            this.#isMethod = typeof theProp === 'function' && targetPropMeta.isMethod;
+            //const theProp = this.originClass.prototype[this.name];
+            this.#isMethod = targetPropMeta.isMethod //&& typeof theProp === 'function';
 
             return;
         }        
@@ -162,5 +120,3 @@ class ReflectionPrototypeProperty extends Reflection {
         this.#isValid = false;
     }
 }
-
-module.exports = ReflectionPrototypeProperty;

@@ -4,7 +4,7 @@ const ReflectionQuerySubject = require("./query/reflectionQuerySubject");
 const ReflectionAspect = require("./aspect/reflectionAspect");
 const Reflector = require("./reflector");
 const ReflectorContext = require("./reflectorContext");
-const Reflection = require("./refelction");
+const Reflection = require("./reflection");
 
 module.exports = class TypeMetadataReflection extends Reflection {
 

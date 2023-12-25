@@ -1,7 +1,7 @@
 const { prototype } = require("events");
 const Reflector = require("./reflector");
 const ReflectorContext = require("./reflectorContext");
-const Reflection = require("./refelction");
+const Reflection = require("./reflection");
 const ReflectionQuerySubject = require("./query/reflectionQuerySubject");
 const ReflectionPrototypeProperty = require("./reflectionPrototypeProperty");
 //const { prototype_metadata_t } = require("../reflection/metadata");
@@ -13,7 +13,7 @@ const ReflectionPrototypeProperty = require("./reflectionPrototypeProperty");
 /**
  *  PrototypeReflector focus on the prototype metadata of class/object
  */
-module.exports = class PrototypeReflector extends Reflection {
+module.exports = class ReflectionClassPrototype extends Reflection {
 
     /**@type {prototype_metadata_t} */
     #metadata;

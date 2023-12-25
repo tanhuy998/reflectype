@@ -12,6 +12,9 @@ const Reflector = require('../../src/metadata/reflector.js');
 const ReflectionAspect = require('../../src/metadata/aspect/reflectionAspect.js');
 const ReflectionQuerySubject = require('../../src/metadata/query/reflectionQuerySubject.js');
 const TypeMetadataReflection = require('../../src/metadata/typeMetaReflection.js');
+const ReflectionPrototypeProperty = require('../../src/metadata/reflectionPrototypeProperty.js');
+const ReflectionPrototypeMethod = require('../../src/metadata/reflectionPrototypeMethod.js');
+const ReflectionPrototypeAttribute = require('../../src/metadata/reflectionPrototypeAttribute.js');
 
 // const refl = new Reflector(A);
 // const reflAspect = new ReflectionAspect(refl);
@@ -33,6 +36,6 @@ const obj = new A();
 
 console.log(obj)
 
-const refl = new TypeMetadataReflection(obj);
+const refl = new ReflectionPrototypeAttribute(obj, 'prop');
 
-console.log(refl.classPrototype)
+console.log(refl.isValid)
