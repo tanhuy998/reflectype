@@ -1,6 +1,6 @@
-const ReflectionFunction = require("./reflectionFunction");
-const ReflectionPrototypeProperty = require("./reflectionPrototypeProperty");
-const {reflectParameters} = require('./traitfunctionReflection.js');
+const ReflectionFunction = require("../reflectionFunction.js");
+const ReflectionPrototypeProperty = require("./reflectionPrototypeProperty.js");
+const {reflectParameters} = require('../trait/traitfunctionReflection.js');
 
 class ReflectionPrototypeMethod extends ReflectionPrototypeProperty {
 
@@ -44,7 +44,7 @@ class ReflectionPrototypeMethod extends ReflectionPrototypeProperty {
 
     get returnType() {
 
-        return this.#returnType;
+        return this.#returnType || super.type;
     }
 
     get defaultArguments() {

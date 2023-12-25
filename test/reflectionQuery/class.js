@@ -32,7 +32,7 @@ class B extends A {
     // accessor prop
 
     // @paramsType(String)
-    //@returnType(String)
+    @returnType(String)
     func() {
 
         console.log('B.func()')

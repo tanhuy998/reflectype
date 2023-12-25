@@ -1,17 +1,13 @@
-const isAbstract = require('../utils/isAbstract.js');
-const {metaOf} = require('../reflection/metadata.js');
-const ReflectorContext = require('./reflectorContext.js');
+const isAbstract = require('../../utils/isAbstract.js');
+const {metaOf} = require('../../reflection/metadata.js');
+const ReflectorContext = require('../reflectorContext.js');
 
 /**
  * this file define macros functions for Property reflectors that is called in context of a property reflector
  */
 
 /**
- * @typedef {import("./reflectionProperty.js")} ReflectionProperty
- * @typedef {import("./reflectionPrototypeProperty")} ReflectionPrototypeProperty
- * @typedef {ReflectionProperty|ReflectionPrototypeProperty} PropertyReflector
- * 
- * @typedef {import('./reflection.js')} Reflection
+ * @typedef {import('../reflection.js')} Reflection
  */
 
 /**

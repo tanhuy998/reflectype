@@ -1,13 +1,7 @@
-const { isInstantiable, isObject, isFuntion } = require('../libs/type.js');
-const { property_metadata_t, metaOf } = require('../reflection/metadata');
-const isAbStract = require('../utils/isAbstract');
-const self = require('../utils/self.js');
-const PrototypeReflector = require('./prototypeReflection.js');
-const ReflectionQuerySubject = require('./query/reflectionQuerySubject.js');
-const Reflection = require('./reflection.js');
-const ReflectionPropertyAbstract = require('./reflectionPropertyAbstract.js');
-const reflectionContext = require('./reflectorContext');
-const {resolvePropertyMetadata, checkPropertyDescriptorState} = require('./traitPropertyReflection.js');
+const { property_metadata_t } = require('../../reflection/metadata.js');
+const ReflectionQuerySubject = require('../query/reflectionQuerySubject.js');
+const ReflectionPropertyAbstract = require('../abstract/reflectionPropertyAbstract.js');
+const { resolvePropertyMetadata } = require('../trait/traitPropertyReflection.js');
 
 /**
  *  ReflectionPrototypeProperty focus on reading metadata of the prototype.
@@ -17,8 +11,6 @@ const {resolvePropertyMetadata, checkPropertyDescriptorState} = require('./trait
  *  on class to get info about the class's prototype.
  */
 module.exports = class ReflectionPrototypeProperty extends ReflectionPropertyAbstract {
-
-    //#name;
 
     #type;
 

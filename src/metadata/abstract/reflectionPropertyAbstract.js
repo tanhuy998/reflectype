@@ -1,5 +1,5 @@
-const Reflection = require("./reflection.js");
-const {resolvePropertyMetadata, checkPropertyDescriptorState} = require('./traitPropertyReflection.js');
+const Reflection = require("../reflection.js");
+const {resolvePropertyMetadata, checkPropertyDescriptorState} = require('../trait/traitPropertyReflection.js');
 
 module.exports = class ReflectionPropertyAbstract extends Reflection {
 
