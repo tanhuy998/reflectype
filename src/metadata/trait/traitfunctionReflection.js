@@ -1,8 +1,8 @@
 const {metaOf} = require('../../reflection/metadata.js');
-const ReflectionParameter = require('../ReflectionParameter.js');
+const ReflectionParameter = require('../parameter/reflectionFunctionParameter.js');
 
 /**
- *  @typedef {import('../reflectionFunction.js')} ReflectionFunction
+ *  @typedef {import('../function/reflectionFunction.js')} ReflectionFunction
  *  @typedef {import('./reflectionPrototypeMethod.js')} ReflectionPrototypeMethod
  *  @typedef {import('../../reflection/metadata.js').property_metadata_t } property_metadata_t
  */

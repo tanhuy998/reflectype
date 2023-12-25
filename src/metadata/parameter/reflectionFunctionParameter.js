@@ -1,8 +1,9 @@
-const { property_metadata_t } = require('../reflection/metadata.js');
-const Reflector = require('./reflector.js');
-const ReflectorContext = require('./reflectorContext.js');
+const { property_metadata_t } = require('../../reflection/metadata.js');
+const Reflection = require('../reflection.js');
+const Reflector = require('../reflector.js');
+const ReflectorContext = require('../reflectorContext.js');
 
-class ReflectionParameter extends Reflector {
+module.exports = class ReflectionParameter extends Reflection {
 
     #isValid;
 
@@ -65,29 +66,26 @@ class ReflectionParameter extends Reflector {
 
     #init() {
 
-        if (this.reflectionContext !== ReflectorContext.OTHER) {
+        /**@type {property_metadata_t} */
+        const funcMeta = this.metadata;
+
+        if (
+            !super.isValid ||
+            this.reflectionContext !== ReflectorContext.OTHER &&
+            !(funcMeta instanceof property_metadata_t)
+        ) {
 
             this.#isValid = false;
-
             return;
         }
 
         this.#isValid = true;
 
-        /**@type {property_metadata_t} */
-        const funcMeta = this.metadata;
-
         const index = this.#paramIndex;
 
-        let {value, defaultParamsType} = funcMeta;
-
-        value ??= [];
-        defaultParamsType ??= [];
+        const {value, defaultParamsType} = funcMeta;
 
         this.#type = defaultParamsType[index];
-
         this.#value = value[index];
     }
 }
-
-module.exports = ReflectionParameter;

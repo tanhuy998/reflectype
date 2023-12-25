@@ -1,4 +1,4 @@
-const ReflectionFunction = require("../reflectionFunction.js");
+const ReflectionFunction = require("../function/reflectionFunction.js");
 const ReflectionPrototypeProperty = require("./reflectionPrototypeProperty.js");
 const {reflectParameters} = require('../trait/traitfunctionReflection.js');
 
