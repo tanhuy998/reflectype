@@ -39,6 +39,6 @@ const obj = new A();
 
 console.log(obj)
 
-const refl = new ReflectionClassPrototype(obj);
+const refl = new ReflectionPrototypeParameter(obj, 'func', 0);
 
-console.log(refl.methods[0].returnType)
+console.log(refl.hasDefaultValue)

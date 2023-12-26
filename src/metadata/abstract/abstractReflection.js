@@ -4,6 +4,8 @@ const Reflection = require("../reflection");
 
 module.exports = class AbstractReflection extends Reflection {
 
+    #options;
+
     #metadata;
 
     #isValid;
@@ -18,11 +20,18 @@ module.exports = class AbstractReflection extends Reflection {
         return this.#isValid;
     }
 
-    constructor(target) {
+    get options() {
+
+        return this.#options;
+    }
+
+    constructor(target, ...options) {
 
         super(target);
 
         preventNonInheritanceTakeEffect.call(this, AbstractReflection);
+
+        this.#options = options;
 
         this.#init(); 
     }
