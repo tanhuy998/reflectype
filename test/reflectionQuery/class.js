@@ -8,6 +8,12 @@ const entries = new Set();
 
 class A {
     
+    @paramsType(Boolean)
+    static func() {
+
+
+    }
+
     @type(Number)
     accessor prop;
 

@@ -16,6 +16,8 @@ const ReflectionPrototypeProperty = require('../../src/metadata/prototypeReflect
 const ReflectionPrototypeMethod = require('../../src/metadata/prototypeReflection/reflectionPrototypeMethod.js');
 const ReflectionPrototypeAttribute = require('../../src/metadata/prototypeReflection/reflectionPrototypeAttribute.js');
 const ReflectionClassPrototype = require('../../src/metadata/prototypeReflection/reflectionClassPrototype.js');
+const ReflectionPrototypeParameter = require('../../src/metadata/parameter/reflectionPrototypeMethodParameter.js');
+const ReflectionClassMethodParameter = require('../../src/metadata/parameter/reflectionClassMethodParameter.js');
 
 // const refl = new Reflector(A);
 // const reflAspect = new ReflectionAspect(refl);
@@ -37,6 +39,6 @@ const obj = new A();
 
 console.log(obj)
 
-const refl = new ReflectionClassPrototype(obj);
+const refl = new ReflectionClassMethodParameter(obj, 'func', 0);
 
-console.log(refl.methods[0])
+console.log(refl.type)

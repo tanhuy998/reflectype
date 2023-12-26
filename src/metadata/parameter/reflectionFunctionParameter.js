@@ -1,47 +1,9 @@
-const { property_metadata_t } = require('../../reflection/metadata.js');
-const Reflection = require('../reflection.js');
-const Reflector = require('../reflector.js');
+const { isFuntion } = require('../../libs/type.js');
+const { property_metadata_t, metaOf } = require('../../reflection/metadata.js');
+const ReflectionParameterAbstract = require('../abstract/reflectionParameterAbstract.js');
 const ReflectorContext = require('../reflectorContext.js');
 
-module.exports = class ReflectionParameter extends Reflection {
-
-    #isValid;
-
-    #type;
-
-    #value;
-
-    #paramIndex;
-
-    get isValid() {
-
-        return this.#isValid;
-    }
-
-    get type() {
-
-        return this.#type;
-    }
-
-    get defaultValue() {
-
-        return this.#value;
-    }
-
-    get paramIndex() {
-
-        return this.#paramIndex;
-    }
-
-    get hasType() {
-
-        return this.#isValid ? Boolean(this.#type) : false;
-    }
-
-    get hasDefaultValue() {
-
-        return this.#isValid ? Boolean(this.#value) : false;
-    }
+module.exports = class ReflectionFunctionParameter extends ReflectionParameterAbstract {
 
     constructor(_func, _index) {
 
@@ -50,42 +12,24 @@ module.exports = class ReflectionParameter extends Reflection {
             throw new TypeError('parameter _func must be a function');
         }
 
-        if (typeof _index !== 'number') {
-
-            throw new TypeError('parameter _index must be a number indicating the order of the function\'s param');
-        }
-
-        super(_func);
-
-        this.#paramIndex = _index
-
-        this.#init();
-
-        super._dispose();
+        super(_func, _index);
     }
 
-    #init() {
-
-        /**@type {property_metadata_t} */
-        const funcMeta = this.metadata;
+        /**
+     * @override
+     * 
+     * @returns {property_metadata_t?}
+     */
+    _resovleFunctionMetadata() {
 
         if (
-            !super.isValid ||
-            this.reflectionContext !== ReflectorContext.OTHER &&
-            !(funcMeta instanceof property_metadata_t)
+            super.reflectionContext !== ReflectorContext.OTHER || 
+            !isFuntion(super.target)
         ) {
 
-            this.#isValid = false;
-            return;
+            return undefined;
         }
 
-        this.#isValid = true;
-
-        const index = this.#paramIndex;
-
-        const {value, defaultParamsType} = funcMeta;
-
-        this.#type = defaultParamsType[index];
-        this.#value = value[index];
+        return metaOf(super.target);
     }
 }
