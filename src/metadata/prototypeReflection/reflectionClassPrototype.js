@@ -3,7 +3,6 @@ const ReflectionQuerySubject = require("../query/reflectionQuerySubject");
 const ReflectionPrototypeProperty = require("./reflectionPrototypeProperty");
 const ReflectionPrototypeMethod = require("./reflectionPrototypeMethod");
 const ReflectionPrototypeAttribute = require("./reflectionPrototypeAttribute");
-const { isInstantiableOrFail } = require("../../libs/type");
 const ReflectionClassAbstract = require("../abstract/reflectionClassAbstract");
 const { prototype_metadata_t } = require("../../reflection/metadata");
 
@@ -16,105 +15,59 @@ const { prototype_metadata_t } = require("../../reflection/metadata");
  */
 module.exports = class ReflectionClassPrototype extends ReflectionClassAbstract {
 
-    /**@type {prototype_metadata_t} */
-    #metadata;
-
-    #isValid;
-
-    get isValidReflection() {
-
-        return this.#isValid;
-    }
-
-    get isValid() {
-
-        return this.#isValid;
-    }
-
-    get properties() {
-
-        if (!this.#isValid) {
-
-            return undefined;
-        }
-
-        return this.#_retrievePropertyReflections(ReflectionPrototypeProperty);
-    }
-
-    get methods() {
-
-        if (!this.#isValid) {
-
-            return undefined;
-        }
-
-        return this.#_retrievePropertyReflections(ReflectionPrototypeMethod);
-    }
-
-    get attributes() {
-
-        if (!this.#isValid) {
-
-            return undefined;
-        }
-
-        return this.#_retrievePropertyReflections(ReflectionPrototypeAttribute);
-    }
-
     constructor(target) {
 
         super(target);
 
-        this.#init();
-
-        super.reflector._dispose();
+        //super.__dispose();
     }
 
-    #init() {
+    /**
+     * @override
+     * @returns {boolean}
+     */
+    _resolveAspectOfReflection() {
 
         const protoMeta = super.mirror()
                                 .from(ReflectionQuerySubject.PROTOTYPE)
                                 .retrieve();
 
         if (
-            !super.isValidReflection || 
-        super.reflectionContext === ReflectorContext.OTHER ||
+            !this.isValidReflection || 
+        this.reflectionContext === ReflectorContext.OTHER ||
             !(protoMeta instanceof prototype_metadata_t)
         ) {
             
-            this.#isValid = false;
-
-            return;
+            return undefined;
         }
 
-        this.#isValid = true;
-        this.#metadata = protoMeta;
+        return protoMeta;
+    }
+
+     /**
+     * @override
+     * @returns {boolean}
+     */
+    _getPropertyReflectionClass() {
+
+        return ReflectionPrototypeProperty;
     }
 
     /**
-     * 
-     * @param {typeof ReflectionPrototypeProperty} _reflectionClass 
-     * 
-     * @return {Iterable<ReflectionPrototypeProperty>?}
+     * @override
+     * @returns {boolean}
      */
-    #_retrievePropertyReflections(_reflectionClass) {
+    _getMethodReflectionClass() {
 
-        isInstantiableOrFail(_reflectionClass);
+        return ReflectionPrototypeMethod;
+    }
 
-        let ret;
+    /**
+     * @override
+     * @returns {boolean}
+     */
+    _getAttributeReflectionClass() {
 
-        for (const propName in this.#metadata.properties) {
-
-            const reflectionProp = new _reflectionClass(this.originClass, propName);
-
-            if (!reflectionProp.isValid) {
-
-                continue;
-            }
-
-            (ret ??= []).push(reflectionProp);
-        }
-
-        return ret;
+        return ReflectionPrototypeAttribute;
     }
 }
