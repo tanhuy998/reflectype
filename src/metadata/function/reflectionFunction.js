@@ -1,26 +1,33 @@
 const ReflectorContext = require("../reflectorContext.js");
 const { property_metadata_t } = require("../../reflection/metadata.js");
-const Reflector = require("../reflector.js");
-const {compareArgsWithType} = require('../../libs/argumentType.js');
-const {reflectParameters} = require('../trait/traitfunctionReflection.js')
+const {reflectParameters} = require('../trait/traitfunctionReflection.js');
+const AbstractReflection = require("../abstract/abstractReflection.js");
 
-class ReflectionFunction extends Reflector {
 
-    #isValid;
-    
+/**
+ * @typedef {import('../abstract/reflectionParameterAbstract.js')} ReflectionParameterAbstract
+ * @typedef {import('../../../src/reflection/metadata.js').property_metadata_t} property_metadata_t
+ */
+
+class ReflectionFunction extends AbstractReflection {
+
+
+    #isValid = false;
+
     #returnType;
     #defaultArgs;
     #argsType;
-    #allowNull;
+
+    #methodName;
 
     get isValid() {
 
         return this.#isValid;
     }
-
+ 
     get returnType() {
 
-        return this.#returnType;
+        return this.#returnType || super.type;
     }
 
     get defaultArguments() {
@@ -28,61 +35,111 @@ class ReflectionFunction extends Reflector {
         return this.#defaultArgs;
     }
 
-    get allowReturnNull() {
-
-        return this.#allowNull
-    }
-
+    /**@type {Array<ReflectionPrototypeMethodParameter>} */
     get parameters() {
 
-        return reflectParameters.call(this);
+        const ReflectionParameterClass = this._getReflectionParameterClass();
+
+        return reflectParameters.call(this, ReflectionParameterClass);
     }
- 
-    constructor(_function) {
 
-        super(...arguments);
+    get methodName() {
 
-        this.#init();
+        return this.#methodName;
+    }
 
-        super._dispose();
+    constructor(_target) {
+
+        super(_target);
+        
+        this.#init();   
     }
 
     #init() {
 
-        if (!this.isValidReflection || this.reflectionContext !== ReflectorContext.OTHER) {
+        if (
+            !super.isValid ||
+            !super.metadata.isMethod
+        ) {
             
             this.#isValid = false;
-
             return;
         }
 
-        /**@type {property_metadata_t} */
-        const meta = this.metadata;
+        this.#isValid = true;
 
-        if (!(meta instanceof property_metadata_t)) {
-            
-            this.#isValid = false;
+        const funcMeta = this.metadata;
 
-            return;
+        this.#defaultArgs = funcMeta.value;
+        this.#returnType = funcMeta.type;
+        this.#methodName = funcMeta.name;
+    }
+
+    _meetPrerequisite() {
+
+        return super.isValidReflection && 
+                super.reflectionContext === ReflectorContext.OTHER;
+    }
+
+    /**
+     * @override
+     * @returns {boolean}
+     */
+    _resolveAspectOfReflection() {
+
+        return this.resolveAspectOnActualMethod();
+    }
+
+    /**
+     * 
+     * @returns {property_metadata_t?}
+     */
+    resolveAspectOnActualMethod() {
+
+        if (
+            super.meetPrerequisite &&
+            super.reflectionContext === ReflectionFunction.OTHER
+        ) {
+            /**
+             * especially, this method just proceed unless reflection context is OTHER
+             */
+            return undefined;
         }
 
-        const {type, value, defaultParamsType, allowNull} = meta;
+        //const methodName = this.name;
+        //const actualMethod = this.originClass.prototype[methodName];
+        const actualMethod = this.target;
 
-        this.#returnType = type;
-        this.#allowNull = allowNull;
-        
-        try {
-            
-            compareArgsWithType(meta);
-            
-            this.#defaultArgs = value;
-            
-            this.#isValid = true;
+        if (typeof actualMethod === 'function') {
+
+            return undefined;
         }
-        catch (error) {
-            
-            this.#isValid = false;
-        }   
+
+        const propMeta = metaOf(actualMethod);
+
+        return propMeta?.isMethod ? propMeta : undefined;
+    }
+
+    invoke(...args) {
+
+        if (!this.isValid) {
+
+            throw new Error('cannot invoke method of an invalid Reflection');
+        }
+
+        const method = this.originClass.prototype[this.name];
+        const _thisContext = this.isInstance ? this.target : this.originClass;
+
+        method.call(_thisContext, ...args);   
+    }
+
+    /**
+     *  
+     *  @returns {typeof ReflectionParameterAbstract} 
+     */
+    _getReflectionParameterClass() {
+
+        return require('../parameter/reflectionFunctionParameter.js');
     }
 }
 
