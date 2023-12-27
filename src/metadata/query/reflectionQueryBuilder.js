@@ -6,6 +6,7 @@ module.exports = class ReflectionQueryBuilder {
     #field;
     #prop;
     #criteria;
+    #options;
 
     #reflectionObject
 
@@ -42,13 +43,29 @@ module.exports = class ReflectionQueryBuilder {
         return this;
     }
 
+    options(_options) {
+
+        this.#options = _options;
+
+        return this;
+    }
+
+    first() {
+
+        this.#options ??= {};
+        this.#options.onlyFirst = true;
+
+        return this;
+    }
+
     build() {
 
         return new ReflectionQuery({
             subject: this.#subject,
             propName: this.#prop,
             field: this.#field,
-            criteria: this.#criteria
+            criteria: this.#criteria,
+            options: this.#options
         });
     }
 

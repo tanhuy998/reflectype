@@ -7,6 +7,7 @@ const { ReflectionSubjectNotFoundError, ReflectionFieldNotFoundError } = require
 const Reflector = require("../reflector.js");
 const ReflectionQuery = require("../query/reflectionQuery.js");
 const CriteriaResovler = require("./criteriaResolver.js");
+const optionResolver = require("./optionResolver.js");
 
 /**
  * @typedef {import('../query/reflectionQuery.js')} ReflectionQuery
@@ -85,12 +86,12 @@ module.exports = class ReflectionAspect {
         this.#isValidOrFail();       
 
         /**@type {property_metadata_t|Object} */
-        const metaObj = new CriteriaResovler(_query, 
-            this.#_resolvePropMeta(_query,
-                this.#_resolveField(_query, 
-                    this.#_resolveSubject(_query))))
+        const metaObj = new optionResolver(_query, 
+            new CriteriaResovler(_query, 
+                this.#_resolvePropMeta(_query,
+                    this.#_resolveField(_query, 
+                        this.#_resolveSubject(_query)))).resolve())
                     .resolve();
-        
 
         if (
             _query.propName &&

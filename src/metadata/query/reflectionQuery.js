@@ -12,6 +12,8 @@ module.exports = class ReflectionQuery {
 
     #field;
 
+    #options;
+
     get field() {
 
         return this.#field;
@@ -33,8 +35,13 @@ module.exports = class ReflectionQuery {
         return this.#criteria;
     }
 
+    get options() {
+
+        return this.#options;
+    }
+
     constructor({
-        subject, propName, field, criteria
+        subject, propName, field, criteria, options
     }) {
 
         if (typeof criteria !== 'object' &&
@@ -47,6 +54,7 @@ module.exports = class ReflectionQuery {
         this.#propName = propName;
         this.#field = field;
         this.#criteria = criteria;
+        this.#options = options;
 
         this.#init();
     }
@@ -56,6 +64,7 @@ module.exports = class ReflectionQuery {
         this.#setDefaultSubjectIfUndefined();        
         this.#setDefaultFieldIfUndefined();
         this.#removeCriteriaIfNoMatchCondition();
+        this.#removeOptionsIfNotMatchCondition();
     }
 
     #setDefaultSubjectIfUndefined() {
@@ -90,6 +99,19 @@ module.exports = class ReflectionQuery {
         ) {
 
             this.#criteria = undefined;
+        }
+    }
+
+    #removeOptionsIfNotMatchCondition() {
+
+        const options = this.#options;
+
+        if (
+            !isObject(options) ||
+            Object.keys(options).length === 0
+        ) {
+
+            this.#options = undefined;
         }
     }
 } 
