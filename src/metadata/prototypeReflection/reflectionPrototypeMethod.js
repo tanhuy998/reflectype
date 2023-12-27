@@ -38,6 +38,7 @@ class ReflectionPrototypeMethod extends ReflectionPrototypeProperty {
         return this.#defaultArgs;
     }
 
+    /**@type {Array<ReflectionPrototypeMethodParameter>} */
     get parameters() {
 
         return reflectParameters.call(this, ReflectionPrototypeMethodParameter);

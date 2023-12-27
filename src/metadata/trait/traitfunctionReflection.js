@@ -1,6 +1,5 @@
-const {metaOf, property_metadata_t} = require('../../reflection/metadata.js');
+const {property_metadata_t} = require('../../reflection/metadata.js');
 const ReflectionParameterAbstract = require('../abstract/reflectionParameterAbstract.js');
-const ReflectionParameter = require('../parameter/reflectionFunctionParameter.js');
 
 /**
  *  @typedef {import('../function/reflectionFunction.js')} ReflectionFunction
@@ -8,6 +7,7 @@ const ReflectionParameter = require('../parameter/reflectionFunctionParameter.js
  *  @typedef {import('../../reflection/metadata.js').property_metadata_t } property_metadata_t
  *  @typedef {import('../abstract/reflectionParameterAbstract.js')} ReflectionParameterAbstract
  *  @typedef {import('../abstract/abstractReflection.js')} AbstractReflection
+ *  @typedef {import('../abstract/reflectionParameterAbstract.js')} ReflectionParameterAbstract
  */
 
 /**
@@ -36,14 +36,10 @@ function reflectParameters(_ReflectionParamClass) {
 
     for (let i = 0; i < maxCount; ++i) {
 
-        const reflection = new _ReflectionParamClass(this.target, propMeta.name, i)
+        /**@type {ReflectionParameterAbstract} */
+        const reflection = new _ReflectionParamClass(this.target, propMeta.name, i);
 
-        if (!reflection.isValid) {
-
-            continue;
-        }
-
-        (ret ??= []).push(reflection);
+        (ret ??= []).push(reflection.isValid ? reflection : undefined);
     }
 
     return ret;

@@ -1,6 +1,7 @@
 const {paramsType, returnType, type} = require('../../src/');
 const {METADATA, TYPE_JS} = require('../../src/constants.js');
 const allowNull = require('../../src/decorators/allowNull.js');
+const defaultArguments = require('../../src/decorators/defaultArguments.js');
 const { ORIGIN } = require('../../src/libs/metadata/constant.js');
 
 const stack = [];
@@ -19,6 +20,7 @@ class A {
 
     @allowNull
     @returnType(Number)
+    @defaultArguments(1)
     @paramsType(Number)
     func() {
 

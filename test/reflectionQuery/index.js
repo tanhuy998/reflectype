@@ -41,4 +41,4 @@ console.log(obj)
 
 const refl = new ReflectionPrototypeMethod(obj, 'func');
 
-console.log(refl.parameters)
+console.log(refl.parameters[0].defaultValue)

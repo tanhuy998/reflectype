@@ -1,7 +1,5 @@
 const { preventNonInheritanceTakeEffect } = require("../../abstraction/traitAbstractClass");
 const { property_metadata_t } = require("../../reflection/metadata");
-const Reflection = require("../reflection");
-const ReflectorContext = require("../reflectorContext");
 const AbstractReflection = require("./abstractReflection");
 
 module.exports = class ReflectionParameterAbstract extends AbstractReflection {
@@ -40,6 +38,11 @@ module.exports = class ReflectionParameterAbstract extends AbstractReflection {
     get methodName() {
 
         return this.options[0];
+    }
+
+    get paramIndex() {
+
+        return this.#index;
     }
 
     constructor(_target, paramIndex, methodName) {
@@ -92,11 +95,14 @@ module.exports = class ReflectionParameterAbstract extends AbstractReflection {
             return;
         }
 
+        /**@type {property_metadata_t} */
         const funcMeta = super.metadata;
         const paramIndex = this.#index;
         const {defaultParamsType} = funcMeta;
-
+        const defaultValues = funcMeta.value;
+        
         this.#type = Array.isArray(defaultParamsType) ? defaultParamsType[paramIndex] : undefined;
+        this.#value = Array.isArray(defaultValues) ? defaultValues[paramIndex] : undefined;
     }
 
 
