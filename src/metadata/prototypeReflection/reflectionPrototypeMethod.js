@@ -1,47 +1,29 @@
 const ReflectionFunction = require("../function/reflectionFunction.js");
 const ReflectionPrototypeProperty = require("./reflectionPrototypeProperty.js");
 const {reflectParameters} = require('../trait/traitfunctionReflection.js');
+const { metaOf } = require("../../reflection/metadata.js");
 
 class ReflectionPrototypeMethod extends ReflectionPrototypeProperty {
 
     #isValid = false;
 
-    #isMethod;
-
     #returnType;
     #defaultArgs;
     #argsType;
-    #allowNull;
 
-    #target
-
-    #isInterface;
-
-    get isValid() {
-
-        return this.#isValid;
-    }
-
-    get target() {
-
-        return this.#target;
-    }
+    #target;
+    #isMethod;
 
     get isMethod() {
 
         return this.#isMethod;
     }
 
-    get defaultValue() {
-
-        return undefined;
-    }
-
     get isValid() {
 
         return this.#isValid;
     }
-
+ 
     get returnType() {
 
         return this.#returnType || super.type;
@@ -66,10 +48,10 @@ class ReflectionPrototypeMethod extends ReflectionPrototypeProperty {
 
     #init() {
 
-        if (!super.isValid) {
+        // if (!super.isValid) {
 
-            this.#readOnActualMethod();
-        } 
+        //     this.#readOnActualMethod();
+        // } 
 
         if (!super.isMethod) {
 
@@ -81,36 +63,43 @@ class ReflectionPrototypeMethod extends ReflectionPrototypeProperty {
         this.#isValid = true;
     }
 
+    _resolveAspectOfReflection() {
+
+        return super._resolveAspectOfReflection() || this.#readOnActualMethod();
+    }
+
     #readOnActualMethod() {
 
         const methodName = this.name;
 
         const actualMethod = this.originClass.prototype[methodName];
 
-        if (typeof actualMethod !== 'function') {
+        // if (typeof actualMethod !== 'function') {
             
-            this.#isMethod = false;
-            this.#isValid = false;
-            return;
-        }
+        //     // this.#isMethod = false;
+        //     // this.#isValid = false;
+        //     return undefined;
+        // }
 
-        this.#target = actualMethod;
+        //this.#target = actualMethod;
 
-        const reflection = new ReflectionFunction(actualMethod);
+        // const reflection = new ReflectionFunction(actualMethod);
 
-        if (!reflection.isValid) {
+        // if (!reflection.isValid) {
             
-            this.#isMethod = false;
-            this.#isValid = false;
-            return;
-        }
+        //     this.#isMethod = false;
+        //     this.#isValid = false;
+        //     return undefined;
+        // }
 
-        this.#isMethod = true;
-        this.#isValid = true;
+        // this.#isMethod = true;
+        // this.#isValid = true;
 
-        this.#defaultArgs = reflection.defaultArguments;
-        this.#allowNull = reflection.allowReturnNull;
-        this.#returnType = reflection.returnType;
+        // this.#defaultArgs = reflection.defaultArguments;
+        // //this.#allowNull = reflection.allowReturnNull;
+        // this.#returnType = reflection.returnType;
+
+        return typeof actualMethod === 'function' ? metaOf(actualMethod) : undefined;
     }
 
     invoke(...args) {

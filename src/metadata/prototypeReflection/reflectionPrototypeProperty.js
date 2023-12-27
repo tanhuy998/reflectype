@@ -12,62 +12,6 @@ const { resolvePropertyMetadata } = require('../trait/traitPropertyReflection.js
  */
 module.exports = class ReflectionPrototypeProperty extends ReflectionPropertyAbstract {
 
-    #type;
-
-    /**@type {boolean} */
-    #isValid = false;
-
-    /**@type {boolean} */
-    #isPrivate;
-
-    #defaultValue;
-
-    #isMethod;
-
-    #isStatic;
-
-    #target;
-
-    get target() {
-
-        return this.#isValid ? this.#target : undefined;
-    }
-
-    get isStatic() {
-
-        return this.#isStatic;
-    }
-
-    get isMethod() {
-
-        return this.#isMethod;
-    }
-
-    get isPrivate() {
-
-        return this.#isPrivate;
-    }
-
-    get type() {
-
-        return this.#type;
-    }
-
-    get isValid() {
-
-        return this.#isValid;
-    }
-
-    get defaultValue() {
-
-        return this.isValid ? this.#defaultValue : undefined;
-    }
-
-    get value() {
-
-        return this.#defaultValue;
-    }
-
     /**
      * 
      * @param {any} _target 
@@ -77,38 +21,21 @@ module.exports = class ReflectionPrototypeProperty extends ReflectionPropertyAbs
 
         super(_target, _attributeKey);   
 
-        this.#init();
-        this.reflector._dispose();
+        //this.#init();
+        //this.reflector._dispose();
     }
 
-    #init() {
-        
-        if (!super.isValidReflection) {
-            
-            this.#isValid = false;
-            return;
+    _resolveAspectOfReflection() {
+
+        if (!super.isValid) {
+
+            return undefined;
         }
 
-        const targetPropMeta = super.mirror()
-                                .select(this.name)
-                                .from(ReflectionQuerySubject.PROTOTYPE)
-                                .retrieve()
-                                ?? resolvePropertyMetadata.call(this, this.name);
-        
-        if (targetPropMeta instanceof property_metadata_t) {
-
-            this.#type = targetPropMeta.type;
-            this.#isPrivate = targetPropMeta.type || false;
-            this.#isValid = true;
-            this.#defaultValue = targetPropMeta.value;
-            this.#isStatic = targetPropMeta.static;
-
-            //const theProp = this.originClass.prototype[this.name];
-            this.#isMethod = targetPropMeta.isMethod //&& typeof theProp === 'function';
-
-            return;
-        }        
-
-        this.#isValid = false;
+        return super.mirror()
+        .select(this.name)
+        .from(ReflectionQuerySubject.PROTOTYPE)
+        .retrieve()
+        ?? resolvePropertyMetadata.call(this, this.name);
     }
 }
