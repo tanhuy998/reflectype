@@ -50,10 +50,10 @@ module.exports = class ReflectionPropertyAbstract extends AbstractReflection {
         return checkPropertyDescriptorState.call(this, 'configurable')
     }
 
-    get target() {
+    // get target() {
 
-        return this.isValid ? this.#target : undefined;
-    }
+    //     return this.isValid ? this.#target : undefined;
+    // }
 
     get isStatic() {
 

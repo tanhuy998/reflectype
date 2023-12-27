@@ -1,29 +1,49 @@
-const {metaOf} = require('../../reflection/metadata.js');
+const {metaOf, property_metadata_t} = require('../../reflection/metadata.js');
+const ReflectionParameterAbstract = require('../abstract/reflectionParameterAbstract.js');
 const ReflectionParameter = require('../parameter/reflectionFunctionParameter.js');
 
 /**
  *  @typedef {import('../function/reflectionFunction.js')} ReflectionFunction
  *  @typedef {import('./reflectionPrototypeMethod.js')} ReflectionPrototypeMethod
  *  @typedef {import('../../reflection/metadata.js').property_metadata_t } property_metadata_t
+ *  @typedef {import('../abstract/reflectionParameterAbstract.js')} ReflectionParameterAbstract
+ *  @typedef {import('../abstract/abstractReflection.js')} AbstractReflection
  */
 
-/**@this  {ReflectionFunction | ReflectionPrototypeMethod}*/
-function reflectParameters() {
+/**
+ * @this AbstractReflection
+ * 
+ * @param {ReflectionParameterAbstract} _ReflectionParamClass 
+ * @returns {Iterable<ReflectionParameterAbstract>}
+ */
+function reflectParameters(_ReflectionParamClass) {
 
-    /**@type  {property_metadata_t}*/
-    const reflector = metaOf(this.target);
+    const propMeta = this.metadata;
 
-    const declaredParamsCount = this.target.length;
-    const declaredParamTypes = reflector.defaultParamsType?.length ?? 0;
-    const declaredParamValues = reflector.value?.length ?? 0;
+    if (!(propMeta instanceof property_metadata_t)) {
 
-    const maxCount = max(declaredParamTypes, max(declaredParamsCount, declaredParamValues));
+        return undefined;
+    }
 
-    const ret = [];
+    //const declaredParamsCount = this.target.length;
+    const declaredParamTypes = propMeta.defaultParamsType?.length ?? 0;
+    const declaredParamValues = propMeta.value?.length ?? 0;
+
+    // const maxCount = max(declaredParamTypes, max(declaredParamsCount, declaredParamValues));
+    const maxCount = max(declaredParamTypes, declaredParamValues);
+
+    let ret;
 
     for (let i = 0; i < maxCount; ++i) {
 
-        ret.push(new ReflectionParameter(this.target, i));
+        const reflection = new _ReflectionParamClass(this.target, propMeta.name, i)
+
+        if (!reflection.isValid) {
+
+            continue;
+        }
+
+        (ret ??= []).push(reflection);
     }
 
     return ret;
