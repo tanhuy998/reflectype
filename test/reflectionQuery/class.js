@@ -9,6 +9,9 @@ const entries = new Set();
 
 class A {
     
+    @type(Boolean)
+    static prop;
+
     @paramsType(Boolean)
     static func() {
 
