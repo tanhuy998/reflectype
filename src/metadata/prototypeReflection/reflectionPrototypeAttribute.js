@@ -1,43 +1,29 @@
+const ReflectionQuerySubject = require("../query/reflectionQuerySubject");
 const ReflectionPrototypeProperty = require("./reflectionPrototypeProperty");
 
 
 class ReflectionPrototypeAttribute extends ReflectionPrototypeProperty {
 
-    /**@type {boolean} */
-    #isValid = false;
-
-    get isValid() {
-
-        return this.#isValid;
-    }
-
     constructor(_target, _attributeKey) {
 
         super(...arguments);
-
-        this.#init();
     }
 
     _resolveAspectOfReflection() {
 
-        const propMeta = super._resolveAspectOfReflection();
+        if (!super.meetPrerequisite) {
 
-        return !propMeta?.isMethod ? propMeta : undefined;
-    }
-
-    #init() {
-
-        if (!super.isValid) {
-
-            return;
+            return undefined;
         }
 
-        if (super.isMethod) {
-
-            return;
-        }
-
-        this.#isValid = true;
+        return super.mirror()
+                    .select(this.name)
+                    .first()
+                    .from(ReflectionQuerySubject.PROTOTYPE)
+                    .where({
+                        isMethod: false
+                    })
+                    .retrieve();
     }
 }
 
