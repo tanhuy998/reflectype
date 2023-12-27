@@ -18,6 +18,13 @@ class ReflectionPrototypeAttribute extends ReflectionPrototypeProperty {
         this.#init();
     }
 
+    _resolveAspectOfReflection() {
+
+        const propMeta = super._resolveAspectOfReflection();
+
+        return !propMeta?.isMethod ? propMeta : undefined;
+    }
+
     #init() {
 
         if (!super.isValid) {

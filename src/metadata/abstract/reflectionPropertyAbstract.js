@@ -75,11 +75,6 @@ module.exports = class ReflectionPropertyAbstract extends AbstractReflection {
         return this.#type;
     }
 
-    get isValid() {
-
-        return this.isValid;
-    }
-
     get defaultValue() {
 
         return this.isValid ? this.#defaultValue : undefined;
@@ -105,7 +100,6 @@ module.exports = class ReflectionPropertyAbstract extends AbstractReflection {
         super(target, propName);
 
         preventNonInheritanceTakeEffect.call(this, ReflectionPropertyAbstract);
-        //this.#name = propName;
 
         this.#init();
     }
@@ -114,18 +108,6 @@ module.exports = class ReflectionPropertyAbstract extends AbstractReflection {
 
         return super.isValidReflection && super.reflectionContext !== ReflectorContext.OTHER;
     }
-
-    // #init() {
-
-    //     if (!this.isValid) {
-
-    //         return;
-    //     }
-        
-    //     const propMeta = this.metadata;
-
-
-    // }
 
     #init() {
 

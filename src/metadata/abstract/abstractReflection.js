@@ -2,13 +2,21 @@ const { preventNonInheritanceTakeEffect } = require("../../abstraction/traitAbst
 const { isObject } = require("../../libs/type");
 const Reflection = require("../reflection");
 
+/**
+ * @typedef {import('../../../src/reflection/metadata.js').property_metadata_t} property_metadata_t
+ * @typedef {import('../../../src/reflection/metadata.js').metadata_t} metadata_t
+ */
+
 module.exports = class AbstractReflection extends Reflection {
 
     #options;
 
+    /**@type {metadata_t|property_metadata_t} */
     #metadata;
 
     #isValid;
+
+    #meetPrerequisite;
 
     get metadata() {
 
@@ -23,6 +31,11 @@ module.exports = class AbstractReflection extends Reflection {
     get options() {
 
         return this.#options;
+    }
+
+    get meetPrerequisite() {
+
+        return this.#meetPrerequisite;
     }
 
     constructor(target, ...options) {
@@ -45,10 +58,11 @@ module.exports = class AbstractReflection extends Reflection {
 
         if (!this._meetPrerequisite()) {
 
-            this.#isValid = false;
+            this.#meetPrerequisite = false;
             return;
         }
 
+        this.#meetPrerequisite = true;
         this.#metadata = this._resolveAspectOfReflection();
         this.#isValid = isObject(this.#metadata);
     }

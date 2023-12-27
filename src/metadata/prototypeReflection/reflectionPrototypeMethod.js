@@ -1,7 +1,11 @@
-const ReflectionFunction = require("../function/reflectionFunction.js");
 const ReflectionPrototypeProperty = require("./reflectionPrototypeProperty.js");
 const {reflectParameters} = require('../trait/traitfunctionReflection.js');
 const { metaOf } = require("../../reflection/metadata.js");
+const ReflectionPrototypeMethodParameter = require("../parameter/reflectionPrototypeMethodParameter.js");
+
+/**
+ * @typedef {import('../../../src/reflection/metadata.js').property_metadata_t} property_metadata_t
+ */
 
 class ReflectionPrototypeMethod extends ReflectionPrototypeProperty {
 
@@ -36,7 +40,12 @@ class ReflectionPrototypeMethod extends ReflectionPrototypeProperty {
 
     get parameters() {
 
-        return reflectParameters.call(this);
+        return reflectParameters.call(this, ReflectionPrototypeMethodParameter);
+    }
+
+    get methodName() {
+
+        return super.name;
     }
 
     constructor(_target, _methodKey) {
@@ -48,58 +57,42 @@ class ReflectionPrototypeMethod extends ReflectionPrototypeProperty {
 
     #init() {
 
-        // if (!super.isValid) {
-
-        //     this.#readOnActualMethod();
-        // } 
-
         if (!super.isMethod) {
 
             return;
         }
-        
-        //this.#defaultArgs = super.value;
 
         this.#isValid = true;
     }
 
+    /**
+     * @override
+     * @returns {boolean}
+     */
     _resolveAspectOfReflection() {
 
-        return super._resolveAspectOfReflection() || this.#readOnActualMethod();
+        const proto_propMeta = super._resolveAspectOfReflection();
+
+        return proto_propMeta?.isMethod ? proto_propMeta : this.resolveAspectOnActualMethod();
     }
 
-    #readOnActualMethod() {
-
+    /**
+     * 
+     * @returns {property_metadata_t?}
+     */
+    resolveAspectOnActualMethod() {
+        
         const methodName = this.name;
-
         const actualMethod = this.originClass.prototype[methodName];
 
-        // if (typeof actualMethod !== 'function') {
-            
-        //     // this.#isMethod = false;
-        //     // this.#isValid = false;
-        //     return undefined;
-        // }
+        if (typeof actualMethod === 'function') {
 
-        //this.#target = actualMethod;
+            return undefined;
+        }
 
-        // const reflection = new ReflectionFunction(actualMethod);
+        const propMeta = metaOf(actualMethod);
 
-        // if (!reflection.isValid) {
-            
-        //     this.#isMethod = false;
-        //     this.#isValid = false;
-        //     return undefined;
-        // }
-
-        // this.#isMethod = true;
-        // this.#isValid = true;
-
-        // this.#defaultArgs = reflection.defaultArguments;
-        // //this.#allowNull = reflection.allowReturnNull;
-        // this.#returnType = reflection.returnType;
-
-        return typeof actualMethod === 'function' ? metaOf(actualMethod) : undefined;
+        return propMeta?.isMethod ? propMeta : undefined;
     }
 
     invoke(...args) {
@@ -110,7 +103,6 @@ class ReflectionPrototypeMethod extends ReflectionPrototypeProperty {
         }
 
         const method = this.originClass.prototype[this.name];
-
         const _thisContext = this.isInstance ? this.target : this.originClass;
 
         method.call(_thisContext, ...args);   

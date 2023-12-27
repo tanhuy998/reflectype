@@ -1,7 +1,10 @@
-const { property_metadata_t } = require('../../reflection/metadata.js');
 const ReflectionQuerySubject = require('../query/reflectionQuerySubject.js');
 const ReflectionPropertyAbstract = require('../abstract/reflectionPropertyAbstract.js');
 const { resolvePropertyMetadata } = require('../trait/traitPropertyReflection.js');
+
+/**
+ * @typedef {import('../../../src/reflection/metadata.js').property_metadata_t} property_metadata_t
+ */
 
 /**
  *  ReflectionPrototypeProperty focus on reading metadata of the prototype.
@@ -19,19 +22,20 @@ module.exports = class ReflectionPrototypeProperty extends ReflectionPropertyAbs
      */
     constructor(_target, _attributeKey) {
 
-        super(_target, _attributeKey);   
-
-        //this.#init();
-        //this.reflector._dispose();
+        super(_target, _attributeKey);
     }
 
+    /**
+     * @override
+     * @returns {property_metadata_t?}
+     */
     _resolveAspectOfReflection() {
 
-        if (!super.isValid) {
+        if (!super.meetPrerequisite) {
 
             return undefined;
         }
-
+        
         return super.mirror()
         .select(this.name)
         .from(ReflectionQuerySubject.PROTOTYPE)
