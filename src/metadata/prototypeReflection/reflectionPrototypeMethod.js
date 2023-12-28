@@ -49,7 +49,7 @@ class ReflectionPrototypeMethod extends ReflectionMethodAbstract {
 
     #init() {
 
-        console.log(this.metadata)
+        
     }
 }
 

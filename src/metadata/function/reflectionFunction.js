@@ -50,7 +50,7 @@ class ReflectionFunction extends AbstractReflection {
 
     constructor(_target) {
 
-        super(_target);
+        super(...arguments);
         
         this.#init();   
     }

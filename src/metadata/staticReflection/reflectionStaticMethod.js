@@ -24,7 +24,7 @@ module.exports = class ReflectionStaticMethod extends ReflectionMethodAbstract {
 
             return undefined;
         }
-        
+
         return super.mirror()
                 .select(super.methodName)
                 .from(ReflectionQuerySubject.STATIC)
@@ -44,6 +44,6 @@ module.exports = class ReflectionStaticMethod extends ReflectionMethodAbstract {
 
     #init() {
 
-        console.log(this.metadata)
+        
     }
 }
