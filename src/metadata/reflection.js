@@ -1,6 +1,10 @@
 const ReflectionAspect = require("./aspect/reflectionAspect");
 const Reflector = require("./reflector");
 
+/**
+ *  Reflection is the combination of Relector and ReflectionAspect.
+ *  Classes which inherit Reflection class is considered as an aspect of reflection.
+ */
 module.exports = class Reflection {
 
     /**@type {Reflector} */

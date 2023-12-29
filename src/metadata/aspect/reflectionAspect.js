@@ -1,4 +1,4 @@
-const { isValuable, isObject, isObjectKey, isObjectLike } = require("../../libs/type.js");
+const { isObject, isObjectKey } = require("../../libs/type.js");
 const { property_metadata_t } = require("../../reflection/metadata.js");
 const ReflectionQueryBuilder = require("../query/reflectionQueryBuilder.js");
 const ReflectionQuerySubject = require("../query/reflectionQuerySubject.js");
@@ -18,19 +18,12 @@ const optionResolver = require("./optionResolver.js");
  */
 
 /**
- * Reflection class is the proxy between Reflector and other reflection types,
- * Reflection class provides a query interface for retrieving metadata about a specific class.
- * When a query accquired, Reflection instances will analyze which metadata belongs to the 
- * a specific property.
+ * ReflectionAspect is the evaluation of ReflectionQuery. It reads reflection query's properties,
+ * therefore, retrieve piece(s) of metadata of a Reflector object.
  */
 module.exports = class ReflectionAspect {
 
     #reflector;
-
-    get hasPrototype() {
-
-
-    }
 
     /**
      * 
@@ -143,13 +136,6 @@ module.exports = class ReflectionAspect {
 
         return _query.subject === ReflectionQuerySubject.STATIC ? 
                         reflector.metadata : reflector.metadata[_query.subject];
-
-        // if (!isObject(subject)) {
-
-        //     throw new Error();
-        // }
-        //console.log(['subject'], _query.subject, subject);
-        //return subject;
     }
 
     /**
@@ -174,7 +160,7 @@ module.exports = class ReflectionAspect {
         }
 
         const metaField = _metaSubject[queryField];
-        //console.log(['field'], metaField)
+        
         return metaField;
     }
 
@@ -200,9 +186,7 @@ module.exports = class ReflectionAspect {
         }
 
         const propMeta = _metaField[queryProp];
-        //console.log(['prop'], propMeta)
+
         return propMeta;
     }
-
-    
 }
