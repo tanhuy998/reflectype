@@ -3,15 +3,13 @@ const ReflectionClassPrototype = require("../prototypeReflection/reflectionClass
 const ReflectionQuerySubject = require("../query/reflectionQuerySubject");
 const ReflectorContext = require("../reflectorContext");
 
+/**
+ * @typedef {import('../prototypeReflection/reflectionClassPrototype.js')} ReflectionClassPrototype
+ */
+
 module.exports = class ReflectionClass extends ReflectionClassAbstract {
 
-    #isValid = false;
-
-    get isValid() {
-
-        return this.#isValid;
-    }
-
+    /**@type {ReflectionClassPrototype?} */
     get prototype() {
 
         if (!this.isValid) {
@@ -52,12 +50,9 @@ module.exports = class ReflectionClass extends ReflectionClassAbstract {
 
         if (!super.isValid) {
 
-            this.#isValid = false;
             super.__dispose();
             return;
         }
-
-        this.#isValid = true;
     }
 
     _getPropertyReflectionClass() {
@@ -72,7 +67,7 @@ module.exports = class ReflectionClass extends ReflectionClassAbstract {
 
     _getAttributeReflectionClass() {
 
-        
+        return require('./reflectionStaticAttribute.js');
     }
 }
 

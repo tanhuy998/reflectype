@@ -3,15 +3,22 @@ const { isInstantiable } = require("../../libs/type");
 const ReflectorContext = require("../reflectorContext");
 const AbstractReflection = require("./abstractReflection");
 
+/**
+ * @typedef {import('./reflectionPropertyAbstract')} ReflectionPropertyAbstract
+ * @typedef {import('./reflectionMethodAbstract.js')} ReflectionMethodAbstract
+ */
+
 module.exports = class ReflectionClassAbstract extends AbstractReflection {
 
     #es6 = false;
 
+    /**@type {boolean} */
     get isES6Class() {
 
         return this.#es6;
     }
 
+    /**@type {Array<ReflectionPropertyAbstract>?} */
     get properties() {
 
         if (!this.isValid) {
@@ -24,6 +31,7 @@ module.exports = class ReflectionClassAbstract extends AbstractReflection {
         return this.#_retrievePropertyReflections(_Class);
     }
 
+    /**@type {Array<ReflectionMethodAbstract>?} */
     get methods() {
 
         if (!this.isValid) {
@@ -36,6 +44,7 @@ module.exports = class ReflectionClassAbstract extends AbstractReflection {
         return this.#_retrievePropertyReflections(_Class);
     }
 
+    /**@type {Array<ReflectionPropertyAbstract>?} */
     get attributes() {
 
         if (!this.isValid) {

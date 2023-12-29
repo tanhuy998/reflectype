@@ -4,13 +4,6 @@ const ReflectorContext = require("../reflectorContext");
 
 module.exports = class ReflectionStaticProperty extends ReflectionPropertyAbstract {
 
-    #isValid;
-
-    get isValid() {
-
-        return this.#isValid;
-    }
-
     constructor(_target, _propKey) {
 
         super(_target, _propKey);
@@ -51,11 +44,8 @@ module.exports = class ReflectionStaticProperty extends ReflectionPropertyAbstra
 
         if (!super.isValid) {
 
-            this.#isValid = false;
             super.__dispose();
             return;
         }
-
-        this.#isValid = true;
     }
 }
