@@ -1,7 +1,7 @@
 const propertyDecorator = require('../libs/propertyDecorator.js');
 const { compareArgsWithType } = require('../libs/argumentType.js');
-const { hasFootPrint, setFootPrint } = require('../libs/footPrint.js');
-const { DEFAULT_ARGS } = require('../libs/constant.js');
+const { hasFootPrint, setFootPrint, retrieveFootPrintByKey } = require('../libs/footPrint.js');
+const { DEFAULT_ARGS, DECORATED_VALUE } = require('../libs/constant.js');
 /**
  * 
  * @param  {...any} values 
@@ -32,7 +32,7 @@ function defaultArguments(...args) {
 
         setFootPrint(_method, _context, DEFAULT_ARGS);
 
-        return _method;
+        return retrieveFootPrintByKey(_method, _context, DECORATED_VALUE);
     }
 }
 

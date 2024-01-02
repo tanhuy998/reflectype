@@ -1,5 +1,5 @@
 const {metaOf, metadata_t, property_metadata_t, prototype_metadata_t, PROP_META_INITIALIZED} = require('../reflection/metadata.js');
-const {hasFootPrint} = require('./footPrint.js');
+const {hasFootPrint, setFootPrint} = require('./footPrint.js');
 const matchType = require('./matchType.js');
 const {compareArgsWithType} = require('../libs/argumentType.js');
 const {isIterable, isInstantiable} = require('./type.js');
@@ -132,12 +132,13 @@ function decorateMethod(_method, context, propMeta) {
         return;
     }
 
-    const {addInitializer} = context;
-
-    propMeta.isInitialized = false;
+    setFootPrint(_method, context, DECORATED_VALUE, generateDecorateMethod(_method, propMeta));
     propMeta.decoratorContext = context;
+    propMeta.isInitialized = true;
 
-    addInitializer(overrideClassPrototype(propMeta))
+    // const {addInitializer} = context;
+    // propMeta.isInitialized = false;
+    // addInitializer(overrideClassPrototype(propMeta));
 }
 
 /**

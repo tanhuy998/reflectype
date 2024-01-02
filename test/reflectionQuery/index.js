@@ -44,4 +44,4 @@ console.log(obj)
 
 const refl = new ReflectionClass(obj);
 
-console.log(refl.methods);
+console.log(refl.methods[0].isPrivate);

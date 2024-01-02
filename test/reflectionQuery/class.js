@@ -13,7 +13,7 @@ class A {
     static prop;
 
     @paramsType(Boolean)
-    static func() {
+    static #func() {
 
 
     }

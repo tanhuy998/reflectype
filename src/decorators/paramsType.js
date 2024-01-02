@@ -3,7 +3,8 @@ const { property_metadata_t } = require('../reflection/metadata.js');
 const {compareArgsWithType} = require('../libs/argumentType.js');
 const {isInstantiableOrFail} = require('../libs/type.js');
 const { hasFootPrint, setFootPrint } = require('../libs/footPrint.js');
-const { PARAM } = require('../libs/constant.js');
+const { PARAM, DECORATED_VALUE } = require('../libs/constant.js');
+const footprint = require('../libs/footPrint.js');
 
 function paramsType(..._types) {
 
@@ -32,7 +33,7 @@ function paramsType(..._types) {
 
         propMeta.defaultParamsType = _types;
 
-        return _;
+        return footprint.retrieveFootPrintByKey(_, _context, DECORATED_VALUE);
     }
 }
 
