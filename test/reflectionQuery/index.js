@@ -21,6 +21,7 @@ const ReflectionClassMethodParameter = require('../../src/metadata/parameter/ref
 const ReflectionStaticMethod = require('../../src/metadata/staticReflection/reflectionStaticMethod.js');
 const ReflectionStaticAttribute = require('../../src/metadata/staticReflection/reflectionStaticAttribute.js');
 const ReflectionClass = require('../../src/metadata/staticReflection/reflectionClass.js');
+const Reflection = require('../../src/metadata/reflection.js');
 
 // const refl = new Reflector(A);
 // const reflAspect = new ReflectionAspect(refl);
@@ -39,9 +40,24 @@ const ReflectionClass = require('../../src/metadata/staticReflection/reflectionC
 // console.log(obj)
 
 const obj = new A();
+const objB = new B()
+
+// const reflectMethod = new ReflectionPrototypeMethod(obj, 'func');
+
+console.log(new Reflection(A).mirror()
+                .select('func')
+                .where({
+                    isMethod: true
+                })
+                .from(ReflectionQuerySubject.PROTOTYPE)
+                .on('properties')
+                .retrieve());
+
+obj.func();
+// objB.func();
 
 console.log(obj)
 
 const refl = new ReflectionClass(obj);
 
-console.log(refl.methods[0].isPrivate);
+console.log(refl.prototype.methods);

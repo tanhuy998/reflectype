@@ -1,5 +1,5 @@
 const ReflectorContext = require("../reflectorContext.js");
-const { property_metadata_t } = require("../../reflection/metadata.js");
+const { property_metadata_t, metaOf } = require("../../reflection/metadata.js");
 const {reflectParameters} = require('../trait/traitfunctionReflection.js');
 const AbstractReflection = require("../abstract/abstractReflection.js");
 

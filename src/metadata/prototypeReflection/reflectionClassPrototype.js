@@ -22,12 +22,12 @@ module.exports = class ReflectionClassPrototype extends ReflectionClassAbstract 
      * @returns {boolean}
      */
     _resolveAspectOfReflection() {
-
-        if (super.meetPrerequisite) {
+        
+        if (!super.meetPrerequisite) {
 
             return undefined;
         }
-
+        
         return super.mirror()
                 .from(ReflectionQuerySubject.PROTOTYPE)
                 .retrieve();

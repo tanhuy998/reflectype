@@ -1,7 +1,5 @@
-const {reflectParameters} = require('../trait/traitfunctionReflection.js');
-const { metaOf } = require("../../reflection/metadata.js");
-const ReflectionPrototypeMethodParameter = require("../parameter/reflectionPrototypeMethodParameter.js");
 const ReflectionMethodAbstract = require("../abstract/reflectionMethodAbstract.js");
+const ReflectionQuerySubject = require('../query/reflectionQuerySubject.js');
 
 /**
  * @typedef {import('../../../src/reflection/metadata.js').property_metadata_t} property_metadata_t
@@ -16,15 +14,8 @@ class ReflectionPrototypeMethod extends ReflectionMethodAbstract {
         this.#init();
     }
 
-    _meetPrerequisite() {
-
-        return super.isValidReflection &&
-                super._meetPrerequisite() &&
-                super.reflectionContext !== ReflectorContext.PROTOTYPE;
-    }
-
     _resolveAspectOfReflection() {
-
+        
         if (!super.meetPrerequisite) {
 
             return undefined;
@@ -32,7 +23,7 @@ class ReflectionPrototypeMethod extends ReflectionMethodAbstract {
         
         return super.mirror()
                 .select(super.methodName)
-                .from(ReflectionQuerySubject.STATIC)
+                .from(ReflectionQuerySubject.PROTOTYPE)
                 .where({
                     isMethod: true
                 })
