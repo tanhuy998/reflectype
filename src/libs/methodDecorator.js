@@ -2,7 +2,7 @@ const {metaOf, metadata_t, property_metadata_t, prototype_metadata_t, PROP_META_
 const {hasFootPrint, setFootPrint} = require('./footPrint.js');
 const matchType = require('./matchType.js');
 const {compareArgsWithType} = require('../libs/argumentType.js');
-const {isIterable, isInstantiable} = require('./type.js');
+const {isIterable, isInstantiable, isObject} = require('./type.js');
 const ReturnValueNotMatchType = require('../error/returnValueNotMatchTypeError.js');
 const isAbStract = require('../utils/isAbstract.js');
 const { DECORATED_VALUE } = require('./constant.js');
@@ -184,12 +184,14 @@ function overrideClassPrototype(propMeta) {
  */
 function establishClassPrototypeMethod(_unknown, propMeta) {
 
+    const abstract = !isInstantiable(_unknown) ? self(_unknown) : _unknown;
+    establishMetadataResolution(abstract);
+
     if (propMeta.isInitialized === true) {
 
         return;
     }
 
-    const abstract = !isInstantiable(_unknown) ? self(_unknown) : _unknown;
     const decoratorContext = propMeta.decoratorContext;
     const {name} = decoratorContext;
     const isStaticMethod = decoratorContext.static;
@@ -228,6 +230,22 @@ function establishClassPrototypeMethod(_unknown, propMeta) {
     }
 
     Object.defineProperty(propMeta, 'isInitialized', PROP_META_INITIALIZED);
+}
+
+function establishMetadataResolution(_abstract) {
+
+    const typeMeta = metaOf(_abstract);
+
+    if (!isObject(typeMeta)) {
+
+        return;
+    }
+
+    if (!typeMeta.abstract) {
+
+        typeMeta.abstract = _abstract;
+        typeMeta.prototype.abstract = _abstract;
+    }
 }
 
 function linkTypeMetaAbstract(_class) {
