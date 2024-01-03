@@ -1,8 +1,6 @@
 const { preventNonInheritanceTakeEffect } = require("../../abstraction/traitAbstractClass");
 const ReflectionFunction = require("../function/reflectionFunction");
 const ReflectorContext = require("../reflectorContext");
-const { reflectParameters } = require("../trait/traitfunctionReflection");
-const AbstractReflection = require("./abstractReflection");
 
 const METHOD_NAME = 0;
 
@@ -11,6 +9,16 @@ module.exports = class ReflectionMethodAbstract extends ReflectionFunction {
     get methodName() {
 
         return super.options[METHOD_NAME]
+    }
+
+    get isStatic() {
+
+        return this.metadata?.static;
+    }
+
+    get isPrivate() {
+
+        return this.metadata?.private;
     }
 
     constructor(_target, _methodKey) {
