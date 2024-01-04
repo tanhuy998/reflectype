@@ -6,7 +6,7 @@
 
 const {A, B, C} = require('./compiled.js');
 const {METADATA} = require('../../src/constants.js');
-const { TYPE_JS } = require('../../src/reflection/metadata.js');
+const { TYPE_JS, property_metadata_t } = require('../../src/reflection/metadata.js');
 
 const Reflector = require('../../src/metadata/reflector.js');
 const ReflectionAspect = require('../../src/metadata/aspect/reflectionAspect.js');
@@ -22,6 +22,8 @@ const ReflectionStaticMethod = require('../../src/metadata/staticReflection/refl
 const ReflectionStaticAttribute = require('../../src/metadata/staticReflection/reflectionStaticAttribute.js');
 const ReflectionClass = require('../../src/metadata/staticReflection/reflectionClass.js');
 const Reflection = require('../../src/metadata/reflection.js');
+
+const {getDecoratedValue} = require('../../src/libs/propertyDecorator.js');
 
 // const refl = new Reflector(A);
 // const reflAspect = new ReflectionAspect(refl);
@@ -44,20 +46,22 @@ const objB = new B()
 
 // const reflectMethod = new ReflectionPrototypeMethod(obj, 'func');
 
-console.log(new Reflection(A).mirror()
+const propMeta = new Reflection(A).mirror()
                 .select('func')
                 .where({
                     isMethod: true
                 })
                 .from(ReflectionQuerySubject.PROTOTYPE)
                 .on('properties')
-                .retrieve());
+                .retrieve();
+
+
 
 obj.func();
 // objB.func();
 
-console.log(obj)
+// console.log(obj)
 
 const refl = new ReflectionClass(obj);
 
-console.log(refl.prototype.methods[0].isPrivate);
+// console.log(refl.prototype.methods[0].isPrivate);

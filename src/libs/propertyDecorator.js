@@ -1,11 +1,16 @@
 const {METADATA, property_metadata_t } = require("../reflection/metadata");
 const {decorateMethod} = require('./methodDecorator.js');
 const {decorateAccessor} = require('./accessorDecorator.js');
-const {initTypeMetaFootPrint, hasFootPrint, setFootPrint} = require('./footPrint.js');
+const {initTypeMetaFootPrint, hasFootPrint, setFootPrint, retrieveFootPrintByKey} = require('./footPrint.js');
 const { traceAndInitContextMetadata } = require("./metadata/metadataTrace.js");
-const { DECORATED } = require("./constant.js");
+const { DECORATED, FOOTPRINT, DECORATED_VALUE } = require("./constant.js");
 
 
+/**
+ * 
+ * @param {*} _obj 
+ * @returns 
+ */
 function getMetadataOf(_obj) {
 
     if (_obj instanceof Object) {
@@ -62,4 +67,23 @@ function resolvePropMeta(_, _context) {
     return propMeta;
 }
 
-module.exports = {initMetadata, getMetadataOf};
+/**
+ * 
+ * @param {property_metadata_t} _propMeta 
+ */
+function getDecoratedValue(_propMeta) {
+
+    if (typeof _propMeta !== 'object') {
+
+        return undefined;
+    }
+
+    if (FOOTPRINT in _propMeta && DECORATED_VALUE in _propMeta[FOOTPRINT]) {
+
+        return _propMeta[FOOTPRINT][DECORATED_VALUE];
+    }
+
+    return undefined;
+}
+
+module.exports = {initMetadata, getMetadataOf, getDecoratedValue};
