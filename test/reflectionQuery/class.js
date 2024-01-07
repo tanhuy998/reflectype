@@ -19,7 +19,10 @@ class A {
     }
 
     @type(Number)
-    accessor prop;
+    accessor #prop;
+
+    @type(String)
+    accessor strProp;
 
     @allowNull
     @returnType(Number)

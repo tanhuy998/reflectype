@@ -46,14 +46,14 @@ const objB = new B()
 
 // const reflectMethod = new ReflectionPrototypeMethod(obj, 'func');
 
-const propMeta = new Reflection(A).mirror()
-                .select('func')
-                .where({
-                    isMethod: true
-                })
-                .from(ReflectionQuerySubject.PROTOTYPE)
-                .on('properties')
-                .retrieve();
+// const propMeta = new Reflection(A).mirror()
+//                 .select('func')
+//                 .where({
+//                     isMethod: true
+//                 })
+//                 .from(ReflectionQuerySubject.PROTOTYPE)
+//                 .on('properties')
+//                 .retrieve();
 
 
 
@@ -62,6 +62,10 @@ obj.func();
 
 // console.log(obj)
 
-const refl = new ReflectionClass(obj);
+const refl = new ReflectionPrototypeAttribute(obj, '#prop');
+
+refl.setValue('true');
+
+console.log(refl.value);
 
 // console.log(refl.prototype.methods[0].isPrivate);

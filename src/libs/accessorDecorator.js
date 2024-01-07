@@ -4,7 +4,8 @@ const { METADATA, TYPE_JS } = require('../constants.js');
 const {initTypeMetaFootPrint, hasFootPrint, setFootPrint} = require('./footPrint.js');
 const matchType = require('./matchType.js');
 const { DECORATED_VALUE } = require('./constant.js');
-const Void = require('../type/void')
+const Void = require('../type/void');
+const AccesorDecoratorSetterNotMatchTypeError = require('./error/accessorDecorator/accessorDecoratorSetterNotMatchTypeError.js');
 
 
 // will be obsolete
@@ -13,13 +14,12 @@ function resolveAccessorTypeMetadata(_accessor, _propMeta) {
     const { get } = _accessor;
 
     get[METADATA] ??= {};
-
     get[METADATA][TYPE_JS] ??= _propMeta;
 
     const actualMeta = metaOf(get);
     actualMeta.isMethod = false;
 
-    initFootPrint(actualMeta);
+    initTypeMetaFootPrint(actualMeta);
 
     get[METADATA] ??= {};
 
@@ -69,8 +69,6 @@ function generateAccessorInitializer(_propMeta) {
  */
 function generateAccessorSetter(_propMeta, _defaultSet) {
 
-    //const {type, allowNull} = _propMeta;
-
     return function (_value) {
 
         const isNull = _value === undefined || _value === null;
@@ -82,10 +80,7 @@ function generateAccessorSetter(_propMeta, _defaultSet) {
         
         if (!matchType(_propMeta.type, _value)) {
 
-            const isStatic = _propMeta.static;
-            const propName = _propMeta.name;
-
-            throw new TypeError(`Cannot set value to${(isStatic? ' static' : '') + ' attribute '}${isStatic ? this.name : this.constructor.name}.${propName} that is not type of [${_propMeta.type.name}]`);
+            throw new AccesorDecoratorSetterNotMatchTypeError(this, _propMeta);
         }
 
         return _defaultSet.call(this, _value);

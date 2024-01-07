@@ -1,4 +1,6 @@
 const { preventNonInheritanceTakeEffect } = require("../../abstraction/traitAbstractClass.js");
+const AccessorDecoratorError = require("../../libs/error/accessorDecorator/accessorDecoratorError.js");
+const { getDecoratedValue } = require("../../libs/propertyDecorator.js");
 const { isObjectKey } = require("../../libs/type.js");
 const { property_metadata_t } = require("../../reflection/metadata.js");
 const Reflection = require("../reflection.js");
@@ -10,25 +12,16 @@ const PROPERTY_NAME = 0;
 
 module.exports = class ReflectionPropertyAbstract extends AbstractReflection {
 
-    #name;
-
     #type;
-
-    // /**@type {boolean} */
-    // #isValid = false;
 
     /**@type {boolean} */
     #isPrivate;
-
     #defaultValue;
-
     #isMethod;
-
     #isStatic;
-
-    #target;
-
     #allowNull;
+
+    #decoratedValue;
 
     get name() {
 
@@ -49,11 +42,6 @@ module.exports = class ReflectionPropertyAbstract extends AbstractReflection {
 
         return checkPropertyDescriptorState.call(this, 'configurable')
     }
-
-    // get target() {
-
-    //     return this.isValid ? this.#target : undefined;
-    // }
 
     get isStatic() {
 
@@ -82,12 +70,49 @@ module.exports = class ReflectionPropertyAbstract extends AbstractReflection {
 
     get value() {
 
-        return this.#defaultValue;
+        if (!this.isValid) {
+            
+            return undefined;
+        }
+
+        if (this.isMethod) {
+
+            return this.#decoratedValue;
+        }
+
+        try {
+
+            if (super.reflectionContext !== ReflectorContext.INSTANCE) {
+            
+                return this.#defaultValue;
+            }
+
+            return this.#propMetaGetter.call(this.target) || this.#defaultValue;
+        }
+        catch (e) {
+            
+            return this.#defaultValue;
+        }
     }
 
     get allowNull() {
 
         return this.#allowNull;
+    }
+
+    get #accessor() {
+
+        return !this.#isMethod ? this.#decoratedValue : undefined;
+    }
+
+    get #propMetaGetter() {
+
+        return this.#accessor?.get;
+    }
+
+    get #propMetaSetter() {
+
+        return this.#accessor?.set;
     }
 
     constructor(target, propName) {
@@ -129,7 +154,52 @@ module.exports = class ReflectionPropertyAbstract extends AbstractReflection {
             //const theProp = this.originClass.prototype[this.name];
             this.#isMethod = targetPropMeta.isMethod //&& typeof theProp === 'function';
 
+            this.#decoratedValue = !this.#isMethod ? getDecoratedValue(targetPropMeta) : undefined;
+
             return;
+        }
+    }
+
+    /**
+     * 
+     * @param {any} _value 
+     * @returns {boolean}
+     * 
+     * @throws
+     */
+    setValue(_value) {
+
+        if (this.isMethod) {
+
+            throw new Error('the target of property reflection is a method, value could not be setted');
+        }
+
+        if (
+            !this.isValid ||
+            super.reflectionContext !== ReflectorContext.INSTANCE
+        ) {
+
+            return false;
+        }
+
+        try {
+
+            /**
+             * old version of decorator proposal
+             * set.call(this.target, _value);
+             */
+            this.#propMetaSetter.call(this.target, _value);
+
+            return true;
+        }
+        catch (e) {
+            
+            if (e instanceof AccessorDecoratorError) {
+
+                throw e;
+            }
+
+            return false;
         }
     }
 }
