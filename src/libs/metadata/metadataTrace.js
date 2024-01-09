@@ -228,6 +228,19 @@ function belongsToCurrentMetadataSession(decoraotorContext) {
     return metadata[ORIGIN] === metadata;
 }
 
+function retrieveMetaObject(_, decoratorContext) {
+
+    const {kind, metadata} = decoratorContext;
+    const typeMeta = metadata[TYPE_JS];
+
+    if (kind === 'class') {
+
+        return typeMeta;
+    }
+
+    return retrievePropMeta(_, decoratorContext);
+}
+
 module.exports = {
     currentPropMeta, 
     currentClassMeta, 
@@ -235,6 +248,7 @@ module.exports = {
     refreshTypeMetadata,
     retrievePropMeta,
     retrieveTypeMetaProperties,
-    belongsToCurrentMetadataSession
+    belongsToCurrentMetadataSession,
+    retrieveMetaObject
 }
 

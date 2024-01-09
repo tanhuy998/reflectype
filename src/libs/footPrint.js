@@ -1,6 +1,6 @@
 const { TYPE_JS, METADATA } = require("../reflection/metadata");
 const { FOOTPRINT } = require("./constant");
-const { retrievePropMeta } = require("./metadata/metadataTrace.js");
+const { retrievePropMeta, retrieveMetaObject } = require("./metadata/metadataTrace.js");
 const {isObjectKeyOrFail, isValuable, isObjectKey} = require('./type.js');
 
 /**
@@ -17,23 +17,23 @@ const {isObjectKeyOrFail, isValuable, isObjectKey} = require('./type.js');
  */
 function initTypeMetaFootPrint(_, context) {
 
-    const _propMeta = retrievePropMeta(_, context);
+    const metaObject = retrieveMetaObject(_, context);
+    
+    return initFootPrint(metaObject);
+}
 
-    if (typeof _propMeta !== 'object') {
+/**
+ * 
+ * @param {Object} metaObject 
+ */
+function initFootPrint(metaObject) {
+
+    if (typeof metaObject !== 'object') {
 
         return;
     }
 
-    if (typeof _propMeta[FOOTPRINT] !== 'object') {
-
-        _propMeta[FOOTPRINT] = {};
-
-        return;
-    }
-
-    const footPrint = _propMeta[FOOTPRINT] ??= {};
-
-    return footPrint;
+    return metaObject[FOOTPRINT] ??= {};
 }
 
 function setFootPrint(_, context, _key, _value = undefined) {
@@ -167,5 +167,5 @@ module.exports = {
     retrieveFootPrintObject, 
     setFootPrint,
     retrieveFootPrintByKey,
-    initFootPrint: initTypeMetaFootPrint
+    initFootPrint
 }

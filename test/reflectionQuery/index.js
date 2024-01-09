@@ -62,7 +62,7 @@ obj.func();
 
 // console.log(obj)
 
-const refl = new ReflectionPrototypeAttribute(obj, '#prop');
+const refl = new ReflectionPrototypeAttribute(objB, 'prop');
 
 refl.setValue('true');
 

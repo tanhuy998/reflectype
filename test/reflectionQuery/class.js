@@ -19,7 +19,7 @@ class A {
     }
 
     @type(Number)
-    accessor #prop;
+    accessor prop;
 
     @type(String)
     accessor strProp;
@@ -42,13 +42,13 @@ class A {
 class B extends A {
 
     
-    // @type(String)
-    // accessor prop
+    @type(String)
+    accessor prop
 
     // @paramsType(String)
     @returnType(String)
     func() {
-
+c
         console.log('B.func()')
     }
 }
