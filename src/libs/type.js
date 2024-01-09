@@ -2,6 +2,8 @@ const Void = require('../type/void.js');
 const {IS_CHECKABLE} = require('../constants.js');
 const Any = require('../type/any.js');
 
+const OBJECT_KEY_TYPES = ['number', 'string', 'symbol'];
+
 function matchType(_type, value) {
     
     if (_type instanceof Any || _type?.prototype instanceof Any) {
@@ -174,12 +176,27 @@ function isObjectKey(_unknown) {
 
     const type = typeof _unknown;
 
-    return ['number', 'string', 'symbol'].includes(type);
+    return OBJECT_KEY_TYPES.includes(type);
 }
 
 function isObjectKeyOrFail(_unknown) {
 
     if (!isObjectKey(_unknown)) {
+
+        throw new TypeError();
+    }
+
+    return true;
+}
+
+function isNonIterableObjectKey(_value) {
+
+    return isObjectKey(_value) && typeof _value !== 'number';
+}
+
+function isNonIterableObjectKeyOrFail(_value) {
+
+    if (!isNonIterableObjectKey(_value)) {
 
         throw new TypeError();
     }
@@ -205,5 +222,7 @@ module.exports = {
     isObjectLike,
     isObjectLikeOrFail,
     isObjectKey,
-    isObjectKeyOrFail
+    isObjectKeyOrFail,
+    isNonIterableObjectKey,
+    isNonIterableObjectKeyOrFail
 }
