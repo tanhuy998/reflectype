@@ -64,6 +64,8 @@ obj.func();
 
 const refl = new ReflectionPrototypeAttribute(objB, 'prop');
 
+console.log(refl.metadata)
+
 // refl.setValue('true');
 
 console.log(refl.type);

@@ -4,6 +4,7 @@ const getMetadata = require('../reflection/getMetadata.js');
 const ReflectorContext = require('./reflectorContext.js');
 const { metadata_t, metaOf, property_metadata_t } = require('../reflection/metadata.js');
 const { type } = require('os');
+const { resolveArbitraryResolution } = require('../reflection/typeMetadataAction.js');
 
 /**
  *  Reflector is the atomic unit of the reflecting progress.
@@ -70,12 +71,20 @@ class Reflector extends IDisposable{
 
         super();
 
-        this.#resolveMetadata(_unknown);
-
+        //this.#resolveMetadata(_unknown);
         this.#target = _unknown;
+        this.#init();
     }
 
-    #resolveMetadata(_target) {
+    #init() {
+
+        this.#resolveMetadata();
+        this.#applyMetadataResolution();   
+    }
+
+    #resolveMetadata() {
+
+        const _target = this.#target;
 
         if (isAbStract(_target)) {
 
@@ -113,6 +122,19 @@ class Reflector extends IDisposable{
 
         this.#isValid = false;
         this.#isDisposed = true;
+    }
+
+    #applyMetadataResolution() {
+
+        if (
+            !this.isValidReflection ||
+            this.reflectionContext === ReflectorContext.OTHER    
+        ) {
+
+            return;
+        }
+        
+        resolveArbitraryResolution(this.metadata, this.originClass);
     }
 
     _dispose() {

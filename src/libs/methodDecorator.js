@@ -8,6 +8,7 @@ const isAbStract = require('../utils/isAbstract.js');
 const { DECORATED_VALUE } = require('./constant.js');
 const self = require('../utils/self.js');
 const { belongsToCurrentMetadataSession } = require('./metadata/metadataTrace.js');
+const { resolveTypeMetaResolution, establishMetadataResolution } = require('../reflection/typeMetadataAction.js');
 
 
 function generateDecorateMethod(_method, propMeta) {
@@ -232,21 +233,6 @@ function establishClassPrototypeMethod(_unknown, propMeta) {
     Object.defineProperty(propMeta, 'isInitialized', PROP_META_INITIALIZED);
 }
 
-function establishMetadataResolution(_abstract) {
-
-    const typeMeta = metaOf(_abstract);
-
-    if (!isObject(typeMeta)) {
-
-        return;
-    }
-
-    if (!typeMeta.abstract) {
-
-        typeMeta.abstract = _abstract;
-        typeMeta.prototype.abstract = _abstract;
-    }
-}
 
 function linkTypeMetaAbstract(_class) {
 
@@ -293,4 +279,4 @@ function unlinkPropMeta(_class, decoratorContext) {
 }
 
 
-module.exports = {decorateMethod, establishClassPrototypeMethod};
+module.exports = {decorateMethod};

@@ -19,7 +19,8 @@
     "test-reflection": "npx babel ./test/reflection/class.js > ./test/reflection/compiled.js && node --trace-warnings ./test/reflection",
     "test-footprint": "npx babel ./test/decoratorfootprint/class.js > ./test/decoratorfootprint/compiled.js && node --trace-warnings ./test/decoratorfootprint",
     "test-interface": "npx babel ./test/interface/class.js > ./test/interface/compiled.js && node --trace-warnings ./test/interface",
-    "test-metadata": "npx babel ./test/classMetadata/class.js > ./test/classMetadata/compiled.js && node --trace-warnings ./test/classMetadata"
+    "test-metadata": "npx babel ./test/classMetadata/class.js > ./test/classMetadata/compiled.js && node --trace-warnings ./test/classMetadata",
+    "test-resolution": "npx babel ./test/metadataResolution/class.js > ./test/metadataResolution/compiled.js && node --trace-warnings ./test/metadataResolution"
   },
   "author": "tanhuy998",
   "license": "MIT",

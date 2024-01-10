@@ -71,4 +71,26 @@ function checkPropertyDescriptorState(_state) {
    return descriptor ? descriptor[_state] || false : false;
 }
 
-module.exports = {resolvePropertyMetadata, checkPropertyDescriptorState};
+/**
+ * 
+ * @this Reflection
+ */
+function checkPropertyOverridenState() {
+
+    if (!this.isValidReflection) {
+
+        return undefined;
+    }
+
+
+}
+
+/**
+ * @this Reflection
+ */
+function checkPropertyOwnerClass() {
+
+
+}
+
+module.exports = {resolvePropertyMetadata, checkPropertyDescriptorState, checkPropertyOverridenState, checkPropertyOwnerClass};
