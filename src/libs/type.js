@@ -1,5 +1,5 @@
 const Void = require('../type/void.js');
-const {IS_CHECKABLE} = require('../constants.js');
+const {IS_CHECKABLE} = require('../interface/constant.js');
 const Any = require('../type/any.js');
 
 const OBJECT_KEY_TYPES = ['number', 'string', 'symbol'];
