@@ -38,36 +38,43 @@ const {getDecoratedValue} = require('../../src/libs/propertyDecorator.js');
 //                         .retrieve();
 
 // console.log(obj);
-
+const a = 'initial 2 object';
+const b = 'reflection time';
 // console.log(obj)
-
+console.time(a);
 const obj = new A();
 const objB = new B()
-
+console.timeEnd(a);
 // const reflectMethod = new ReflectionPrototypeMethod(obj, 'func');
 
-// const propMeta = new Reflection(A).mirror()
+// const propMeta = new Reflection(B).mirror()
 //                 .select('func')
-//                 .where({
-//                     isMethod: true
-//                 })
+//                 // .where({
+//                 //     isMethod: true
+//                 // })
 //                 .from(ReflectionQuerySubject.PROTOTYPE)
-//                 .on('properties')
+//                 // .on('properties')
 //                 .retrieve();
 
+// console.log(propMeta)
+
+// // objB.func();
+// // objB.func();
+
+// // console.log(obj)
+// console.time(b);
+const refl = new ReflectionPrototypeProperty(objB, 'func');
+// console.timeEnd(b)
+
+// console.time(b)
+// for (let i = 0; i < 10; ++i) {
+//     new ReflectionPrototypeAttribute(objB, 'func');
+// }
+// console.timeEnd(b)
 
 
-obj.func();
-// objB.func();
 
-// console.log(obj)
-
-const refl = new ReflectionPrototypeAttribute(objB, 'prop');
-
-console.log(refl.metadata.owner)
-
-// refl.setValue('true');
-
+console.log(refl.metadata)
 console.log(refl.type);
 
 // console.log(refl.prototype.methods[0].isPrivate);

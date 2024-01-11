@@ -47,7 +47,6 @@ function addPropertyMetadata(_typeMeta, _propName, _ref) {
  */
 function _resolveTypeResolution(_typeMeta, _properties) {
 
-    const ownerTypeMetaWrapper = _typeMeta.ownerClassWrapper;
     const _class = _typeMeta.abstract;
     /********************************************************************
      * stuck from heare
@@ -63,7 +62,6 @@ function _resolveTypeResolution(_typeMeta, _properties) {
     for (const [propName,/** @type {property_metadata_t} */ propMeta] of Object.entries(_properties) || []) {
         
         if (
-            propMeta.owner.classWrapper !== ownerTypeMetaWrapper ||
             propMeta.owner.isResolutionResolved &&
             propMeta.owner.typeMeta instanceof metadata_t
         ) {
@@ -72,7 +70,31 @@ function _resolveTypeResolution(_typeMeta, _properties) {
         }
         
         propMeta.owner.isResolutionResolved = true;
-        propMeta.owner.typeMeta = _typeMeta;
+        propMeta.owner.typeMeta = _traceActualTypeMeta(propMeta, _typeMeta);
+    }
+}
+
+/**
+ * 
+ * @param {property_metadata_t} _propMeta 
+ * @param {metadata_t} _typeMeta 
+ * @returns {metadata_t?}
+ */
+function _traceActualTypeMeta(_propMeta, _typeMeta) {
+
+    let _class = _typeMeta.abstract;
+
+    while (_class) {
+        
+        const tempTypeMeta = metaOf(_class);
+        
+        if (_propMeta.owner.classWrapper === tempTypeMeta.ownerClassWrapper) {
+            
+            tempTypeMeta.abstract = _class;
+            return tempTypeMeta;
+        }
+        
+        _class = _class.__proto__;
     }
 }
 
@@ -148,6 +170,13 @@ function resolveStaticResolution(_typeMeta) {
     _resolveTypeResolution(_typeMeta, _typeMeta.prototype.properties);
 }
 
+/**
+ * Check if the typeMeta is metadata of a class
+ * 
+ * @param {Function} _class 
+ * @param {metadata_t} _typeMeta 
+ * @returns 
+ */
 function isPaired(_class, _typeMeta) {
 
     return hasTypeMetadata(_class) &&
@@ -163,7 +192,7 @@ function resolveTypeMetaResolution(_class, _typeMeta) {
 
     if (isInstantiable(_typeMeta.abstract)) {
 
-        throw new Error('')
+        throw new Error('');
     }
 
     if (!isPaired(_class, _typeMeta)) {
@@ -173,7 +202,7 @@ function resolveTypeMetaResolution(_class, _typeMeta) {
     
     _typeMeta.abstract = _class;
     _typeMeta.prototype.abstract = _class;
-    
+
     resolveStaticResolution(_typeMeta);
     resolveProtypeResolution(_typeMeta);
 

@@ -78,51 +78,12 @@ module.exports = class ReflectionAspect {
 
         this.#isValidOrFail();       
 
-        /**@type {property_metadata_t|Object} */
-        const metaObj = new optionResolver(_query, 
+        return new optionResolver(_query, 
             new CriteriaResovler(_query, 
                 this.#_resolvePropMeta(_query,
                     this.#_resolveField(_query, 
                         this.#_resolveSubject(_query)))).resolve())
                     .resolve();
-
-        if (
-            _query.propName &&
-        metaObj instanceof property_metadata_t
-        ) {
-
-            return this.#_resovlePropMetaResolution(_query, metaObj);
-        }
-        else {
-
-            return metaObj;
-        }
-    }
-
-    /**
-     * 
-     * @param {property_metadata_t|any} prop 
-     * @param {ReflectionQuery} _query 
-     */
-    #_resovlePropMetaResolution(_query, propMeta) {
-
-        this.#_establishPropMeta(propMeta);
-
-        return propMeta;
-    }
-
-    /**
-     * 
-     * @param {property_metadata_t} _propMeta 
-     */
-    #_establishPropMeta(_propMeta) {
-
-        if (_propMeta.isMethod && _propMeta.isInitialized !== true) {
-
-            const abstract = this.#reflector.target;
-
-            methodDecorator.establishClassPrototypeMethod(abstract, _propMeta);
-        }
     }
 
     /**

@@ -1,6 +1,7 @@
 const isAbstract = require('../../utils/isAbstract.js');
 const {metaOf} = require('../../reflection/metadata.js');
 const ReflectorContext = require('../reflectorContext.js');
+const { resolveResolutionFromArbitrayMeta } = require('../../reflection/typeMetadataAction.js');
 
 /**
  * this file define macros functions for Property reflectors that is called in context of a property reflector
@@ -8,6 +9,7 @@ const ReflectorContext = require('../reflectorContext.js');
 
 /**
  * @typedef {import('../reflection.js')} Reflection
+ * @typedef {import('../../reflection/metadata.js').property_metadata_t} property_metadata_t
  */
 
 /**
@@ -20,14 +22,9 @@ const ReflectorContext = require('../reflectorContext.js');
  */
 function resolvePropertyMetadata(prop) {
 
-    //const targetIsClass = this.reflectionContext === ReflectorContext.ABSTRACT
     const isInstanceContext = this.reflectionContext === ReflectorContext.INSTANCE;
-
     /**@type {metadata_t} */
     const contextMetadata = (isInstanceContext) ? this.metadata?.prototype : this.metadata;
-
-    // /**@type {property_metadata_t} */
-    // let propMeta = contextMetadata?.properties;
 
     return contextMetadata?.properties[prop] || getMetadataFromProp.call(this, prop);
 }
@@ -40,13 +37,9 @@ function resolvePropertyMetadata(prop) {
  * @this Reflection
  */
 function getMetadataFromProp(prop) {
-    
-    //const isStatic = this.reflectionContext === ReflectorContext.ABSTRACT;
 
     const isFocusOnPrototype = [ReflectorContext.INSTANCE, ReflectorContext.PROTOTYPE].includes(this.reflectionContext);
-
     const targetAbstract = this.originClass;
-
     const propInstance = (isFocusOnPrototype) ? targetAbstract.prototype[prop] : targetAbstract[prop];
 
     return metaOf(propInstance);
@@ -91,6 +84,20 @@ function checkPropertyOverridenState() {
 function checkPropertyOwnerClass() {
 
 
+}
+
+/**
+ * @this Reflection
+ */
+function getOwner() {
+
+    /**@type {property_metadata_t} */
+    const meta = this.metadata;
+
+    if (!meta?.owner?.isResolutionResolved) {
+
+        resolveResolutionFromArbitrayMeta(meta);
+    }
 }
 
 module.exports = {resolvePropertyMetadata, checkPropertyDescriptorState, checkPropertyOverridenState, checkPropertyOwnerClass};
