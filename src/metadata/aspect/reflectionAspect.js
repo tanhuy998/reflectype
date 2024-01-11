@@ -2,7 +2,6 @@ const { isObject, isObjectKey } = require("../../libs/type.js");
 const { property_metadata_t } = require("../../reflection/metadata.js");
 const ReflectionQueryBuilder = require("../query/reflectionQueryBuilder.js");
 const ReflectionQuerySubject = require("../query/reflectionQuerySubject.js");
-const methodDecorator = require('../../libs/methodDecorator.js');
 const { ReflectionSubjectNotFoundError, ReflectionFieldNotFoundError } = require("../error/reflectionAspect.js");
 const Reflector = require("../reflector.js");
 const ReflectionQuery = require("../query/reflectionQuery.js");
@@ -32,7 +31,6 @@ module.exports = class ReflectionAspect {
     constructor(reflector) {
 
         this.#reflector = reflector;
-        
         this.#init();
     }
 
@@ -59,7 +57,6 @@ module.exports = class ReflectionAspect {
     query() {
 
         this.#isValidOrFail();
-
         return new ReflectionQueryBuilder(this);
     }
 
@@ -76,14 +73,22 @@ module.exports = class ReflectionAspect {
             throw new TypeError('invalid query');
         }
 
-        this.#isValidOrFail();       
+        try {
 
-        return new optionResolver(_query, 
-            new CriteriaResovler(_query, 
-                this.#_resolvePropMeta(_query,
-                    this.#_resolveField(_query, 
-                        this.#_resolveSubject(_query)))).resolve())
-                    .resolve();
+            this.#isValidOrFail();
+            
+            return new optionResolver(_query,
+                            new CriteriaResovler(_query,
+                                this.#_resolvePropMeta(_query,
+                                this.#_resolveField(_query,
+                                this.#_resolveSubject(_query))))
+                            .resolve())
+                        .resolve();
+        }
+        catch {
+            
+            return undefined;
+        }
     }
 
     /**
@@ -125,9 +130,7 @@ module.exports = class ReflectionAspect {
             return _metaSubject;
         }
 
-        const metaField = _metaSubject[queryField];
-        
-        return metaField;
+        return _metaSubject[queryField];
     }
 
     /**
@@ -151,8 +154,6 @@ module.exports = class ReflectionAspect {
             return _metaField;
         }
 
-        const propMeta = _metaField[queryProp];
-
-        return propMeta;
+        return _metaField[queryProp];
     }
 }

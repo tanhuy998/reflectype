@@ -67,7 +67,7 @@ const refl = new ReflectionPrototypeProperty(objB, 'func');
 console.timeEnd(b)
 
 console.time(b)
-for (let i = 0; i < 10; ++i) {
+for (let i = 0; i < 10_000_000; ++i) {
     new ReflectionPrototypeAttribute(objB, 'func');
 }
 console.timeEnd(b)
