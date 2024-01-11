@@ -133,6 +133,11 @@ module.exports = class ReflectionAspect {
     #_resolveSubject(_query) {
 
         const reflector = this.#reflector;
+        
+        if (!reflector.isValidReflection) {
+
+            return undefined;
+        }
 
         return _query.subject === ReflectionQuerySubject.STATIC ? 
                         reflector.metadata : reflector.metadata[_query.subject];

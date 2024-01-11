@@ -1,11 +1,10 @@
-const { METADATA, TYPE_JS } = require("../constants");
 const { isInstantiable, isObject, isObjectKey, isNonIterableObjectKey } = require("../libs/type");
 const self = require("../utils/self");
-const { metadata_t, property_metadata_t, prototype_metadata_t, metaOf } = require("./metadata");
+const { METADATA, TYPE_JS, metadata_t, property_metadata_t, prototype_metadata_t, metaOf } = require("./metadata");
 
 module.exports = {
     addPropertyMetadata, 
-    resolveArbitraryResolution, 
+    resolveResolutionFromArbitrayMeta, 
     resolveTypeMetaResolution, 
     establishMetadataResolution,
     hasTypeMetadata,
@@ -34,10 +33,12 @@ function addPropertyMetadata(_typeMeta, _propName, _ref) {
         return undefined;
     }
 
-    const propMeta = properties[_propName] = new property_metadata_t(_ref);
+    const propMeta = properties[_propName] = new property_metadata_t(_ref, _typeMeta);
 
-    propMeta.ownerTypeMeta = _typeMeta;
+    propMeta.owner.typeMeta = _typeMeta;
     propMeta.name = _propName;
+    //console.log(propMeta)
+    return propMeta;
 }
 
 /**
@@ -52,24 +53,20 @@ function _resolveTypeResolution(_typeMeta, _properties) {
      * stuck from heare
      *******************************************************************/
     if (
-        !isInstantiable(_class) ||
-        _class[METADATA] !== ownerTypeMetaWrapper
+        !isInstantiable(_class) //||
+        //_class[METADATA] !== ownerTypeMetaWrapper
     ) {
 
         return;
     }
     
-    for (const [propName,/** @type {property_metadata_t} */ propMeta] in Object.entries(_properties) || []) {
-
+    for (const [propName,/** @type {property_metadata_t} */ propMeta] of Object.entries(_properties) || []) {
+        
         if (
+            propMeta.owner.classWrapper !== ownerTypeMetaWrapper ||
             propMeta.owner.isResolutionResolved &&
             propMeta.owner.typeMeta instanceof metadata_t
         ) {
-
-            continue;
-        }
-
-        if (propMeta.owner.classWrapper !== ownerTypeMetaWrapper) {
 
             continue;
         }
@@ -86,7 +83,7 @@ function _resolveTypeResolution(_typeMeta, _properties) {
  * @param {Function} _abstract 
  * @returns 
  */
-function resolveArbitraryResolution(_meta, _abstract) {
+function resolveResolutionFromArbitrayMeta(_meta, _abstract) {
 
     if (
         !isObject(_meta) &&
@@ -173,10 +170,10 @@ function resolveTypeMetaResolution(_class, _typeMeta) {
 
         return;
     }
-
+    
     _typeMeta.abstract = _class;
     _typeMeta.prototype.abstract = _class;
-
+    
     resolveStaticResolution(_typeMeta);
     resolveProtypeResolution(_typeMeta);
 

@@ -35,6 +35,7 @@
 
 
 const { property_metadata_t, metadata_t, TYPE_JS } = require('../../reflection/metadata.js');
+const { addPropertyMetadata } = require('../../reflection/typeMetadataAction.js');
 const self = require('../../utils/self.js');
 const { ORIGIN } = require('./constant.js');
 const {classStack, propStack} = require('./initialStack.js');
@@ -78,17 +79,20 @@ function traceAndInitContextMetadata(_, decoratorContext) {
 
 function resolvePropMeta(_, decoratorContext) {
 
-    const {name} = decoratorContext;
+    const {name, metadata} = decoratorContext;
     const properties = retrieveTypeMetaProperties(_, decoratorContext);
-    let propMeta = properties[name];
+    const typeMeta = metadata[TYPE_JS];
+    //let propMeta = properties[name];
+    let propMeta = retrievePropMeta(_, decoratorContext);
 
     if (noPropMetaOrSubClassOverride(_, decoratorContext)) {
         
-        propMeta = properties[name] = new property_metadata_t();
-        
+        //propMeta = properties[name] = new property_metadata_t();
+        //propMeta = addPropertyMetadata(typeMeta, name);
+        propMeta = properties[name] = new property_metadata_t(undefined, typeMeta);
         registerPropMeta(propMeta);
     }
-
+    
     return propMeta;
 }
 
@@ -141,8 +145,6 @@ function refreshDecoratorMetadataSession(decoraotorContext) {
  * @returns {boolean}
  */
 function noPropMetaOrSubClassOverride(_, decoratorContext) {
-
-    //const {metadata} = decoratorContext;
     
     if (isSubclassFirstDecorator(decoratorContext)) {
         /**
@@ -154,22 +156,24 @@ function noPropMetaOrSubClassOverride(_, decoratorContext) {
     }
 
     const propMeta = retrievePropMeta(_, decoratorContext);
-
-    /**
-     * when the property meta haven't exist yet, it's mean this is the first decorator,
-     * just instantiate new one
-     */
+    
     if (!(propMeta instanceof property_metadata_t)) {
-        
+        /**
+         * when the property meta haven't exist yet, it's mean this is the first decorator,
+         * just instantiate new one
+         */
         return true;
     }
 
-    /**
-     * subclass override the property
-     */
-    if (propStack.exist(propMeta) &&
-    propStack.head !== propMeta) {
-        
+    if (
+        propStack.exist(propMeta) &&
+        propStack.head !== propMeta
+    ) {
+        /**
+         * When the existed propMeta on the current decorator context is on top of the stack,
+         * it means the current decorator are placed after a previous decorator on the same
+         * class's property.
+         */
         return true;
     }
     
@@ -200,12 +204,13 @@ function refreshTypeMetadata(_, decoratorContext) {
 
     // refresh metadata_t first
     const newTypeMeta = metadata[TYPE_JS] = new metadata_t(undefined, oldTypeMeta);
+    newTypeMeta.ownerClassWrapper = decoratorContext.metadata;
 
     if (kind === 'class') {
 
         newTypeMeta.abstract = _;
     }
-
+    
     return newTypeMeta;
 }
 

@@ -4,6 +4,8 @@
  * Defines data structures that represent the raw metadata for classes.
  */
 
+const { isInstantiableOrFail, isInstantiable, isObject, isObjectLike } = require('../libs/type.js');
+
 /**
  * @typedef {import('../interface/interfacePrototype.js')} InterfacePrototype
  */
@@ -21,8 +23,17 @@ const PROP_META_INITIALIZED = {
 
 function owner_metadata_t() {
 
+    /**
+     * @type {Object}
+     */
     this.classWrapper = undefined;
+    /**
+     * @type {metadata_t}
+     */
     this.typeMeta = undefined;
+    /**
+     * @type {boolean}
+     */
     this.isResolutionResolved = false;
 }
 
@@ -39,7 +50,7 @@ function metadata_t(_abstract, _ref) {
      * 
      * @type {Function}
      */
-    this.abstract = _ref?.abstract ?? _abstract;
+    this.abstract = isInstantiable(_abstract) ? _abstract : _ref?.abstract;
     /**@type {Object} */
     this.properties = Object.assign({}, _ref?.properties);
 
@@ -51,7 +62,7 @@ function metadata_t(_abstract, _ref) {
      * 
      * @type {prototype_metadata_t} 
      */
-    this.prototype = new prototype_metadata_t(_ref);
+    this.prototype = new prototype_metadata_t(_ref, this.abstract);
 
     /**
      *  When "isInitialized" equals to false,
@@ -60,7 +71,7 @@ function metadata_t(_abstract, _ref) {
      *  
      *  @type {Object}
      */
-    this.ownerClassWrapper = undefined;
+    this.ownerClassWrapper = wrapperOf(this.abstract);
 
     this.isResolutionResolved = false;
 }
@@ -68,15 +79,16 @@ function metadata_t(_abstract, _ref) {
 /**
  * 
  * @param {metadata_t} _ref 
+ * @param {Function} _ownerAbstract
  */
-function prototype_metadata_t(_ref) {
+function prototype_metadata_t(_ref, _ownerAbstract) {
 
     /**
      * The class that is annotated
      * 
      * @type {Function}
      */
-    this.abstract = _ref?.abstract;
+    this.abstract = _ownerAbstract; // _ref.abstract
     
     const _refProto = _ref?.prototype;
 
@@ -84,14 +96,17 @@ function prototype_metadata_t(_ref) {
     this.properties = Object.assign({}, _refProto?.properties);
 
     this.owner = new owner_metadata_t();
+
+    setWrapper(this, {abstract: _ownerAbstract});
 }
 
 
 /**
  * @class
  * @param {property_metadata_t} _ref 
+ * @param {metadata_t} _ownerTypeMeta
  */
-function property_metadata_t(_ref) {
+function property_metadata_t(_ref, _ownerTypeMeta) {
 
     /**@type {boolean} */
     this.private = _ref?.private;
@@ -137,7 +152,13 @@ function property_metadata_t(_ref) {
      */
     this.isInitialized = undefined;
 
+    /**
+     * 
+     * @type {owner_metadata_t}
+     */
     this.owner = new owner_metadata_t();
+
+    this.owner.typeMeta = _ownerTypeMeta?.constructor === metadata_t ? _ownerTypeMeta : undefined;
 
     /**
      *  When "isInitialized" equals to false,
@@ -147,8 +168,37 @@ function property_metadata_t(_ref) {
      *  @type {Object}
      */
     this.decoratorContext = undefined;
+
+    setWrapper(this, {
+        abstract: _ownerTypeMeta?.abstract,
+        typeMeta: _ownerTypeMeta
+    });
 }
 
+/**
+ * 
+ * @param {prototype_metadata_t|property_metadata_t} _meta 
+ * @param {Object} options
+ * @param {Function} options.abstract 
+ * @param {Object} options.typeMeta
+ */
+function setWrapper(_meta, {abstract, typeMeta} = {}) {
+
+    switch(_meta?.constructor) {
+        case property_metadata_t:
+            break;
+        case prototype_metadata_t:
+            break;
+        default: 
+            return;
+    }
+    
+    const wrapper = !isInstantiable(abstract) ? 
+                    typeMeta?.ownerClassWrapper
+                    : abstract[METADATA];
+
+    _meta.owner.classWrapper = typeof wrapper === 'object' ? wrapper : undefined; 
+}
 
 /**
  * 
@@ -157,20 +207,14 @@ function property_metadata_t(_ref) {
  */
 function metaOf(_unknown) {
 
-    if (!_unknown) {
-
-        return;
-    }
-
-    const wrapper = _unknown[METADATA];
+    const wrapper = wrapperOf(_unknown);
 
     return typeof wrapper === 'object' ? wrapper[TYPE_JS] : undefined;
 }
 
+function wrapperOf(_unknown) {
 
-function isAbstract(_unknown) {
-
-    return typeof _unknown === 'function' && typeof _unknown.prototype === 'object';
+    return isObjectLike(_unknown) ? _unknown[METADATA] : undefined;
 }
 
 module.exports = {
@@ -178,6 +222,8 @@ module.exports = {
     TYPE_JS, 
     PROP_META_INITIALIZED,
     metaOf, 
+    wrapperOf,
+    setWrapper,
     metadata_t,
     property_metadata_t, 
     owner_metadata_t,

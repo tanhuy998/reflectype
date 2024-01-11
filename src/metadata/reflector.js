@@ -3,8 +3,9 @@ const isAbStract = require('../utils/isAbstract.js');
 const getMetadata = require('../reflection/getMetadata.js');
 const ReflectorContext = require('./reflectorContext.js');
 const { metadata_t, metaOf, property_metadata_t } = require('../reflection/metadata.js');
-const { type } = require('os');
-const { resolveArbitraryResolution } = require('../reflection/typeMetadataAction.js');
+const { resolveTypeMetaResolution, resolveResolutionFromArbitrayMeta } = require('../reflection/typeMetadataAction.js');
+const { isInstantiable } = require('../libs/type.js');
+const self = require('../utils/self.js');
 
 /**
  *  Reflector is the atomic unit of the reflecting progress.
@@ -86,42 +87,45 @@ class Reflector extends IDisposable{
 
         const _target = this.#target;
 
-        if (isAbStract(_target)) {
+        // if (isAbStract(_target)) {
 
-            const typeMeta = metaOf(_target);
+        //     const typeMeta = metaOf(_target);
 
-            this.#metadata = typeMeta;
+        //     this.#metadata = typeMeta;
 
-            this.#context =  (typeMeta instanceof metadata_t) ? ReflectorContext.ABSTRACT : ReflectorContext.OTHER;
+        //     this.#context =  (typeMeta instanceof metadata_t) ? ReflectorContext.ABSTRACT : ReflectorContext.OTHER;
 
-            this.#originClass = _target;
-
-            return;
-        }
-
-        // when the _target of reflection is an instance of a particular class
-        if (isAbStract(_target.constructor)) {
+        //     this.#originClass = _target;
+        // }
+        // // when the _target of reflection is an instance of a particular class
+        // else if (isAbStract(_target.constructor)) {
             
-            this.#metadata = getMetadata(_target.constructor);
+        //     this.#metadata = getMetadata(_target.constructor);
 
-            this.#context = ReflectorContext.INSTANCE;
+        //     this.#context = ReflectorContext.INSTANCE;
 
-            this.#originClass = _target.constructor;
+        //     this.#originClass = _target.constructor;
+        // }
+        // else if (metaOf(_target) instanceof Object) {
 
-            return;
-        }
+        //     this.#metadata = metaOf(_target)
 
-        if (metaOf(_target) instanceof Object) {
+        //     this.#context = ReflectorContext.OTHER;
+        // }
 
-            this.#metadata = metaOf(_target)
+        /**
+         *  Short version of the above block
+         */
+        const _class = !isInstantiable(_target)? self(_target) : _target;
+        
+        this.#originClass = _class;
+        this.#metadata = metaOf(_class) || metaOf(_target);
+        this.#context = isInstantiable(_class) ? 
+                        (_class === _target ? ReflectorContext.ABSTRACT : ReflectorContext.INSTANCE) 
+                        : ReflectorContext.OTHER;
 
-            this.#context = ReflectorContext.OTHER;
-
-            return;
-        }
-
-        this.#isValid = false;
-        this.#isDisposed = true;
+        this.#isValid = typeof this.#metadata === 'object';
+        this.#isDisposed = !this.#isValid;
     }
 
     #applyMetadataResolution() {
@@ -134,7 +138,7 @@ class Reflector extends IDisposable{
             return;
         }
         
-        resolveArbitraryResolution(this.metadata, this.originClass);
+        resolveResolutionFromArbitrayMeta(this.metadata, this.originClass);
     }
 
     _dispose() {
