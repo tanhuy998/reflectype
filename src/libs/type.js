@@ -84,7 +84,7 @@ function isObject(_unknown) {
  */
 function isObjectOrFail(_target) {
 
-    if (isObject(_target)) {
+    if (!isObject(_target)) {
 
         throw new TypeError();
     }
