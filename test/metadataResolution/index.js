@@ -62,19 +62,19 @@ console.timeEnd(a);
 // // objB.func();
 
 // // console.log(obj)
-// console.time(b);
+console.time(b);
 const refl = new ReflectionPrototypeProperty(objB, 'func');
-// console.timeEnd(b)
+console.timeEnd(b)
 
-// console.time(b)
-// for (let i = 0; i < 10; ++i) {
-//     new ReflectionPrototypeAttribute(objB, 'func');
-// }
-// console.timeEnd(b)
+console.time(b)
+for (let i = 0; i < 10; ++i) {
+    new ReflectionPrototypeAttribute(objB, 'func');
+}
+console.timeEnd(b)
 
 
 
-console.log(refl.metadata)
+console.log(refl.metadata.owner)
 console.log(refl.type);
 
 // console.log(refl.prototype.methods[0].isPrivate);

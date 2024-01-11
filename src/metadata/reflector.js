@@ -1,11 +1,12 @@
 const IDisposable = require('../libs/iDisposable.js');
-const isAbStract = require('../utils/isAbstract.js');
-const getMetadata = require('../reflection/getMetadata.js');
+// const isAbStract = require('../utils/isAbstract.js');
+// const getMetadata = require('../reflection/getMetadata.js');
 const ReflectorContext = require('./reflectorContext.js');
 const { metadata_t, metaOf, property_metadata_t } = require('../reflection/metadata.js');
-const { resolveTypeMetaResolution, resolveResolutionFromArbitrayMeta } = require('../reflection/typeMetadataAction.js');
+//const { resolveResolutionFromArbitrayMeta } = require('../reflection/typeMetadataAction.js');
 const { isInstantiable } = require('../libs/type.js');
 const self = require('../utils/self.js');
+const { resolveTypeMetaResolution } = require('../libs/metadata/resolution.js');
 
 /**
  *  Reflector is the atomic unit of the reflecting progress.
@@ -138,7 +139,8 @@ class Reflector extends IDisposable{
             return;
         }
         
-        resolveResolutionFromArbitrayMeta(this.metadata, this.originClass);
+        //resolveResolutionFromArbitrayMeta(this.metadata, this.originClass);
+        resolveTypeMetaResolution(this.#originClass, this.#metadata);
     }
 
     _dispose() {

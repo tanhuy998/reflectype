@@ -3,10 +3,21 @@ const {METADATA, TYPE_JS} = require('../../src/constants.js');
 const allowNull = require('../../src/decorators/allowNull.js');
 const defaultArguments = require('../../src/decorators/defaultArguments.js');
 const { ORIGIN } = require('../../src/libs/metadata/constant.js');
+const implement = require('../../src/decorators/implement.js');
+const Interface = require('../../src/interface/interface.js');
 
 const stack = [];
 const entries = new Set();
 
+class ITestA extends Interface {
+
+    testI() {
+
+
+    }
+}
+
+@implement(ITestA)
 class A {
     
     @type(Boolean)
@@ -33,7 +44,7 @@ class A {
         console.log('func', ...arguments)
     }
 
-    test() {
+    testI() {
 
         this.func(...arguments);
     }

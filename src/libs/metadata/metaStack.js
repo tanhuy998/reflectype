@@ -24,15 +24,39 @@ module.exports = class MetaStack {
         }
     }
 
+    get length() {
+
+        return this.#stack.length;
+    }
+
     constructor(_type) {
 
         this.#type = _type;
     }
 
+    indexOf(entry) {
+
+        if (!this.exist(entry)) {
+
+            return undefined;
+        }
+
+        return this.#stack.findIndex(entry);
+    }
+
+    at(index) {
+
+        if (isNaN(index)) {
+
+            throw new Error('invalid value of index');
+        }
+
+        return this.#stack.at(index);
+    }
+
     push(entry) {
 
         this.#checkExist(entry);
-
         this.#entries.add(entry);
         this.#stack.push(entry);
     }

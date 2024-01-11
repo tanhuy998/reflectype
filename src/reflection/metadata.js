@@ -22,19 +22,10 @@ const PROP_META_INITIALIZED = {
 };
 
 function owner_metadata_t() {
-
-    /**
-     * @type {Object}
-     */
-    this.classWrapper = undefined;
     /**
      * @type {metadata_t}
      */
     this.typeMeta = undefined;
-    /**
-     * @type {boolean}
-     */
-    this.isResolutionResolved = false;
 }
 
 /**
@@ -44,26 +35,20 @@ function owner_metadata_t() {
  * @param {metadata_t} _ref 
  */
 function metadata_t(_abstract, _ref) {
-
     /**
-     * The class that is annotated
+     * The class that is annotated.
+     * When shallow copy from another, clone everything except "owner" and "abstract"
      * 
      * @type {Function}
      */
-    this.abstract = isInstantiable(_abstract) ? _abstract : _ref?.abstract;
+    this.abstract = isInstantiable(_abstract) ? _abstract : undefined;
     /**@type {Object} */
     this.properties = Object.assign({}, _ref?.properties);
 
     /**@type {InterfacePrototype} */
     this.interfaces = _ref?.interfaces?.clone();
 
-    /**
-     * Metadata about the prototype of the annotated class
-     * 
-     * @type {prototype_metadata_t} 
-     */
-    this.prototype = new prototype_metadata_t(_ref, this.abstract);
-
+    
     /**
      *  When "isInitialized" equals to false,
      *  decoratorContext will be set to the decorator context which is 
@@ -73,7 +58,17 @@ function metadata_t(_abstract, _ref) {
      */
     this.ownerClassWrapper = wrapperOf(this.abstract);
 
-    this.isResolutionResolved = false;
+
+    this.owner = new owner_metadata_t();
+    this.owner.typeMeta = this;
+
+    /**
+     * Metadata about the prototype of the annotated class
+     * 
+     * @type {prototype_metadata_t} 
+     */
+    this.prototype = new prototype_metadata_t(_ref, this.abstract);
+    this.prototype.owner = this.owner;
 }
 
 /**
@@ -82,22 +77,18 @@ function metadata_t(_abstract, _ref) {
  * @param {Function} _ownerAbstract
  */
 function prototype_metadata_t(_ref, _ownerAbstract) {
-
-    /**
-     * The class that is annotated
-     * 
-     * @type {Function}
-     */
-    this.abstract = _ownerAbstract; // _ref.abstract
     
     const _refProto = _ref?.prototype;
 
-    /**@type {Object} */
+    /**
+     * @type {Object} 
+     */
     this.properties = Object.assign({}, _refProto?.properties);
 
-    this.owner = new owner_metadata_t();
-
-    setWrapper(this, {abstract: _ownerAbstract});
+    /**
+     * @type {owner_metadata_t}
+     */
+    this.owner; //= new owner_metadata_t();
 }
 
 
@@ -156,9 +147,7 @@ function property_metadata_t(_ref, _ownerTypeMeta) {
      * 
      * @type {owner_metadata_t}
      */
-    this.owner = new owner_metadata_t();
-
-    this.owner.typeMeta = _ownerTypeMeta?.constructor === metadata_t ? _ownerTypeMeta : undefined;
+    this.owner; //= new owner_metadata_t();
 
     /**
      *  When "isInitialized" equals to false,
@@ -168,11 +157,6 @@ function property_metadata_t(_ref, _ownerTypeMeta) {
      *  @type {Object}
      */
     this.decoratorContext = undefined;
-
-    setWrapper(this, {
-        abstract: _ownerTypeMeta?.abstract,
-        typeMeta: _ownerTypeMeta
-    });
 }
 
 /**
@@ -214,7 +198,7 @@ function metaOf(_unknown) {
 
 function wrapperOf(_unknown) {
 
-    return isObjectLike(_unknown) ? _unknown[METADATA] : undefined;
+    return isObjectLike(_unknown) ? _unknown[METADATA] || _unknown.metadata : undefined;
 }
 
 module.exports = {
@@ -223,7 +207,7 @@ module.exports = {
     PROP_META_INITIALIZED,
     metaOf, 
     wrapperOf,
-    setWrapper,
+    //setWrapper,
     metadata_t,
     property_metadata_t, 
     owner_metadata_t,

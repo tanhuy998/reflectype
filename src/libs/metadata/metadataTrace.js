@@ -34,11 +34,11 @@
  */
 
 
-const { property_metadata_t, metadata_t, TYPE_JS } = require('../../reflection/metadata.js');
+const { property_metadata_t, metadata_t, TYPE_JS, metaOf } = require('../../reflection/metadata.js');
 const { addPropertyMetadata } = require('../../reflection/typeMetadataAction.js');
 const self = require('../../utils/self.js');
-const { ORIGIN } = require('./constant.js');
-const {classStack, propStack} = require('./initialStack.js');
+const { ORIGIN, GLOBAL_STACK_OFFSET } = require('./constant.js');
+const {classStack, propStack, globalStack} = require('./initialStack.js');
 
 function currentClassMeta() {
     
@@ -57,6 +57,7 @@ function currentPropMeta() {
  */
 function registerPropMeta(propMeta) {
 
+    globalStack.push(propMeta);
     return propStack.push(propMeta)
 }
 
@@ -81,15 +82,17 @@ function resolvePropMeta(_, decoratorContext) {
 
     const {name, metadata} = decoratorContext;
     const properties = retrieveTypeMetaProperties(_, decoratorContext);
+    /**@type {metadata_t} */
     const typeMeta = metadata[TYPE_JS];
-    //let propMeta = properties[name];
-    let propMeta = retrievePropMeta(_, decoratorContext);
+    let propMeta = properties[name];
+    //let propMeta = retrievePropMeta(_, decoratorContext);
 
     if (noPropMetaOrSubClassOverride(_, decoratorContext)) {
         
         //propMeta = properties[name] = new property_metadata_t();
         //propMeta = addPropertyMetadata(typeMeta, name);
         propMeta = properties[name] = new property_metadata_t(undefined, typeMeta);
+        propMeta.owner = typeMeta.owner;
         registerPropMeta(propMeta);
     }
     
@@ -112,6 +115,12 @@ function retrieveTypeMetaProperties(_, decoratorContext) {
     }
 }
 
+/**
+ * 
+ * @param {any} _ 
+ * @param {Object} decoratorContext 
+ * @returns {property_metadata_t}
+ */
 function retrievePropMeta(_, decoratorContext) {
 
     const {name} = decoratorContext;
@@ -190,7 +199,7 @@ function refreshTypeMetadata(_, decoratorContext) {
 
     if (!isSubclassFirstDecorator(decoratorContext)) {
 
-        return;
+        return metaOf(decoratorContext);
     }
 
     const {kind, metadata} = decoratorContext;
@@ -198,20 +207,34 @@ function refreshTypeMetadata(_, decoratorContext) {
     const oldTypeMeta = metadata[TYPE_JS];
 
     if (kind === 'class' && oldTypeMeta?.abstract === _) {
-
-        return;
+        /**
+         * When typeMeta.abstract is setted as the current class, it means that
+         * this class was apllied by another decorator and the typeMeta not need to be refreshed.
+         */
+        return oldTypeMeta;
     }
 
-    // refresh metadata_t first
     const newTypeMeta = metadata[TYPE_JS] = new metadata_t(undefined, oldTypeMeta);
-    newTypeMeta.ownerClassWrapper = decoratorContext.metadata;
 
     if (kind === 'class') {
 
         newTypeMeta.abstract = _;
     }
-    
+
+    registerTypeMeta(newTypeMeta);
     return newTypeMeta;
+}
+
+/**
+ * 
+ * @param {metadata_t} _typeMeta 
+ */
+function registerTypeMeta(_typeMeta) {
+
+    globalStack.push(_typeMeta);
+    classStack.push(_typeMeta);
+
+    //_typeMeta[GLOBAL_STACK_OFFSET] = globalStack.indexOf(_typeMeta);
 }
 
 /**

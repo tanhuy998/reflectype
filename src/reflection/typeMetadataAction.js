@@ -5,10 +5,11 @@ const { METADATA, TYPE_JS, metadata_t, property_metadata_t, prototype_metadata_t
 module.exports = {
     addPropertyMetadata, 
     resolveResolutionFromArbitrayMeta, 
-    resolveTypeMetaResolution, 
+    strictlyResolveTypeMetaResolution, 
     establishMetadataResolution,
     hasTypeMetadata,
-    isPaired
+    isPaired,
+    decorator_establishMetadataResolution
 };
 
 /**
@@ -45,18 +46,19 @@ function addPropertyMetadata(_typeMeta, _propName, _ref) {
  * @param {metadata_t} _typeMeta
  * @param {Object} _properties 
  */
-function _resolveTypeResolution(_typeMeta, _properties) {
+function _resolvePropertyResolution(_typeMeta, _properties) {
 
     const _class = _typeMeta.abstract;
     /********************************************************************
      * stuck from heare
      *******************************************************************/
     if (
-        !isInstantiable(_class) //||
+        !isInstantiable(_class) ||
         //_class[METADATA] !== ownerTypeMetaWrapper
+        _typeMeta.isResolutionResolved
     ) {
 
-        return;
+        return false;
     }
     
     for (const [propName,/** @type {property_metadata_t} */ propMeta] of Object.entries(_properties) || []) {
@@ -72,6 +74,8 @@ function _resolveTypeResolution(_typeMeta, _properties) {
         propMeta.owner.isResolutionResolved = true;
         propMeta.owner.typeMeta = _traceActualTypeMeta(propMeta, _typeMeta);
     }
+
+    return true;
 }
 
 /**
@@ -84,11 +88,23 @@ function _traceActualTypeMeta(_propMeta, _typeMeta) {
 
     let _class = _typeMeta.abstract;
 
+    if (
+        metaOf(_class)?.constructor !== metadata_t &&
+        _traceActualTypeMeta_matchWrapper(_propMeta, _typeMeta)
+    ) {
+        /**
+         * first iteration, edge case of this algorithm.
+         */
+        return _typeMeta;
+    }
+
+    _class = _class.__proto__;
+
     while (_class) {
         
         const tempTypeMeta = metaOf(_class);
         
-        if (_propMeta.owner.classWrapper === tempTypeMeta.ownerClassWrapper) {
+        if (_traceActualTypeMeta_matchWrapper(_propMeta, tempTypeMeta)) {
             
             tempTypeMeta.abstract = _class;
             return tempTypeMeta;
@@ -96,6 +112,25 @@ function _traceActualTypeMeta(_propMeta, _typeMeta) {
         
         _class = _class.__proto__;
     }
+}
+
+/**
+ * 
+ * @param {metadata_t} _typeMeta 
+ */
+function _traceActualTypeMeta_firstIteration(_typeMeta) {
+
+
+}
+
+/**
+ * 
+ * @param {property_metadata_t} _propMeta 
+ * @param {metadata_t} _typeMeta 
+ */
+function _traceActualTypeMeta_matchWrapper(_propMeta, _typeMeta) {
+
+    return _propMeta.owner.classWrapper === _typeMeta.ownerClassWrapper;
 }
 
 /**
@@ -158,7 +193,7 @@ function hasTypeMetadata(_abstract) {
  */
 function resolveProtypeResolution(_typeMeta) {
 
-    _resolveTypeResolution(_typeMeta, _typeMeta.properties);
+    _resolvePropertyResolution(_typeMeta, _typeMeta.properties);
 }
 
 /**
@@ -167,7 +202,7 @@ function resolveProtypeResolution(_typeMeta) {
  */
 function resolveStaticResolution(_typeMeta) {
 
-    _resolveTypeResolution(_typeMeta, _typeMeta.prototype.properties);
+    _resolvePropertyResolution(_typeMeta, _typeMeta.prototype.properties);
 }
 
 /**
@@ -188,9 +223,9 @@ function isPaired(_class, _typeMeta) {
  * @param {Function} _class 
  * @param {metadata_t} _typeMeta 
  */
-function resolveTypeMetaResolution(_class, _typeMeta) {
+function strictlyResolveTypeMetaResolution(_class, _typeMeta) {
 
-    if (isInstantiable(_typeMeta.abstract)) {
+    if (!isInstantiable(_typeMeta.abstract)) {
 
         throw new Error('');
     }
@@ -203,12 +238,25 @@ function resolveTypeMetaResolution(_class, _typeMeta) {
     _typeMeta.abstract = _class;
     _typeMeta.prototype.abstract = _class;
 
-    resolveStaticResolution(_typeMeta);
-    resolveProtypeResolution(_typeMeta);
-
-    _typeMeta.isResolutionResolved = true;
+    _resolveTypeResolution(_typeMeta);
 }
 
+/**
+ * 
+ * @param {metadata_t} _typeMeta 
+ */
+function _resolveTypeResolution(_typeMeta) {
+
+    _typeMeta.isResolutionResolved ||= resolveStaticResolution(_typeMeta) &&
+                                    resolveProtypeResolution(_typeMeta);
+}
+
+/**
+ * This function is used when reflector read metadata of a class
+ * 
+ * @param {Function} _abstract 
+ * @returns 
+ */
 function establishMetadataResolution(_abstract) {
     
     const typeMeta = metaOf(_abstract);
@@ -222,7 +270,16 @@ function establishMetadataResolution(_abstract) {
 
         return;
     }
+    //typeMeta.abstract ||= _abstract;
+    strictlyResolveTypeMetaResolution(_abstract, typeMeta);
+}
 
-    resolveTypeMetaResolution(_abstract, typeMeta);
+/**
+ * 
+ * @param {metadata_t} _typeMeta 
+ */
+function decorator_establishMetadataResolution(_typeMeta) {
+
+    _resolveTypeResolution(_typeMeta)
 }
 

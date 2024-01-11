@@ -8,7 +8,7 @@ const isAbStract = require('../utils/isAbstract.js');
 const { DECORATED_VALUE } = require('./constant.js');
 const self = require('../utils/self.js');
 const { belongsToCurrentMetadataSession } = require('./metadata/metadataTrace.js');
-const { resolveTypeMetaResolution, establishMetadataResolution } = require('../reflection/typeMetadataAction.js');
+const { establishMetadataResolution } = require('../reflection/typeMetadataAction.js');
 
 
 function generateDecorateMethod(_method, propMeta) {

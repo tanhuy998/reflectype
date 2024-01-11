@@ -1,10 +1,11 @@
 const { IS_CHECKABLE, METADATA } = require('../constants.js');
 const Interface = require('../interface/interface.js');
 const InterfacePrototype = require('../interface/interfacePrototype.js');
+const { initTypeMeta } = require('../libs/classDecorator.js');
 const { refreshTypeMetadata } = require('../libs/metadata/metadataTrace.js');
 //const initMetadata = require('../reflection/initMetadata');
 //const initPrototypeMetadata = require('../reflection/initPrototypeMetadata');
-const { metaOf, metadata_t } = require('../reflection/metadata');
+const { metaOf, metadata_t, TYPE_JS } = require('../reflection/metadata');
 const self = require('../utils/self.js');
 
 function implement(...interfaces) {
@@ -20,6 +21,7 @@ function implement(...interfaces) {
             throw new Error('cannot apply @implement on non-class object'); 
         }
         
+        initTypeMeta(_class, _context);
         handle(_class, _context, interfaces);
         
         return _class;
@@ -38,9 +40,12 @@ function checkInput(inputs) {
 }
 
 function handle(_class, decoratorContext, _interfaces = []) {
+    
+    const {metadata} = decoratorContext;
 
     /**@type {metadata_t} */
-    const classMeta = refreshTypeMetadata(_class, decoratorContext);
+    const classMeta = metadata[TYPE_JS];
+    //const classMeta = refreshTypeMetadata(_class, decoratorContext);
     
     if (!classMeta.interfaces) {
     //|| isInterfacePrototypeConflict(_class)) {
