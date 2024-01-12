@@ -1,7 +1,7 @@
-const { TYPE_JS, METADATA } = require("../reflection/metadata");
-const { FOOTPRINT } = require("./constant");
+const { TYPE_JS, METADATA, property_metadata_t, prototype_metadata_t, metadata_t } = require("../reflection/metadata.js");
+const { FOOTPRINT } = require("./constant.js");
 const { retrievePropMeta, retrieveMetaObject } = require("./metadata/metadataTrace.js");
-const {isObjectKeyOrFail, isValuable, isObjectKey} = require('./type.js');
+const {isObjectKeyOrFail, isValuable, isObjectKey, isObjectOrFail, isObject} = require('./type.js');
 
 /**
  * Foot print is the way decorators detect if they took effect on a class's property.
@@ -9,24 +9,58 @@ const {isObjectKeyOrFail, isValuable, isObjectKey} = require('./type.js');
  * for decorators on determining the current property is owned by base class or derived class
  */
 
+module.exports = {
+    initFootPrint,
+    initDecoratorFootPrint, 
+    decoratorHasFootPrint, 
+    retrieveDecoratorFootPrintObject, 
+    setDecoratorFootPrint,
+    retrieveDecoratorFootPrintByKey,
+    initMetadataFootPrint,
+    getMetadataFootPrintObject,
+    getMetadataFootPrintByKey,
+    metadataHasFootPrint,
+    setMetadataFootPrint
+}
+
+
+/**
+ * 
+ */
+function initFootPrint(_unknown) {
+
+    switch(_unknown?.constructor) {
+        case property_metadata_t:
+            break;
+        case prototype_metadata_t:
+            break;
+        case metadata_t:
+            break;
+        default:
+            return initDecoratorFootPrint(...arguments);
+    }
+
+    return initMetadataFootPrint(_unknown);
+}
+
 /**
  * 
  * @param {Function|Object} _ 
  * @param {Object} context 
  * @returns 
  */
-function initTypeMetaFootPrint(_, context) {
+function initDecoratorFootPrint(_, context) {
 
     const metaObject = retrieveMetaObject(_, context);
     
-    return initFootPrint(metaObject);
+    return initMetadataFootPrint(metaObject);
 }
 
 /**
  * 
  * @param {Object} metaObject 
  */
-function initFootPrint(metaObject) {
+function initMetadataFootPrint(metaObject) {
 
     if (typeof metaObject !== 'object') {
 
@@ -36,11 +70,31 @@ function initFootPrint(metaObject) {
     return metaObject[FOOTPRINT] ??= {};
 }
 
-function setFootPrint(_, context, _key, _value = undefined) {
+function metadataHasFootPrint(metaObj) {
 
-    const footPrintObject = initTypeMetaFootPrint(_, context);
+    return isObject(getFootPrint(metaObj));
+}
 
-    footPrintObject[_key] = _value || true;
+function getMetadataFootPrintObject(metaObj) {
+
+    return getFootPrint(metaObj);
+}
+
+function getMetadataFootPrintByKey(metaObj, _key) {
+
+    return getMetadataFootPrintObject(metaObj)?.[_key];
+}
+
+function setMetadataFootPrint(metaObj, key, value) {
+
+    const footPrintObj = initMetadataFootPrint(metaObj);
+    return footPrintObj[_key] = isValuable(value) ? value : true;
+}
+
+function setDecoratorFootPrint(_, context, _key, _value) {
+
+    const footPrintObject = initDecoratorFootPrint(_, context);
+    return footPrintObject[_key] = isValuable(_value) ? _value : true;
 }
 
 /**
@@ -50,11 +104,11 @@ function setFootPrint(_, context, _key, _value = undefined) {
  * @param {string | undefined} _key 
  * @returns {boolean}
  */
-function hasFootPrint(_, context, _key = undefined) {
+function decoratorHasFootPrint(_, context, _key = undefined) {
 
     try {
 
-        const footPrintObj = retrieveFootPrintObject(_, context);
+        const footPrintObj = retrieveDecoratorFootPrintObject(_, context);
         isObjectKeyOrFail(footPrintObj);
 
         if (!isObjectKey(_key)) {
@@ -70,7 +124,7 @@ function hasFootPrint(_, context, _key = undefined) {
     }
 }
 
-function retrieveFootPrintObject(_, context) {
+function retrieveDecoratorFootPrintObject(_, context) {
     
     return retrievePropMeta(_, context)?.[FOOTPRINT];
 }
@@ -91,7 +145,7 @@ function checkFootPrintOnMethod(method, _footPrintObject, _key) {
     try {
 
         const methodFootPrintObject = getFootPrint(method);
-        isObjectOrFasle(methodFootPrintObject);
+        isObjectOrFail(methodFootPrintObject);
 
         if (methodFootPrintObject !== _footPrintObject) {
 
@@ -111,10 +165,10 @@ function getFootPrint(_unknown) {
     try {
 
         const meta = _unknown[METADATA];
-        isObjectOrFasle(meta);
+        isObjectOrFail(meta);
 
         const footPrintObject = meta[FOOTPRINT];
-        isObjectOrFasle(footPrintObject);
+        isObjectOrFail(footPrintObject);
 
         return footPrintObject;
     }
@@ -142,7 +196,7 @@ function checkFootPrintOnAccessor(accessor, _footPrintObject, _key) {
  * @param {Function} _method 
  * @param {Object} _footPrint 
  */
-function setFootPrintToFunction(_func, _footPrint) {
+function setDecoratorFootPrintToFunction(_func, _footPrint) {
 
     if (typeof _func !== 'function') {
 
@@ -154,18 +208,9 @@ function setFootPrintToFunction(_func, _footPrint) {
     meta[FOOTPRINT] = _footPrint;
 }
 
-function retrieveFootPrintByKey(_, context, _key) {
+function retrieveDecoratorFootPrintByKey(_, context, _key) {
 
-    const footPrintObject = retrieveFootPrintObject(_, context);
+    const footPrintObject = retrieveDecoratorFootPrintObject(_, context);
 
     return footPrintObject[_key];
-}
-
-module.exports = {
-    initTypeMetaFootPrint, 
-    hasFootPrint, 
-    retrieveFootPrintObject, 
-    setFootPrint,
-    retrieveFootPrintByKey,
-    initFootPrint
 }

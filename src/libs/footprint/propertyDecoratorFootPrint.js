@@ -6,7 +6,7 @@ const { UPDATE } = require("./constant");
 
 module.exports = class PropertyDecoratorFootPrint {
 
-    static retrieveFootPrintObject(_, context) {
+    static retrieveDecoratorFootPrintObject(_, context) {
 
         if (!isObjectLike(_)) {
 
@@ -47,9 +47,9 @@ module.exports = class PropertyDecoratorFootPrint {
         return propMeta[FOOTPRINT];
     }
 
-    static hasFootPrint(_, context, _key = undefined) {
+    static decoratorHasFootPrint(_, context, _key = undefined) {
 
-        const footPrintObject = this.retrieveFootPrintObject(_, context);
+        const footPrintObject = this.retrieveDecoratorFootPrintObject(_, context);
 
         if (!isObject(footPrintObject)) {
 
@@ -71,7 +71,7 @@ module.exports = class PropertyDecoratorFootPrint {
             throw new TypeError('_key must be type of either string or symbol');
         }
 
-        const footPrintObject = this.retrieveFootPrintObject(_, context, _key);
+        const footPrintObject = this.retrieveDecoratorFootPrintObject(_, context, _key);
 
         if (!isObject(footPrintObject)) {
 
@@ -102,7 +102,7 @@ module.exports = class PropertyDecoratorFootPrint {
         return this.#decoratorContext;
     }
 
-    get hasFootPrint() {
+    get decoratorHasFootPrint() {
 
         return typeof this.#footPrint === 'object';
     }
@@ -125,14 +125,14 @@ module.exports = class PropertyDecoratorFootPrint {
         const target = this.#decoratorTarget;
         const context = this.#decoratorContext;
         const footPrintObject = DecoratorFootPrint
-                                .retrieveFootPrintObject(target, context);
+                                .retrieveDecoratorFootPrintObject(target, context);
 
         this.#footPrint = footPrintObject;
     }
 
     #initializeFootPrint() {
 
-        if (this.hasFootPrint) {
+        if (this.decoratorHasFootPrint) {
 
             throw new Error();
         }
@@ -168,7 +168,7 @@ module.exports = class PropertyDecoratorFootPrint {
 
     set(_key, _value = true) {
 
-        if (!this.hasFootPrint) {
+        if (!this.decoratorHasFootPrint) {
 
             this.#initializeFootPrint();
         }
@@ -182,7 +182,7 @@ module.exports = class PropertyDecoratorFootPrint {
 
         isObjectKeyOrFail(_key);
 
-        if (!this.hasFootPrint) {
+        if (!this.decoratorHasFootPrint) {
 
             return undefined;
         }

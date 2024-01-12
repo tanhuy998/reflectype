@@ -1,7 +1,7 @@
 const {METADATA, property_metadata_t } = require("../reflection/metadata");
 const {decorateMethod} = require('./methodDecorator.js');
 const {decorateAccessor} = require('./accessorDecorator.js');
-const {initTypeMetaFootPrint, hasFootPrint, setFootPrint, retrieveFootPrintByKey} = require('./footPrint.js');
+const {initDecoratorFootPrint, decoratorHasFootPrint, setDecoratorFootPrint, retrieveDecoratorFootPrintByKey} = require('./footPrint.js');
 const { traceAndInitContextMetadata } = require("./metadata/metadataTrace.js");
 const { DECORATED, FOOTPRINT, DECORATED_VALUE } = require("./constant.js");
 
@@ -31,9 +31,9 @@ function initMetadata(_, _context) {
     const {kind} = _context;
     const propMeta = resolvePropMeta(_, _context);
     
-    initTypeMetaFootPrint(_, _context);
+    initDecoratorFootPrint(_, _context);
     
-    if (hasFootPrint(_, _context, DECORATED)) {
+    if (decoratorHasFootPrint(_, _context, DECORATED)) {
         
         return propMeta;
     }
@@ -49,7 +49,7 @@ function initMetadata(_, _context) {
             break;
     }
 
-    setFootPrint(_, _context, DECORATED);
+    setDecoratorFootPrint(_, _context, DECORATED);
 
     return propMeta;
 }

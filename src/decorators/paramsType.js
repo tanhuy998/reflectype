@@ -2,7 +2,7 @@ const {initMetadata} = require('../libs/propertyDecorator.js');
 const { property_metadata_t } = require('../reflection/metadata.js');
 const {compareArgsWithType} = require('../libs/argumentType.js');
 const {isInstantiableOrFail} = require('../libs/type.js');
-const { hasFootPrint, setFootPrint } = require('../libs/footPrint.js');
+const { decoratorHasFootPrint, setDecoratorFootPrint } = require('../libs/footPrint.js');
 const { PARAM, DECORATED_VALUE } = require('../libs/constant.js');
 const footprint = require('../libs/footPrint.js');
 
@@ -21,7 +21,7 @@ function paramsType(..._types) {
 
         /**@type {property_metadata_t} */
         const propMeta = initMetadata(_, _context);
-        const isApplied = hasFootPrint(_, _context, PARAM);
+        const isApplied = decoratorHasFootPrint(_, _context, PARAM);
 
         if (isApplied) {
 
@@ -29,11 +29,11 @@ function paramsType(..._types) {
         }
 
         compareArgsWithType(propMeta);
-        setFootPrint(_, _context, PARAM);
+        setDecoratorFootPrint(_, _context, PARAM);
 
         propMeta.defaultParamsType = _types;
 
-        return footprint.retrieveFootPrintByKey(_, _context, DECORATED_VALUE);
+        return footprint.retrieveDecoratorFootPrintByKey(_, _context, DECORATED_VALUE);
     }
 }
 

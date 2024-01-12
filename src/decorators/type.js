@@ -9,7 +9,7 @@ function type(_abstract) {
     return function handle(prop, context) {
 
         const propMeta = propertyDecorator.initMetadata(prop, context);
-        const alreadyApplied = footprint.hasFootPrint(prop, context, TYPE)
+        const alreadyApplied = footprint.decoratorHasFootPrint(prop, context, TYPE)
 
         if (alreadyApplied) {
 
@@ -18,9 +18,9 @@ function type(_abstract) {
 
         propMeta.type = _abstract;
 
-        footprint.setFootPrint(prop, context, TYPE);
+        footprint.setDecoratorFootPrint(prop, context, TYPE);
         
-        return footprint.retrieveFootPrintByKey(prop, context, DECORATED_VALUE);
+        return footprint.retrieveDecoratorFootPrintByKey(prop, context, DECORATED_VALUE);
     }
 }
 

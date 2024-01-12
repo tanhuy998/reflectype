@@ -1,5 +1,5 @@
 const {metaOf, metadata_t, property_metadata_t, prototype_metadata_t, PROP_META_INITIALIZED} = require('../reflection/metadata.js');
-const {hasFootPrint, setFootPrint} = require('./footPrint.js');
+const {decoratorHasFootPrint, setDecoratorFootPrint} = require('./footPrint.js');
 const matchType = require('./matchType.js');
 const {compareArgsWithType} = require('../libs/argumentType.js');
 const {isIterable, isInstantiable, isObject} = require('./type.js');
@@ -128,12 +128,12 @@ function decorateMethod(_method, context, propMeta) {
         return;
     }
 
-    if (hasFootPrint(_method, context, DECORATED_VALUE)) {
+    if (decoratorHasFootPrint(_method, context, DECORATED_VALUE)) {
 
         return;
     }
 
-    setFootPrint(_method, context, DECORATED_VALUE, generateDecorateMethod(_method, propMeta));
+    setDecoratorFootPrint(_method, context, DECORATED_VALUE, generateDecorateMethod(_method, propMeta));
     propMeta.decoratorContext = context;
     propMeta.isInitialized = true;
 

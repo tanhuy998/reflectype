@@ -1,5 +1,5 @@
 const { DECORATED_VALUE } = require('../libs/constant.js');
-const { retrieveFootPrintByKey } = require('../libs/footPrint.js');
+const { retrieveDecoratorFootPrintByKey } = require('../libs/footPrint.js');
 const propertyDecorator = require('../libs/propertyDecorator.js');
 
 
@@ -16,7 +16,7 @@ function allowNull(_, _context) {
 
     propMeta.allowNull = true;
     
-    return retrieveFootPrintByKey(_, _context, DECORATED_VALUE);
+    return retrieveDecoratorFootPrintByKey(_, _context, DECORATED_VALUE);
 }
 
 module.exports = allowNull;

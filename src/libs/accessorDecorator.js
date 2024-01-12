@@ -1,7 +1,7 @@
 const { metaOf, property_metadata_t, metadata_t} = require('../reflection/metadata.js');
 const { METADATA, TYPE_JS } = require('../constants.js');
 //const isPrimitive = require('../utils/isPrimitive.js');
-const {initTypeMetaFootPrint, hasFootPrint, setFootPrint} = require('./footPrint.js');
+const {initDecoratorFootPrint, decoratorHasFootPrint, setDecoratorFootPrint} = require('./footPrint.js');
 const matchType = require('./matchType.js');
 const { DECORATED_VALUE } = require('./constant.js');
 const Void = require('../type/void');
@@ -19,7 +19,7 @@ function resolveAccessorTypeMetadata(_accessor, _propMeta) {
     const actualMeta = metaOf(get);
     actualMeta.isMethod = false;
 
-    initTypeMetaFootPrint(actualMeta);
+    initDecoratorFootPrint(actualMeta);
 
     get[METADATA] ??= {};
 
@@ -102,7 +102,7 @@ function decorateAccessor(_accessor, context, initPropMeta) {
         return;
     }
 
-    if (hasFootPrint(_accessor, context, DECORATED_VALUE)) {
+    if (decoratorHasFootPrint(_accessor, context, DECORATED_VALUE)) {
         
         return;
     }
@@ -128,7 +128,7 @@ function decorateAccessor(_accessor, context, initPropMeta) {
     //     initPropMeta.initialized = true;
     // })
     
-    setFootPrint(_accessor, context, DECORATED_VALUE, {
+    setDecoratorFootPrint(_accessor, context, DECORATED_VALUE, {
         init: generateAccessorInitializer(initPropMeta),
         set: generateAccessorSetter(initPropMeta, _accessor.set),
         get: _accessor.get

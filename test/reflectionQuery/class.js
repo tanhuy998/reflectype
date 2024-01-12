@@ -42,8 +42,8 @@ class A {
 class B extends A {
 
     
-    // @type(String)
-    // accessor prop
+    @type(String)
+    accessor prop
 
     // @paramsType(String)
     @returnType(String)
