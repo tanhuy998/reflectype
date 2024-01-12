@@ -5,7 +5,7 @@ const { isObjectKey } = require("../../libs/type.js");
 const { property_metadata_t } = require("../../reflection/metadata.js");
 const Reflection = require("../reflection.js");
 const ReflectorContext = require("../reflectorContext.js");
-const {resolvePropertyMetadata, checkPropertyDescriptorState} = require('../trait/traitPropertyReflection.js');
+const {resolvePropertyMetadata, checkPropertyDescriptorState, getOwnerClass} = require('../trait/traitPropertyReflection.js');
 const AbstractReflection = require("./abstractReflection.js");
 
 const PROPERTY_NAME = 0;
@@ -98,6 +98,11 @@ module.exports = class ReflectionPropertyAbstract extends AbstractReflection {
     get allowNull() {
 
         return this.#allowNull;
+    }
+
+    get ownerClass() {
+
+        return getOwnerClass.call(this);
     }
 
     get #accessor() {

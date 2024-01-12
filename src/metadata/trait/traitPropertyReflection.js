@@ -1,7 +1,8 @@
 const isAbstract = require('../../utils/isAbstract.js');
-const {metaOf} = require('../../reflection/metadata.js');
+const {metaOf, property_metadata_t} = require('../../reflection/metadata.js');
 const ReflectorContext = require('../reflectorContext.js');
 const { resolveResolutionFromArbitrayMeta } = require('../../reflection/typeMetadataAction.js');
+const { isObject } = require('../../libs/type.js');
 
 /**
  * this file define macros functions for Property reflectors that is called in context of a property reflector
@@ -11,6 +12,12 @@ const { resolveResolutionFromArbitrayMeta } = require('../../reflection/typeMeta
  * @typedef {import('../reflection.js')} Reflection
  * @typedef {import('../../reflection/metadata.js').property_metadata_t} property_metadata_t
  */
+
+module.exports = {
+    resolvePropertyMetadata, 
+    checkPropertyDescriptorState,  
+    getOwnerClass
+};
 
 /**
  * macro function 
@@ -64,40 +71,23 @@ function checkPropertyDescriptorState(_state) {
    return descriptor ? descriptor[_state] || false : false;
 }
 
+
 /**
- * 
  * @this Reflection
  */
-function checkPropertyOverridenState() {
+function getOwnerClass() {
 
     if (!this.isValidReflection) {
 
-        return undefined;
+        return false;
     }
 
+    const propMeta = this.metadata;
 
-}
+    if (!(propMeta instanceof property_metadata_t)) {
 
-/**
- * @this Reflection
- */
-function checkPropertyOwnerClass() {
-
-
-}
-
-/**
- * @this Reflection
- */
-function getOwner() {
-
-    /**@type {property_metadata_t} */
-    const meta = this.metadata;
-
-    if (!meta?.owner?.isResolutionResolved) {
-
-        resolveResolutionFromArbitrayMeta(meta);
+        throw new TypeError('invalid type of refleftion to resolve property\'s origin');
     }
-}
 
-module.exports = {resolvePropertyMetadata, checkPropertyDescriptorState, checkPropertyOverridenState, checkPropertyOwnerClass};
+    return propMeta?.owner?.typeMeta?.abstract
+}

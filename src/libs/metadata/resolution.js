@@ -11,5 +11,5 @@ module.exports = {
 function resolveTypeMetaResolution(_class, _typeMeta) {
 
     _typeMeta.abstract ||= _class;
-    delete _typeMeta.owner;
+    delete _typeMeta.loop;
 }

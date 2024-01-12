@@ -2,9 +2,15 @@ const { preventNonInheritanceTakeEffect } = require("../../abstraction/traitAbst
 const { isObjectKey } = require("../../libs/type");
 const { metaOf } = require("../../reflection/metadata");
 const ReflectorContext = require("../reflectorContext");
+const { getOwnerClass } = require("../trait/traitPropertyReflection");
 const ReflectionParameterAbstract = require("./reflectionParameterAbstract");
 
 module.exports = class ReflectionMethodParameterAbstract extends ReflectionParameterAbstract {
+
+    get ownerClass() {
+
+        return getOwnerClass.call(this);
+    }
 
     constructor(_target, _methodKey, _index) {
 

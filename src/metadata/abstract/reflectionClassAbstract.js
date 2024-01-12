@@ -18,6 +18,16 @@ module.exports = class ReflectionClassAbstract extends AbstractReflection {
         return this.#es6;
     }
 
+    get baseClass() {
+
+        return (
+                this.isValid &&
+                super.reflectionContext !== ReflectorContext.OTHER
+            ) ? 
+                this.originClass.__proto__ :
+                undefined;
+    }
+
     /**@type {Array<ReflectionPropertyAbstract>?} */
     get properties() {
 

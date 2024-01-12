@@ -48,27 +48,23 @@ function metadata_t(_abstract, _ref) {
     /**@type {InterfacePrototype} */
     this.interfaces = _ref?.interfaces?.clone();
 
-    
-    /**
-     *  When "isInitialized" equals to false,
-     *  decoratorContext will be set to the decorator context which is 
-     *  applied by a particular method decorator 
-     *  
-     *  @type {Object}
-     */
-    this.ownerClassWrapper = wrapperOf(this.abstract);
-
-
-    this.owner = new owner_metadata_t();
-    this.owner.typeMeta = this;
-
     /**
      * Metadata about the prototype of the annotated class
      * 
      * @type {prototype_metadata_t} 
      */
     this.prototype = new prototype_metadata_t(_ref, this.abstract);
-    this.prototype.owner = this.owner;
+    this.prototype.owner = this.loopback;
+
+    /**
+     * A reference for its dependent metadata objects to resolve their original
+     * owner. This property will be delete permanently when resolution of the entire
+     * typeMeta is resolved.
+     * 
+     * @type {owner_metadata_t}
+     */
+    this.loopback = new owner_metadata_t();
+    this.loopback.typeMeta = this;
 }
 
 /**
@@ -150,9 +146,8 @@ function property_metadata_t(_ref, _ownerTypeMeta) {
     this.owner; //= new owner_metadata_t();
 
     /**
-     *  When "isInitialized" equals to false,
-     *  decoratorContext will be set to the decorator context which is 
-     *  applied by a particular method decorator 
+     *  Refers to the context of a decorator which initialize the propMeta.
+     *  This property is used for decorator initialization when creating objects.
      *  
      *  @type {Object}
      */

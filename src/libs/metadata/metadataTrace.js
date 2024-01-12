@@ -92,7 +92,7 @@ function resolvePropMeta(_, decoratorContext) {
         //propMeta = properties[name] = new property_metadata_t();
         //propMeta = addPropertyMetadata(typeMeta, name);
         propMeta = properties[name] = new property_metadata_t(undefined, typeMeta);
-        propMeta.owner = typeMeta.owner;
+        propMeta.owner = typeMeta.loopback;
         registerPropMeta(propMeta);
     }
     
