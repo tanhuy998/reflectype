@@ -88,7 +88,7 @@ function getMetadataFootPrintByKey(metaObj, _key) {
 function setMetadataFootPrint(metaObj, key, value) {
 
     const footPrintObj = initMetadataFootPrint(metaObj);
-    return footPrintObj[_key] = isValuable(value) ? value : true;
+    return footPrintObj[key] = isValuable(value) ? value : true;
 }
 
 function setDecoratorFootPrint(_, context, _key, _value) {
