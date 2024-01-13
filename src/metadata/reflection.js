@@ -61,15 +61,14 @@ module.exports = class Reflection {
 
     #init() {
 
-        const reflector = new Reflector(this.#target);
+        this.#reflector = new Reflector(this.#target);
 
-        if (!reflector.isValidReflection) {
+        if (!this.#reflector.isValidReflection) {
 
             return;
         }
 
-        this.#reflector = reflector;
-        this.#reflectionAspect = new ReflectionAspect(reflector);
+        this.#reflectionAspect = new ReflectionAspect(this.#reflector);
     }
 
     mirror() {
