@@ -4,6 +4,54 @@ const Any = require('../type/any.js');
 
 const OBJECT_KEY_TYPES = ['number', 'string', 'symbol'];
 
+module.exports = {
+    isParent,
+    isParentOrFail,
+    matchType, 
+    matchTypeOrFail,
+    isPrimitive, 
+    isIterable, 
+    isValuable,
+    isObject,
+    isObjectOrFail, 
+    isIterableOrFail, 
+    isPrimitiveOrFail, 
+    isValuableOrFail,
+    isInstantiable,
+    isInstantiableOrFail,
+    isFuntion,
+    isFunctionOrFail,
+    isObjectLike,
+    isObjectLikeOrFail,
+    isObjectKey,
+    isObjectKeyOrFail,
+    isNonIterableObjectKey,
+    isNonIterableObjectKeyOrFail
+}
+
+/**
+ * 
+ * @param {Object} base 
+ * @param {Object} derived 
+ * @returns 
+ */
+function isParent(base, derived) {
+
+    return isInstantiable(base) && 
+    isInstantiable(derived) && 
+    derived.prototype instanceof base;
+}
+
+function isParentOrFail(base, derived) {
+
+    if (!isParent(...arguments)) {
+
+        throw new Error;
+    }
+
+    return true;
+}
+
 function matchType(_type, value) {
     
     if (_type instanceof Any || _type?.prototype instanceof Any) {
@@ -202,27 +250,4 @@ function isNonIterableObjectKeyOrFail(_value) {
     }
 
     return true;
-}
- 
-module.exports = { 
-    matchType, 
-    matchTypeOrFail,
-    isPrimitive, 
-    isIterable, 
-    isValuable,
-    isObject,
-    isObjectOrFail, 
-    isIterableOrFail, 
-    isPrimitiveOrFail, 
-    isValuableOrFail,
-    isInstantiable,
-    isInstantiableOrFail,
-    isFuntion,
-    isFunctionOrFail,
-    isObjectLike,
-    isObjectLikeOrFail,
-    isObjectKey,
-    isObjectKeyOrFail,
-    isNonIterableObjectKey,
-    isNonIterableObjectKeyOrFail
 }
