@@ -1,6 +1,7 @@
 const { preventNonInheritanceTakeEffect } = require("../../abstraction/traitAbstractClass");
 const ReflectionFunction = require("../function/reflectionFunction");
 const ReflectorContext = require("../reflectorContext");
+const { getOwnerClass } = require("../trait/traitPropertyReflection");
 
 const METHOD_NAME = 0;
 
@@ -19,6 +20,11 @@ module.exports = class ReflectionMethodAbstract extends ReflectionFunction {
     get isPrivate() {
 
         return this.metadata?.private;
+    }
+
+    get ownerClass() {
+
+        return getOwnerClass.call(this);
     }
 
     constructor(_target, _methodKey) {

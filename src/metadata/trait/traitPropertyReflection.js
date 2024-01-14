@@ -89,5 +89,5 @@ function getOwnerClass() {
         throw new TypeError('invalid type of refleftion to resolve property\'s origin');
     }
 
-    return propMeta?.owner?.typeMeta?.abstract
+    return propMeta?.owner?.typeMeta?.abstract;
 }
