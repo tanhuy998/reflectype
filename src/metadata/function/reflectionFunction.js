@@ -3,6 +3,7 @@ const { property_metadata_t, metaOf } = require("../../reflection/metadata.js");
 const {reflectParameters} = require('../trait/traitfunctionReflection.js');
 const AbstractReflection = require("../abstract/abstractReflection.js");
 const { FUNCTION_DETECT, FUNCTION_PARAMS, REGEX_FUNCTION_DETECT } = require("./constant.js");
+const { discoverFunctionParams } = require("../trait/traitParameterReflection.js");
 
 
 /**
@@ -71,7 +72,7 @@ class ReflectionFunction extends AbstractReflection {
             return;
         }
 
-        this.#resolveFunctionParamsName();
+        this.#_discoverFunctionParams();
         this.#isValid = true;
 
         const funcMeta = this.metadata;
@@ -81,27 +82,9 @@ class ReflectionFunction extends AbstractReflection {
         this.#methodName = funcMeta.name;
     }
 
-    #resolveFunctionParamsName() {
+    #_discoverFunctionParams() {
 
-        if (this.metadata.isDiscovered === true) {
-            
-            return;
-        }
-
-        const match = this._getActualFunction()
-                        ?.toString()
-                        ?.match(REGEX_FUNCTION_DETECT);
-        
-        if (!match) {
-
-            throw new TypeError('invalid function returned by _getActualFunction');
-        }
-
-        this.metadata.paramsName = match[FUNCTION_PARAMS]
-                            ?.replace(/\s/, '')
-                            ?.split(',');
-        
-        this.metadata.isDiscovered = true;
+        discoverFunctionParams.call(this);
     }
 
     /**

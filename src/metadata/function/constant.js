@@ -1,4 +1,5 @@
 module.exports = {
     REGEX_FUNCTION_DETECT: /^function(\s+\w*)*\s*\((.*)\)/,
-    FUNCTION_PARAMS: 2
+    REGEX_REMOVE_DEFAULT_ARG: /=\s*\w+/,
+    FUNCTION_PARAMS: 2,
 }

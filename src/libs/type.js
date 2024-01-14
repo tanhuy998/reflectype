@@ -26,7 +26,24 @@ module.exports = {
     isObjectKey,
     isObjectKeyOrFail,
     isNonIterableObjectKey,
-    isNonIterableObjectKeyOrFail
+    isNonIterableObjectKeyOrFail,
+    isFunctionParamIdentifier,
+    isFunctionParamIdentifierOrFail
+}
+
+function isFunctionParamIdentifier(_key) {
+
+    return typeof _key === 'string';
+}
+
+function isFunctionParamIdentifierOrFail(_key) {
+
+    if (!isFunctionParamIdentifier(_key)) {
+
+        throw new Error();
+    }
+
+    return true;
 }
 
 /**
