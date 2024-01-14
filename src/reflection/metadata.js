@@ -101,6 +101,8 @@ function property_metadata_t(_ref, _ownerTypeMeta) {
     this.static = _ref?.static;
     /**@type {Iterable<any>} */
     this.defaultParamsType = _ref?.defaultParamsType;
+    /**@type {Iterable<string>} */
+    this.paramsName;
     /**@type {boolean} */
     this.isMethod = _ref?.isMethod;
     /**@type {string|Symbol} */
@@ -152,6 +154,11 @@ function property_metadata_t(_ref, _ownerTypeMeta) {
      *  @type {Object}
      */
     this.decoratorContext = undefined;
+
+    /**
+     * @type {boolean}
+     */
+    this.isDiscovered = undefined;
 }
 
 /**

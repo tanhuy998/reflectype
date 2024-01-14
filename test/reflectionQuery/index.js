@@ -62,10 +62,12 @@ obj.func();
 
 // console.log(obj)
 
-const refl = new ReflectionPrototypeAttribute(objB, 'prop');
+const refl = new ReflectionPrototypeMethod(objB, 'func');
 
 // refl.setValue('true');
 
-console.log(refl.type);
+console.log(refl.metadata.paramsName);
+
+new ReflectionPrototypeMethod(objB, 'func')
 
 // console.log(refl.prototype.methods[0].isPrivate);

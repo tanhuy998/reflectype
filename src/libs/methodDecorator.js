@@ -5,7 +5,7 @@ const {compareArgsWithType} = require('../libs/argumentType.js');
 const {isIterable, isInstantiable, isObject} = require('./type.js');
 const ReturnValueNotMatchType = require('../error/returnValueNotMatchTypeError.js');
 const isAbStract = require('../utils/isAbstract.js');
-const { DECORATED_VALUE } = require('./constant.js');
+const { DECORATED_VALUE, ORIGIN_VALUE } = require('./constant.js');
 const self = require('../utils/self.js');
 const { belongsToCurrentMetadataSession } = require('./metadata/metadataTrace.js');
 const { establishMetadataResolution } = require('../reflection/typeMetadataAction.js');
@@ -134,6 +134,7 @@ function decorateMethod(_method, context, propMeta) {
     }
 
     setDecoratorFootPrint(_method, context, DECORATED_VALUE, generateDecorateMethod(_method, propMeta));
+    setDecoratorFootPrint(_method, context, ORIGIN_VALUE, _method);
     propMeta.decoratorContext = context;
     propMeta.isInitialized = true;
 

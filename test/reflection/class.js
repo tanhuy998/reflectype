@@ -11,6 +11,7 @@ class A {
     @type(Number)
     accessor prop;
 
+    @dec
     @allowNull
     @returnType(Number)
     @paramsType(Number)
@@ -18,6 +19,12 @@ class A {
 
         console.log('func', ...arguments)
     }
+
+    constructor() {
+
+        console.log('A constructor')
+    }
+
 
     test() {
 
@@ -27,12 +34,15 @@ class A {
 
 class B extends A {
 
-    
-    @type(String)
     accessor prop
 
-    @paramsType(String)
-    @returnType(String)
+    constructor() {
+
+        super();
+        console.log('B construct')
+    }
+
+    @dec
     func() {
 
 
@@ -41,9 +51,14 @@ class B extends A {
 
 function dec(_, context) {
 
-    const {name, metadata} = context;
+    const {name, metadata, addInitializer} = context;
 
-    console.log(name, metadata[ORIGIN] === metadata)
+    addInitializer(function() {
+
+        console.log('dec init')
+    })
+
+    return _
 }
 
 

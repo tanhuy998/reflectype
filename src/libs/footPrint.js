@@ -1,4 +1,4 @@
-const { TYPE_JS, METADATA, property_metadata_t, prototype_metadata_t, metadata_t } = require("../reflection/metadata.js");
+const { TYPE_JS, METADATA, property_metadata_t, prototype_metadata_t, metadata_t, metaOf } = require("../reflection/metadata.js");
 const { FOOTPRINT } = require("./constant.js");
 const { retrievePropMeta, retrieveMetaObject } = require("./metadata/metadataTrace.js");
 const {isObjectKeyOrFail, isValuable, isObjectKey, isObjectOrFail, isObject} = require('./type.js');
@@ -72,12 +72,12 @@ function initMetadataFootPrint(metaObject) {
 
 function metadataHasFootPrint(metaObj) {
 
-    return isObject(getFootPrint(metaObj));
+    return isObject(getMetadataFootPrintObject(metaObj));
 }
 
 function getMetadataFootPrintObject(metaObj) {
 
-    return getFootPrint(metaObj);
+    return metaObj?.[FOOTPRINT];
 }
 
 function getMetadataFootPrintByKey(metaObj, _key) {
@@ -162,20 +162,22 @@ function checkFootPrintOnMethod(method, _footPrintObject, _key) {
 
 function getFootPrint(_unknown) {
 
-    try {
+    return metaOf(_unknown)?.[FOOTPRINT];
+    // try {
 
-        const meta = _unknown[METADATA];
-        isObjectOrFail(meta);
+    //     //const meta = _unknown[METADATA];
+    //     const meta = metaOf(_unknown);
+    //     isObjectOrFail(meta);
 
-        const footPrintObject = meta[FOOTPRINT];
-        isObjectOrFail(footPrintObject);
+    //     const footPrintObject = meta[FOOTPRINT];
+    //     isObjectOrFail(footPrintObject);
 
-        return footPrintObject;
-    }
-    catch(e) {
+    //     return footPrintObject;
+    // }
+    // catch(e) {
 
-        return undefined;
-    }
+    //     return undefined;
+    // }
 }
 
 /**

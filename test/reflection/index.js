@@ -8,11 +8,11 @@ const {A, B} = require('./compiled.js');
 const {METADATA} = require('../../src/constants.js');
 const { TYPE_JS } = require('../../src/reflection/metadata.js');
 const Reflector = require('../../src/metadata/reflector.js');
-const ProtoReflection = require('../../src/metadata/reflectionPrototypeMethod.js');
+// const ProtoReflection = require('../../src/metadata/reflectionPrototypeMethod.js');
 
-const reflection = new ProtoReflection(B, 'func');
+// const reflection = new ProtoReflection(B, 'func');
 
-console.log(reflection.type)
+// console.log(reflection.type)
 
 const objA = new A();
 const objB = new B();

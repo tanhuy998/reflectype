@@ -2,6 +2,7 @@ const ReflectorContext = require("../reflectorContext.js");
 const { property_metadata_t, metaOf } = require("../../reflection/metadata.js");
 const {reflectParameters} = require('../trait/traitfunctionReflection.js');
 const AbstractReflection = require("../abstract/abstractReflection.js");
+const { FUNCTION_DETECT, FUNCTION_PARAMS, REGEX_FUNCTION_DETECT } = require("./constant.js");
 
 
 /**
@@ -11,14 +12,12 @@ const AbstractReflection = require("../abstract/abstractReflection.js");
 
 class ReflectionFunction extends AbstractReflection {
 
-
     #isValid = false;
-
     #returnType;
     #defaultArgs;
     #argsType;
-
     #methodName;
+    //#paramsNameResolved = false;
 
     get isValid() {
 
@@ -48,6 +47,12 @@ class ReflectionFunction extends AbstractReflection {
         return this.#methodName;
     }
 
+    /**@type {property_metadata_t} */
+    get metadata() {
+
+        return super.metadata;
+    }
+
     constructor(_target) {
 
         super(...arguments);
@@ -66,6 +71,7 @@ class ReflectionFunction extends AbstractReflection {
             return;
         }
 
+        this.#resolveFunctionParamsName();
         this.#isValid = true;
 
         const funcMeta = this.metadata;
@@ -73,6 +79,38 @@ class ReflectionFunction extends AbstractReflection {
         this.#defaultArgs = funcMeta.value;
         this.#returnType = funcMeta.type;
         this.#methodName = funcMeta.name;
+    }
+
+    #resolveFunctionParamsName() {
+
+        if (this.metadata.isDiscovered === true) {
+            
+            return;
+        }
+
+        const match = this._getActualFunction()
+                        ?.toString()
+                        ?.match(REGEX_FUNCTION_DETECT);
+        
+        if (!match) {
+
+            throw new TypeError('invalid function returned by _getActualFunction');
+        }
+
+        this.metadata.paramsName = match[FUNCTION_PARAMS]
+                            ?.replace(/\s/, '')
+                            ?.split(',');
+        
+        this.metadata.isDiscovered = true;
+    }
+
+    /**
+     * 
+     * @returns {Function}
+     */
+    _getActualFunction() {
+
+        return this.target;
     }
 
     _meetPrerequisite() {
