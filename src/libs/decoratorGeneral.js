@@ -1,6 +1,6 @@
 const { metaOf, function_metadata_t, metadata_t } = require("../reflection/metadata");
 const self = require("../utils/self");
-const { REGEX_ES6_CLASS_DETECT, REGEX_ES6_CONSTRUCTOR_DETECT, REGEX_FUNCTION_DETECT, REGEX_PARAM_SEPERATOR } = require("./constant");
+const { REGEX_ES6_CLASS_DETECT, REGEX_ES6_CONSTRUCTOR_DETECT, REGEX_FUNCTION_DETECT, REGEX_PARAM_SEPERATOR, REGEX_DEFAULT_ARG } = require("./constant");
 const { isInstantiable } = require("./type")
 
 const FUNCTION_PARAMS = 2;
@@ -46,7 +46,7 @@ function discoverClassConstructor() {
     const match = isES6 ? 
                 str_abstract.match(REGEX_ES6_CONSTRUCTOR_DETECT)
                 : str_abstract.match(REGEX_FUNCTION_DETECT);
-    console.log(match)
+    
     if (!match) {
 
         return;
@@ -54,5 +54,7 @@ function discoverClassConstructor() {
 
     const param_matchGroup = isES6 ? match[ES6_PARAMS] : match[FUNCTION_PARAMS];
 
-    constructorMeta.paramsName = param_matchGroup?.split(REGEX_PARAM_SEPERATOR) ?? [];
+    constructorMeta.paramsName = param_matchGroup
+                                ?.replace(REGEX_DEFAULT_ARG, '')
+                                ?.split(REGEX_PARAM_SEPERATOR) ?? [];
 }

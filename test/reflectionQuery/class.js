@@ -21,7 +21,7 @@ class A {
 
     }
 
-    constructor(param1, param2) {
+    constructor(param1 = 1, param2) {
 
 
     }
