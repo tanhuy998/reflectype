@@ -60,19 +60,28 @@ const objC = new C();
 //                 .on('properties')
 //                 .retrieve();
 
+class D {
 
+    constructor(paramA, paramB) {
+
+
+    }
+}
 
 obj.func();
 // objB.func();
 
 // console.log(obj)
 
-const refl = new ReflectionPrototypeMethodParameter(objC, 'func', 'a');
+const refl = new ReflectionPrototypeMethodParameter(objB, 'func', 0);
 
 console.log((new ReflectionClassPrototype(A)).isValid);
 console.log((new ReflectionClassPrototype(B)).isValid);
+
+console.log(D.toString())
+
 // refl.setValue('true');
 
-console.log(refl.isValid);
+console.log(refl.type);
 
 // console.log(refl.prototype.methods[0].isPrivate);

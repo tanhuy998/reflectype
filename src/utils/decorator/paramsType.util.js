@@ -4,6 +4,7 @@ const { initMetadata } = require("../../libs/propertyDecorator");
 const { isValuable, isAbstract } = require("../../libs/type");
 const { property_metadata_t } = require("../../reflection/metadata");
 const Any = require("../../type/any");
+const { mapNames } = require("./parameterExplicitMapping");
 
 const PARAMS_DECORATED = 'paramDecorated';
 
@@ -53,25 +54,32 @@ function mapList_validateInput(_types = []) {
  * @param {Object} _table 
  * @param {property_metadata_t} propMeta 
  */
-function mapParamsByNames(_typeTable, propMeta) {
+function mapParamsByNames(_typeDic, propMeta) {
 
-    for (const name of propMeta.functionMeta.paramsName || []) {
-        
-        _registerType(_typeTable[name], propMeta);
+    try {
 
-        delete _typeTable[name];
+        mapName_preparePropMeta(propMeta);
+        const { paramsName, defaultParamsType } = propMeta.functionMeta;
+        mapNames(paramsName, _typeDic, defaultParamsType);
     }
-    
-    mapName_checkUndeclaredParams(_typeTable);
-}
+    catch {
 
-function mapName_checkUndeclaredParams(undeclared) {
-    
-    if (Object.keys(undeclared).length > 0) {
-        
-        throw new ReferenceError('trying to define types for undeclared parameter');        
+        throw new ReferenceError('trying to define types for undeclared parameter');
     }
 }
+
+/**
+ * 
+ * @param {property_metadata_t} propMeta 
+ */
+function mapName_preparePropMeta(propMeta) {
+
+    const {paramsName} = propMeta.functionMeta;
+
+    propMeta.functionMeta.defaultParamsType = new Array(paramsName?.length || 0);
+}
+
+
 
 function checkAndReturnValidType(type) {
     
@@ -96,19 +104,6 @@ function checkAndReturnValidType(type) {
  */
 function mapParamsByList(_list, propMeta) {
     
-    for (const _type of _list) {
-
-        _registerType(_type, propMeta);
-    }
+    propMeta.functionMeta.defaultParamsType = new Array(..._list);
 }
 
-/**
- * 
- * @param {Function} type 
- * @param {property_metadata_t} propMeta 
- */
-function _registerType(type, propMeta) {
-    
-    (propMeta.functionMeta.defaultParamsType ||= [])
-    .push(checkAndReturnValidType(type));
-}

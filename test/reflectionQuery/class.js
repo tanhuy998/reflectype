@@ -21,6 +21,11 @@ class A {
 
     }
 
+    constructor(param1, param2) {
+
+
+    }
+
     @type(Number)
     accessor prop;
 
@@ -49,7 +54,7 @@ class B extends A {
     @type(String)
     accessor prop
 
-    @paramsType(String)
+    @paramsType(String, Number)
     @returnType(String)
     func() {
 
@@ -61,7 +66,7 @@ class C {
 
     //@allowNull
     @returnType(Number)
-    @parameters({a: Function, b: Number})
+    @parameters({ b: Number, a: Function})
     func(a, b) {
 
         console.log('C', ...arguments)
