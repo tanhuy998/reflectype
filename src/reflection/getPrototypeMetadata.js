@@ -4,7 +4,7 @@ function getPrototypeMetadata(_abstract) {
 
     const classMeta = getMetadata(_abstract);
 
-    return classMeta?.prototype;
+    return classMeta?._prototype;
 }
 
 module.exports = getPrototypeMetadata;

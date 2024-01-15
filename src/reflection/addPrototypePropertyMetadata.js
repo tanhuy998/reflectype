@@ -11,7 +11,7 @@ function addPrototypePropertyMetadata(_abstract, prop, meta) {
 
     const {private, type, value} = meta || {};
 
-    const {properties} = metaOf(_abstract).prototype;
+    const {properties} = metaOf(_abstract)._prototype;
 
     // the property does exist
     if (typeof properties[prop] === 'object') {

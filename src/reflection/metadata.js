@@ -4,7 +4,7 @@
  * Defines data structures that represent the raw metadata for classes.
  */
 
-const { isInstantiableOrFail, isInstantiable, isObject, isObjectLike } = require('../libs/type.js');
+const { isInstantiable, isObjectLike } = require('../libs/type.js');
 
 /**
  * @typedef {import('../interface/interfacePrototype.js')} InterfacePrototype
@@ -27,7 +27,6 @@ module.exports = {
     PROP_META_INITIALIZED,
     metaOf, 
     wrapperOf,
-    //setWrapper,
     metadata_t,
     property_metadata_t, 
     function_metadata_t,
@@ -67,8 +66,15 @@ function metadata_t(_abstract, _ref) {
      * 
      * @type {prototype_metadata_t} 
      */
-    this.prototype = new prototype_metadata_t(_ref, this.abstract);
-    this.prototype.owner = this.loopback;
+    this._prototype = new prototype_metadata_t(_ref, this.abstract);
+    this._prototype.owner = this.loopback;
+
+    /**
+     * loopback to this._prototype
+     * 
+     * @type {prototype_metadata_t}
+     */
+    this.prototype = this._prototype;
 
     /**
      * A reference for its dependent metadata objects to resolve their original
@@ -88,7 +94,7 @@ function metadata_t(_abstract, _ref) {
  */
 function prototype_metadata_t(_ref, _ownerAbstract) {
     
-    const _refProto = _ref?.prototype;
+    const _refProto = _ref?._prototype;
 
     /**
      * @type {Object} 
@@ -153,16 +159,6 @@ function property_metadata_t(_ref, _ownerTypeMeta) {
     this.private = _ref?.private;
     /**@type {boolean} */
     this.static = _ref?.static;
-    /**@type {Array<any>} */
-    this.defaultParamsType = _ref?.defaultParamsType;
-    /**@type {Array<string>} */
-    this.paramsName;
-
-    /**
-     * @type {function_metadata_t}
-     */
-    this.functionMeta;
-
     /**@type {boolean} */
     this.isMethod = _ref?.isMethod;
     /**@type {string|Symbol} */
@@ -215,10 +211,20 @@ function property_metadata_t(_ref, _ownerTypeMeta) {
      */
     this.decoratorContext = undefined;
 
+    
+    // /**
+    //  * @type {boolean}
+    //  */
+    // //this.isDiscovered = undefined;
+    // **@type {Array<any>} */
+    // this.defaultParamsType = _ref?.defaultParamsType;
+    // **@type {Array<string>} */
+    // this.paramsName;
+
     /**
-     * @type {boolean}
+     * @type {function_metadata_t}
      */
-    this.isDiscovered = undefined;
+    this.functionMeta;
 }
 
 /**

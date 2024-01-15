@@ -320,12 +320,12 @@ function linkTypeMetaAbstract(_class) {
 
     typeMeta.abstract = _class;
 
-    if (!(typeMeta.prototype instanceof prototype_metadata_t)) {
+    if (!(typeMeta._prototype instanceof prototype_metadata_t)) {
 
         return;
     }
 
-    typeMeta.prototype.abstract = _class;
+    // typeMeta._prototype.abstract = _class; // deprecated
 }
 
 /**
@@ -343,7 +343,7 @@ function unlinkPropMeta(_class, decoratorContext) {
     const isStatic = decoratorContext.static;
     const typeMeta = metaOf(_class);
 
-    const typeMetaProtoProperties = isStatic ? typeMeta?.properties : typeMeta?.prototype?.properties;
+    const typeMetaProtoProperties = isStatic ? typeMeta?.properties : typeMeta?._prototype?.properties;
 
     if (typeof typeMetaProtoProperties !== 'object') {
 

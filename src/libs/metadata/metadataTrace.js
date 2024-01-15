@@ -35,9 +35,7 @@
 
 
 const { property_metadata_t, metadata_t, TYPE_JS, metaOf } = require('../../reflection/metadata.js');
-const { addPropertyMetadata } = require('../../reflection/typeMetadataAction.js');
-const self = require('../../utils/self.js');
-const { ORIGIN, GLOBAL_STACK_OFFSET } = require('./constant.js');
+const { ORIGIN } = require('./constant.js');
 const {classStack, propStack, globalStack} = require('./initialStack.js');
 
 function currentClassMeta() {
@@ -107,7 +105,7 @@ function retrieveTypeMetaProperties(_, decoratorContext) {
 
     try {
         return static ? refreshedTypeMeta.properties :
-            refreshedTypeMeta.prototype.properties;
+            refreshedTypeMeta._prototype.properties;
     }
     catch {
 

@@ -31,7 +31,7 @@ function resolvePropertyMetadata(prop) {
 
     const isInstanceContext = this.reflectionContext === ReflectorContext.INSTANCE;
     /**@type {metadata_t} */
-    const contextMetadata = (isInstanceContext) ? this.metadata?.prototype : this.metadata;
+    const contextMetadata = (isInstanceContext) ? this.metadata?._prototype : this.metadata;
 
     return contextMetadata?.properties[prop] || getMetadataFromProp.call(this, prop);
 }

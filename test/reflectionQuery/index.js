@@ -69,8 +69,10 @@ obj.func();
 
 const refl = new ReflectionPrototypeMethodParameter(objC, 'func', 'a');
 
+console.log((new ReflectionClassPrototype(A)).isValid);
+console.log((new ReflectionClassPrototype(B)).isValid);
 // refl.setValue('true');
 
-console.log(refl.type);
+console.log(refl.isValid);
 
 // console.log(refl.prototype.methods[0].isPrivate);
