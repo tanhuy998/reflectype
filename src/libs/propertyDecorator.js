@@ -4,6 +4,7 @@ const {decorateAccessor} = require('./accessorDecorator.js');
 const {initDecoratorFootPrint, decoratorHasFootPrint, setDecoratorFootPrint, retrieveDecoratorFootPrintByKey} = require('./footPrint.js');
 const { traceAndInitContextMetadata } = require("./metadata/metadataTrace.js");
 const { DECORATED, FOOTPRINT, DECORATED_VALUE, ORIGIN_VALUE } = require("./constant.js");
+const { initConstructorMetadata } = require("./decoratorGeneral.js");
 
 module.exports = {
     initMetadata, 
@@ -43,7 +44,8 @@ function initMetadata(_, _context) {
     const propMeta = resolvePropMeta(_, _context);
     
     initDecoratorFootPrint(_, _context);
-    
+    initConstructorMetadata(_, _context);
+
     if (decoratorHasFootPrint(_, _context, DECORATED)) {
         
         return propMeta;

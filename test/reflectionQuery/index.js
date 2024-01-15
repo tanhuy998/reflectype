@@ -62,7 +62,7 @@ const objC = new C();
 
 class D {
 
-    constructor(paramA, paramB) {
+    constructor() {
 
 
     }
@@ -75,7 +75,7 @@ obj.func();
 
 const refl = new ReflectionPrototypeMethodParameter(objB, 'func', 0);
 
-console.log((new ReflectionClassPrototype(A)).isValid);
+console.log((new ReflectionClass(A)).metadata);
 console.log((new ReflectionClassPrototype(B)).isValid);
 
 console.log(D.toString())

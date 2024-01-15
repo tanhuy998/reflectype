@@ -5,15 +5,17 @@ const {compareArgsWithType} = require('../libs/argumentType.js');
 const {isIterable, isInstantiable} = require('./type.js');
 const ReturnValueNotMatchType = require('../error/returnValueNotMatchTypeError.js');
 const isAbStract = require('../utils/isAbstract.js');
-const { DECORATED_VALUE, ORIGIN_VALUE} = require('./constant.js');
 const self = require('../utils/self.js');
 const { belongsToCurrentMetadataSession } = require('./metadata/metadataTrace.js');
 const { establishMetadataResolution } = require('../reflection/typeMetadataAction.js');
+const {
+    DECORATED_VALUE,
+    ORIGIN_VALUE,
+    REGEX_PARAM_SEPERATOR,
+    REGEX_FUNCTION_DETECT,
+    REGEX_DEFAULT_ARG
+} = require('./constant.js');
 
-const REGEX_WHITE_SPACE = /\s/g;
-const REGEX_PARAM_SEPERATOR = /\s*\,\s*/g;
-const REGEX_FUNCTION_DETECT = /^function(\s+\w*)*\s*\((.*)\)/;
-const REGEX_DEFAULT_ARG = /=\s*\w+/;
 const FUNCTION_PARAMS = 2;
 
 module.exports = {

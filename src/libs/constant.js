@@ -6,4 +6,10 @@ module.exports = {
     ORIGIN_VALUE: 'originValue',
     DEFAULT_ARGS: 'defaultArgs',
     PARAM: 'methodParamsType',
+    REGEX_WHITE_SPACE: /\s/g,
+    REGEX_PARAM_SEPERATOR: /\s*\,\s*/g,
+    REGEX_FUNCTION_DETECT: /^function(\s+\w*)*\s*\((.*)\)/,
+    REGEX_DEFAULT_ARG: /=\s*\w+/,
+    REGEX_ES6_CLASS_DETECT: /^class/,
+    REGEX_ES6_CONSTRUCTOR_DETECT: /constructor\s*\((.*)\)/,
 }
