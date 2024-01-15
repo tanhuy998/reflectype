@@ -107,16 +107,18 @@ function setDecoratorFootPrint(_, context, _key, _value) {
 function decoratorHasFootPrint(_, context, _key = undefined) {
 
     try {
-
+        
         const footPrintObj = retrieveDecoratorFootPrintObject(_, context);
-        isObjectKeyOrFail(footPrintObj);
 
-        if (!isObjectKey(_key)) {
+        if (
+            !isObjectKey(_key) &&
+            typeof footPrintObj === 'object'
+        ) {
 
             return true;
         }
 
-        return isValuable(footPrintObj[_key]);
+        return isValuable(footPrintObj?.[_key]);
     }
     catch(e) {
 

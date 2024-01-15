@@ -99,9 +99,9 @@ function property_metadata_t(_ref, _ownerTypeMeta) {
     this.private = _ref?.private;
     /**@type {boolean} */
     this.static = _ref?.static;
-    /**@type {Iterable<any>} */
+    /**@type {Array<any>} */
     this.defaultParamsType = _ref?.defaultParamsType;
-    /**@type {Iterable<string>} */
+    /**@type {Array<string>} */
     this.paramsName;
     /**@type {boolean} */
     this.isMethod = _ref?.isMethod;

@@ -1,6 +1,5 @@
 const { preventNonInheritanceTakeEffect } = require("../../abstraction/traitAbstractClass");
 const { isObjectKey } = require("../../libs/type");
-const { metaOf } = require("../../reflection/metadata");
 const ReflectorContext = require("../reflectorContext");
 const { getOwnerClass } = require("../trait/traitPropertyReflection");
 const ReflectionParameterAbstract = require("./reflectionParameterAbstract");
@@ -24,6 +23,12 @@ module.exports = class ReflectionMethodParameterAbstract extends ReflectionParam
         preventNonInheritanceTakeEffect.call(this, ReflectionMethodParameterAbstract);
         
         //this.#init();
+    }
+
+    _meetPrerequisite() {
+
+        return this.reflectionContext !== ReflectorContext.OTHER &&
+                this.originClass?.prototype[this.methodName];
     }
 
     /**

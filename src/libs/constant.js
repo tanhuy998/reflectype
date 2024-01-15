@@ -5,5 +5,5 @@ module.exports = {
     DECORATED_VALUE: 'decoratedValue',
     ORIGIN_VALUE: 'originValue',
     DEFAULT_ARGS: 'defaultArgs',
-    PARAM: 'methodParamsType'
+    PARAM: 'methodParamsType',
 }

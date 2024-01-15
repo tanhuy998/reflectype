@@ -2,8 +2,6 @@ const ReflectorContext = require("../reflectorContext.js");
 const { property_metadata_t, metaOf } = require("../../reflection/metadata.js");
 const {reflectParameters} = require('../trait/traitfunctionReflection.js');
 const AbstractReflection = require("../abstract/abstractReflection.js");
-const { FUNCTION_DETECT, FUNCTION_PARAMS, REGEX_FUNCTION_DETECT } = require("./constant.js");
-const { discoverFunctionParams } = require("../trait/traitParameterReflection.js");
 
 
 /**
@@ -72,7 +70,6 @@ class ReflectionFunction extends AbstractReflection {
             return;
         }
 
-        this.#_discoverFunctionParams();
         this.#isValid = true;
 
         const funcMeta = this.metadata;
@@ -80,11 +77,6 @@ class ReflectionFunction extends AbstractReflection {
         this.#defaultArgs = funcMeta.value;
         this.#returnType = funcMeta.type;
         this.#methodName = funcMeta.name;
-    }
-
-    #_discoverFunctionParams() {
-
-        discoverFunctionParams.call(this);
     }
 
     /**

@@ -1,15 +1,24 @@
 const {metaOf, metadata_t, property_metadata_t, prototype_metadata_t, PROP_META_INITIALIZED} = require('../reflection/metadata.js');
-const {decoratorHasFootPrint, setDecoratorFootPrint} = require('./footPrint.js');
+const {decoratorHasFootPrint, setDecoratorFootPrint, getMetadataFootPrintByKey} = require('./footPrint.js');
 const matchType = require('./matchType.js');
 const {compareArgsWithType} = require('../libs/argumentType.js');
 const {isIterable, isInstantiable, isObject} = require('./type.js');
 const ReturnValueNotMatchType = require('../error/returnValueNotMatchTypeError.js');
 const isAbStract = require('../utils/isAbstract.js');
-const { DECORATED_VALUE, ORIGIN_VALUE } = require('./constant.js');
+const { DECORATED_VALUE, ORIGIN_VALUE} = require('./constant.js');
 const self = require('../utils/self.js');
 const { belongsToCurrentMetadataSession } = require('./metadata/metadataTrace.js');
 const { establishMetadataResolution } = require('../reflection/typeMetadataAction.js');
 
+const REGEX_WHITE_SPACE = /\s/g;
+const REGEX_PARAM_SEPERATOR = /\s*\,\s*/g;
+const REGEX_FUNCTION_DETECT = /^function(\s+\w*)*\s*\((.*)\)/;
+const REGEX_DEFAULT_ARG = /=\s*\w+/;
+const FUNCTION_PARAMS = 2;
+
+module.exports = {
+    decorateMethod
+};
 
 function generateDecorateMethod(_method, propMeta) {
 
@@ -128,19 +137,68 @@ function decorateMethod(_method, context, propMeta) {
         return;
     }
 
-    if (decoratorHasFootPrint(_method, context, DECORATED_VALUE)) {
+    if (!decoratorHasFootPrint(_method, context, DECORATED_VALUE)) {
+
+        setDecoratorFootPrint(_method, context, DECORATED_VALUE, generateDecorateMethod(_method, propMeta));
+        //return;
+    }
+
+    if (!decoratorHasFootPrint(_method, context, ORIGIN_VALUE)) {
+        
+        setDecoratorFootPrint(_method, context, ORIGIN_VALUE, _method);
+    }
+
+    discoverParams(propMeta)
+
+    propMeta.decoratorContext = context;
+    propMeta.isInitialized = true;
+}
+
+/**
+ * 
+ * @param {property_metadata_t} propMeta 
+ * @returns 
+ */
+function discoverParams(propMeta) {
+
+    if (!propMeta.isMethod) {
 
         return;
     }
 
-    setDecoratorFootPrint(_method, context, DECORATED_VALUE, generateDecorateMethod(_method, propMeta));
-    setDecoratorFootPrint(_method, context, ORIGIN_VALUE, _method);
-    propMeta.decoratorContext = context;
-    propMeta.isInitialized = true;
+    if (propMeta.isDiscovered === true) {
+        
+        return;
+    }
 
-    // const {addInitializer} = context;
-    // propMeta.isInitialized = false;
-    // addInitializer(overrideClassPrototype(propMeta));
+    const match = getMetadataFootPrintByKey(propMeta, ORIGIN_VALUE)
+                    ?.toString()
+                    ?.match(REGEX_FUNCTION_DETECT);
+    
+    if (!match) {
+
+        throw new TypeError('invalid function returned by _getActualFunction');
+    }
+
+    const list = match[FUNCTION_PARAMS]
+                        ?.replace(REGEX_DEFAULT_ARG, '')
+                        //?.replace(WHITE_SPACE, '')
+                        ?.split(REGEX_PARAM_SEPERATOR);
+
+    propMeta.paramsName = hasNoParam(list) ? [] : list;
+    propMeta.isDiscovered = true;
+}
+
+/**
+ * 
+ * @param {Array<string>} _list 
+ * @returns 
+ */
+function hasNoParam(_list) {
+
+    return _list.length === 0 ||
+            _list.length === 1 &&
+            !_list[0];
 }
 
 /**
@@ -278,6 +336,3 @@ function unlinkPropMeta(_class, decoratorContext) {
 
     delete typeMetaProtoProperties[name];
 }
-
-
-module.exports = {decorateMethod};

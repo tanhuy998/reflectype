@@ -10,6 +10,11 @@ module.exports = {
  */
 function discoverFunctionParams() {
 
+    if (!this.metadata.isMethod) {
+
+        return;
+    }
+
     if (this.metadata.isDiscovered === true) {
         
         return;
