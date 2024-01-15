@@ -62,6 +62,13 @@ function metadata_t(_abstract, _ref) {
     this.interfaces = _ref?.interfaces?.clone();
 
     /**
+     *  Holds metadata about a class's constructor
+     * 
+     *  @type {function_metadata_t}
+     */
+    this._constructor;
+
+    /**
      * Metadata about the prototype of the annotated class
      * 
      * @type {prototype_metadata_t} 
@@ -70,7 +77,7 @@ function metadata_t(_abstract, _ref) {
     this._prototype.owner = this.loopback;
 
     /**
-     * loopback to this._prototype
+     * loopback for this._prototype
      * 
      * @type {prototype_metadata_t}
      */
@@ -85,6 +92,7 @@ function metadata_t(_abstract, _ref) {
      */
     this.loopback = new owner_metadata_t();
     this.loopback.typeMeta = this;
+    this._prototype.owner = this.loopback;
 }
 
 /**

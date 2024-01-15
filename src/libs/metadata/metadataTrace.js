@@ -219,6 +219,7 @@ function refreshTypeMetadata(_, decoratorContext) {
         newTypeMeta.abstract = _;
     }
 
+    newTypeMeta._prototype.owner = newTypeMeta.loopback;
     registerTypeMeta(newTypeMeta);
     return newTypeMeta;
 }
