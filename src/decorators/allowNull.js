@@ -16,6 +16,7 @@ function allowNull(_, _context) {
 
     propMeta.allowNull = true;
     
+    propertyDecorator.refreshPropMeta(propMeta);
     return retrieveDecoratorFootPrintByKey(_, _context, DECORATED_VALUE);
 }
 

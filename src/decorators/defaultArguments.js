@@ -31,7 +31,8 @@ function defaultArguments(...args) {
         propMeta.value = args;
 
         setDecoratorFootPrint(_method, _context, DEFAULT_ARGS);
-
+        propertyDecorator.refreshPropMeta(propMeta);
+        
         return retrieveDecoratorFootPrintByKey(_method, _context, DECORATED_VALUE);
     }
 }

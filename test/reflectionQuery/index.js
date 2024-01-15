@@ -4,7 +4,7 @@
 //     ]
 // })
 
-//const {A, B, C} = require('./compiled.js');
+const {A, B, C} = require('./compiled.js');
 const {METADATA} = require('../../src/constants.js');
 const { TYPE_JS, property_metadata_t } = require('../../src/reflection/metadata.js');
 
@@ -25,7 +25,10 @@ const Reflection = require('../../src/metadata/reflection.js');
 
 const {getDecoratedValue} = require('../../src/libs/propertyDecorator.js');
 const ReflectionPrototypeMethodParameter = require('../../src/metadata/parameter/reflectionPrototypeMethodParameter.js');
-const {A} = require('./compiled.js');
+const { type } = require('os');
+// const {A} = require('./compiled.js');
+
+
 // const refl = new Reflector(A);
 // const reflAspect = new ReflectionAspect(refl);
 
@@ -43,7 +46,8 @@ const {A} = require('./compiled.js');
 // console.log(obj)
 
 const obj = new A();
-//const objB = new B()
+const objB = new B()
+const objC = new C();
 
 // const reflectMethod = new ReflectionPrototypeMethod(obj, 'func');
 
@@ -63,10 +67,10 @@ obj.func();
 
 // console.log(obj)
 
-const refl = new ReflectionPrototypeMethodParameter(obj, 'func', 'abc');
+const refl = new ReflectionPrototypeMethodParameter(objC, 'func', 'a');
 
 // refl.setValue('true');
 
-console.log(refl.metadata);
+console.log(refl.type);
 
 // console.log(refl.prototype.methods[0].isPrivate);

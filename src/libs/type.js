@@ -1,6 +1,7 @@
 const Void = require('../type/void.js');
 const {IS_CHECKABLE} = require('../interface/constant.js');
 const Any = require('../type/any.js');
+const { type } = require('os');
 
 const OBJECT_KEY_TYPES = ['number', 'string', 'symbol'];
 
@@ -28,7 +29,26 @@ module.exports = {
     isNonIterableObjectKey,
     isNonIterableObjectKeyOrFail,
     isFunctionParamIdentifier,
-    isFunctionParamIdentifierOrFail
+    isFunctionParamIdentifierOrFail,
+    isAbstract,
+    isAbstractOrFail
+}
+
+function isAbstract(_class) {
+
+    return isInstantiable(_class) || 
+            typeof _class === 'function' &&
+            typeof _class.prototype === 'function';
+}
+
+function isAbstractOrFail(_class) {
+
+    if (!isAbstract(_class)) {
+
+        throw new Error();
+    }
+
+    return true;
 }
 
 function isFunctionParamIdentifier(_key) {

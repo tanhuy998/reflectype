@@ -1,8 +1,8 @@
-const {metaOf, metadata_t, property_metadata_t, prototype_metadata_t, PROP_META_INITIALIZED} = require('../reflection/metadata.js');
+const {metaOf, metadata_t, property_metadata_t, prototype_metadata_t, PROP_META_INITIALIZED, function_metadata_t} = require('../reflection/metadata.js');
 const {decoratorHasFootPrint, setDecoratorFootPrint, getMetadataFootPrintByKey} = require('./footPrint.js');
 const matchType = require('./matchType.js');
 const {compareArgsWithType} = require('../libs/argumentType.js');
-const {isIterable, isInstantiable, isObject} = require('./type.js');
+const {isIterable, isInstantiable} = require('./type.js');
 const ReturnValueNotMatchType = require('../error/returnValueNotMatchTypeError.js');
 const isAbStract = require('../utils/isAbstract.js');
 const { DECORATED_VALUE, ORIGIN_VALUE} = require('./constant.js');
@@ -17,9 +17,16 @@ const REGEX_DEFAULT_ARG = /=\s*\w+/;
 const FUNCTION_PARAMS = 2;
 
 module.exports = {
-    decorateMethod
+    decorateMethod, 
+    refreshMeta
 };
 
+/**
+ * 
+ * @param {Function} _method 
+ * @param {function_metadata_t} propMeta 
+ * @returns 
+ */
 function generateDecorateMethod(_method, propMeta) {
 
     if (typeof _method !== 'function') {
@@ -29,6 +36,7 @@ function generateDecorateMethod(_method, propMeta) {
     
     return function() {
 
+        //const functionMeta = propMeta.functionMeta;
         const injectedArgs = getInjectedArguments(this, propMeta.name ?? _method.name);
         const defaultArguments = propMeta.value;
         const args = arguments.length !== 0 ? arguments : injectedArgs ?? (isIterable(defaultArguments) ? defaultArguments : [defaultArguments]);
@@ -137,21 +145,27 @@ function decorateMethod(_method, context, propMeta) {
         return;
     }
 
+    refreshMeta(propMeta);
+    discoverParams(propMeta);
+
     if (!decoratorHasFootPrint(_method, context, DECORATED_VALUE)) {
 
         setDecoratorFootPrint(_method, context, DECORATED_VALUE, generateDecorateMethod(_method, propMeta));
-        //return;
     }
-
-    if (!decoratorHasFootPrint(_method, context, ORIGIN_VALUE)) {
-        
-        setDecoratorFootPrint(_method, context, ORIGIN_VALUE, _method);
-    }
-
-    discoverParams(propMeta)
 
     propMeta.decoratorContext = context;
     propMeta.isInitialized = true;
+}
+
+/**
+ * 
+ * @param {property_metadata_t} propMeta 
+ */
+function refreshMeta(propMeta) {
+
+    const functionMeta = propMeta.functionMeta ??= new function_metadata_t(propMeta);
+    functionMeta.returnType = propMeta.type;
+    functionMeta.allowNull = propMeta.allowNull;
 }
 
 /**
@@ -161,13 +175,15 @@ function decorateMethod(_method, context, propMeta) {
  */
 function discoverParams(propMeta) {
 
-    if (!propMeta.isMethod) {
+    const funcMeta = propMeta.functionMeta;
 
+    if (funcMeta?.isDiscovered === true) {
+        
         return;
     }
 
-    if (propMeta.isDiscovered === true) {
-        
+    if (!propMeta.isMethod) {
+
         return;
     }
 
@@ -185,8 +201,8 @@ function discoverParams(propMeta) {
                         //?.replace(WHITE_SPACE, '')
                         ?.split(REGEX_PARAM_SEPERATOR);
 
-    propMeta.paramsName = hasNoParam(list) ? [] : list;
-    propMeta.isDiscovered = true;
+    funcMeta.paramsName = hasNoParam(list) ? [] : list;
+    funcMeta.isDiscovered = true;
 }
 
 /**

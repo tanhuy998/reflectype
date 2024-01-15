@@ -21,6 +21,20 @@ const PROP_META_INITIALIZED = {
     value: true            
 };
 
+module.exports = {
+    METADATA, 
+    TYPE_JS, 
+    PROP_META_INITIALIZED,
+    metaOf, 
+    wrapperOf,
+    //setWrapper,
+    metadata_t,
+    property_metadata_t, 
+    function_metadata_t,
+    owner_metadata_t,
+    prototype_metadata_t
+};
+
 function owner_metadata_t() {
     /**
      * @type {metadata_t}
@@ -87,6 +101,46 @@ function prototype_metadata_t(_ref, _ownerAbstract) {
     this.owner; //= new owner_metadata_t();
 }
 
+/**
+ * 
+ * @param {property_metadata_t} _owner
+ */
+function function_metadata_t(_owner) {
+
+    /**
+     * @type {Array<string>}
+     */
+    this.paramsName;
+
+    /**
+     * @type {any}
+     */
+    this.defaultValues = _owner?.value;
+
+    /**
+     * @type {Function}
+     */
+    this.returnType + _owner?.type;
+
+    /**
+     * @type {string|symbol}
+     */
+    this.name = _owner?.name;
+    /**
+     * @type {Array<Function>}
+     */
+    this.defaultParamsType;
+
+    /**
+     * @type {boolean}
+     */
+    this.allowNull;
+
+    /**
+     * @type {boolean}
+     */
+    this.isDiscovered;
+}
 
 /**
  * @class
@@ -103,6 +157,12 @@ function property_metadata_t(_ref, _ownerTypeMeta) {
     this.defaultParamsType = _ref?.defaultParamsType;
     /**@type {Array<string>} */
     this.paramsName;
+
+    /**
+     * @type {function_metadata_t}
+     */
+    this.functionMeta;
+
     /**@type {boolean} */
     this.isMethod = _ref?.isMethod;
     /**@type {string|Symbol} */
@@ -202,16 +262,3 @@ function wrapperOf(_unknown) {
 
     return isObjectLike(_unknown) ? _unknown[METADATA] || _unknown.metadata : undefined;
 }
-
-module.exports = {
-    METADATA, 
-    TYPE_JS, 
-    PROP_META_INITIALIZED,
-    metaOf, 
-    wrapperOf,
-    //setWrapper,
-    metadata_t,
-    property_metadata_t, 
-    owner_metadata_t,
-    prototype_metadata_t
-};

@@ -1,12 +1,12 @@
 const { preventNonInheritanceTakeEffect } = require("../../abstraction/traitAbstractClass");
 const { getMetadataFootPrintByKey } = require("../../libs/footPrint");
-const { isFunctionParamIdentifier, isValuable } = require("../../libs/type");
+const { isFunctionParamIdentifier } = require("../../libs/type");
 const { property_metadata_t } = require("../../reflection/metadata");
 const AbstractReflection = require("./abstractReflection");
 const { ORIGIN_FUNCTION } = require("./constant");
 
-const METHOD_NAME = 0;
-const PARAM_INDENTIFIER = 1;
+const METHOD_NAME = 1;
+const PARAM_KEY = 0;
 
 module.exports = class ReflectionParameterAbstract extends AbstractReflection {
 
@@ -24,8 +24,9 @@ module.exports = class ReflectionParameterAbstract extends AbstractReflection {
 
     get paramName() {
 
-        return this.#name ?? this.options[PARAM_INDENTIFIER];
+        return this.#name;
     }
+
 
     get type() {
 
@@ -63,6 +64,16 @@ module.exports = class ReflectionParameterAbstract extends AbstractReflection {
         return super.metadata;
     }
 
+    get #paramKey() {
+
+        return this.options[PARAM_KEY];
+    }
+
+    get #methodName() {
+
+        return this.options[METHOD_NAME];
+    }
+
     constructor(_target, paramIndex, methodName) {
 
         if (!isFunctionParamIdentifier(paramIndex)) {
@@ -74,13 +85,9 @@ module.exports = class ReflectionParameterAbstract extends AbstractReflection {
 
                 throw new TypeError('parameter _index must be a number indicating the order of the function\'s param');
             }
-
-            super(_target, methodName);
         }
-        else {
 
-            super(_target, methodName, paramIndex);
-        }
+        super(_target, paramIndex, methodName);
         
         preventNonInheritanceTakeEffect.call(this, ReflectionParameterAbstract);
 
@@ -91,6 +98,7 @@ module.exports = class ReflectionParameterAbstract extends AbstractReflection {
     
     _meetPrerequisite() {
 
+        return this.isValidReflection;
         // const funcMeta = this._resovleFunctionMetadata();
         // return funcMeta instanceof property_metadata_t;
 
@@ -132,8 +140,7 @@ module.exports = class ReflectionParameterAbstract extends AbstractReflection {
             return;
         }
 
-        /**@type {property_metadata_t} */
-        const funcMeta = super.metadata;
+        const funcMeta = this.metadata.functionMeta;
         const paramIndex = this.#index;
         //const paramIndex = this.metadata.paramsName.indexOf()
         const {defaultParamsType} = funcMeta;
@@ -145,50 +152,63 @@ module.exports = class ReflectionParameterAbstract extends AbstractReflection {
 
     #verifyParam() {
 
-        if (this.metadata.paramsName.length === 0) {
+        this.#resolveIdentifier();
+        this.#resolveParam();
+        this.#prepare();
 
-            return;
+        if (!this.isValid) {
+
+            this.#index = undefined;
         }
-
-        this.#resolveParamName();
-        this.#readOnIdentifier();
     }
 
-    #resolveParamName() {
+    #resolveIdentifier() {
+
+        const paramKey = this.#paramKey;
+        const keyType = typeof paramKey;
+        const funcMeta = this.metadata.functionMeta;
+
+        if (keyType === 'string') {
+
+            this.#index = funcMeta.paramsName.indexOf(paramKey);
+        }
+        else if (keyType === 'number') {
+
+            this.#index = paramKey;
+        }
+    }
+
+    #resolveParam() {
 
         const paramIndex = this.#index;
-
-
-        if (typeof paramIndex !== 'number') {
-            /**
-             *  paramIndex and param name is validated by constructor,
-             *  if paramIndex is undefined, it means param name exists
-             */
-            return;
-        }
-        
-        this.#name = this.metadata.paramsName[paramIndex] || undefined;
-    }
-
-    #readOnIdentifier() {
-
-        const name = this.paramName;
-
-        if (!isFunctionParamIdentifier(name)) {
-
-            return;
-        }
+        const paramsTypesCount = this.metadata.functionMeta.defaultParamsType.length;
 
         if (
-            !isValuable(this.#index)
+            typeof paramIndex === 'number' &&
+            paramIndex >= 0 && paramIndex < paramsTypesCount
         ) {
 
-            this.#index = this.metadata.paramsName.indexOf(name);
+            this.#isValid = true;
         }
-
-        this.#isValid = true;
     }
 
+    #prepare() {
+
+        if (!this.#isValid) {
+
+            return;
+        }
+
+        const declaredParamsName = this.metadata.functionMeta.paramsName;
+
+        if (declaredParamsName.length === 0) {
+
+            this.#name = undefined;
+            return;
+        }
+
+        this.#name = typeof this.#paramKey === 'string' ? declaredParamsName[this.#index] : undefined;
+    }
 
     _resovleFunctionMetadata() {
         /**
