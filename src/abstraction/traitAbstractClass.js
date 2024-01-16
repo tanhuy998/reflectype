@@ -7,12 +7,7 @@ const self = require("../utils/self")
  * @this {Object}
  */
 function preventNonInheritanceTakeEffect(_BaseClass) {
-
-    if (!isInstantiable(_BaseClass)) {
-
-        throw new TypeError('_BaseClass must be instantiable');
-    }
-
+    
     if (
         self(this) === _BaseClass || 
         !(this instanceof _BaseClass)

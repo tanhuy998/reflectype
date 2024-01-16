@@ -1,9 +1,18 @@
 const Void = require('../type/void.js');
 const {IS_CHECKABLE} = require('../interface/constant.js');
 const Any = require('../type/any.js');
-const { type } = require('os');
+const Interface = require('../interface/interface')
 
 const OBJECT_KEY_TYPES = ['number', 'string', 'symbol'];
+const INSTANTIABLE_BLACK_LIST = [Interface, Void];
+const PRIMITIVES_CLASS_NAMES = ['Boolean', 'String', 'Number', 'BigInt', Void.name];
+const PRIMITIVE_CLASS_NAMES_MAP = {
+    'string': 'String',
+    'boolean': 'Boolean',
+    'number': 'Number',
+    'bigint': 'BigInt',
+    'undefined': Void.name,
+}
 
 module.exports = {
     isParent,
@@ -37,6 +46,8 @@ module.exports = {
 function isAbstract(_class) {
 
     return isInstantiable(_class) || 
+            _class instanceof Interface || 
+            // below condition is for [Function] class
             typeof _class === 'function' &&
             typeof _class.prototype === 'function';
 }
@@ -74,8 +85,8 @@ function isFunctionParamIdentifierOrFail(_key) {
  */
 function isParent(base, derived) {
 
-    return isInstantiable(base) && 
-    isInstantiable(derived) && 
+    isObjectLike(base) &&
+    isObjectLike(derived) &&
     derived.prototype instanceof base;
 }
 
@@ -101,14 +112,6 @@ function matchType(_type, value) {
         return true;
     }
 
-    const transferToBoxedPrimitive = {
-        'string': 'String',
-        'boolean': 'Boolean',
-        'number': 'Number',
-        'bigint': 'BigInt',
-        'undefined': Void.name,
-    }
-
     // if _type is annotated as primitive types
     // is must be a boxed primitive
     if (isPrimitive(_type) && isPrimitive(value)) {
@@ -118,8 +121,10 @@ function matchType(_type, value) {
             return true;
         }
         
-        const strictType = value === null ? Void.name : transferToBoxedPrimitive[typeof value];
-        
+        const strictType = value === null ? 
+                            Void.name 
+                            : PRIMITIVE_CLASS_NAMES_MAP[typeof value];
+
         return strictType === _type.name;
     }
 
@@ -127,7 +132,9 @@ function matchType(_type, value) {
         
         if  (!isPrimitive(value)) {
             
-            return (value[IS_CHECKABLE]) ? value.__is(_type) : value instanceof _type;
+            return (value[IS_CHECKABLE]) ? 
+                    value.__is(_type) 
+                    : value instanceof _type;
         }
 
         return false;
@@ -146,9 +153,10 @@ function matchTypeOrFail(_type, value) {
 
 function isPrimitive(value) {
 
-    const boxedPrimitiveTypes = ['Boolean', 'String', 'Number', 'BigInt', Void.name];
-
-    return (typeof value !== 'object' && typeof value !== 'function') || value === null || value === undefined || boxedPrimitiveTypes.includes(value.name);
+    return (typeof value !== 'object' && typeof value !== 'function') || 
+            value === null || 
+            value === undefined || 
+            PRIMITIVES_CLASS_NAMES.includes(value.name);
 }
 
 
@@ -215,7 +223,12 @@ function isValuableOrFail(_unknown) {
 
 function isInstantiable(_type) {
 
-    return typeof _type === 'function' && typeof _type.prototype === 'object';
+    return typeof _type === 'function' && 
+    typeof _type.prototype === 'object' &&
+    (
+        !INSTANTIABLE_BLACK_LIST.includes(_type) ||
+        !(_type.prototype instanceof Interface)
+    );
 }
 
 function isInstantiableOrFail(_type) {
