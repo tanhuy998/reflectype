@@ -80,7 +80,10 @@ function generateAccessorSetter(_propMeta, _defaultSet) {
         
         if (!matchType(_propMeta.type, _value)) {
 
-            throw new AccesorDecoratorSetterNotMatchTypeError(_value, _propMeta);
+            throw new AccesorDecoratorSetterNotMatchTypeError({
+                value: _value, 
+                metadata: _propMeta
+            });
         }
 
         return _defaultSet.call(this, _value);
