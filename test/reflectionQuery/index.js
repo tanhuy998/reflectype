@@ -26,6 +26,7 @@ const Reflection = require('../../src/metadata/reflection.js');
 const {getDecoratedValue} = require('../../src/libs/propertyDecorator.js');
 const ReflectionPrototypeMethodParameter = require('../../src/metadata/parameter/reflectionPrototypeMethodParameter.js');
 const { type } = require('os');
+const Void = require('../../src/type/void.js');
 // const {A} = require('./compiled.js');
 
 
@@ -68,8 +69,8 @@ class D {
     }
 }
 
-obj.func();
-// objB.func();
+//obj.func();
+objB.func(2);
 
 // console.log(obj)
 

@@ -1,15 +1,13 @@
+const { reproduceReadableFunctionIndentifier } = require("../utils/stringGenerator");
 
-class ReturnValueNotMatchType extends TypeError{
+module.exports = class ReturnValueNotMatchType extends TypeError{
 
-    constructor(_type, _value) {
+    constructor({type, value, metadata}) {
 
-        const valueType = _value?.constructor?.name ?? _value; 
-        
-        const type = _type.name ?? _type;
-        //console.log(_value.constructor.name)
+        type = type.name ?? type;
+        const valueType = value?.constructor?.name ?? value; 
+        const funcIdentifier = reproduceReadableFunctionIndentifier(metadata);
 
-        super(`The return type of function not type of [${type}], [${valueType}] returned`);
+        super(`The return type of ${funcIdentifier} is not type of [${type}], [${valueType}] returned.`);
     }
 }
-
-module.exports = ReturnValueNotMatchType;

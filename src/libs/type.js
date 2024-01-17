@@ -4,7 +4,7 @@ const Any = require('../type/any.js');
 const Interface = require('../interface/interface')
 
 const OBJECT_KEY_TYPES = ['number', 'string', 'symbol'];
-const INSTANTIABLE_BLACK_LIST = [Interface, Void];
+const INSTANTIABLE_BLACK_LIST = [Interface, Void, Function];
 const PRIMITIVES_CLASS_NAMES = ['Boolean', 'String', 'Number', 'BigInt', Void.name];
 const PRIMITIVE_CLASS_NAMES_MAP = {
     'string': 'String',
@@ -47,9 +47,7 @@ function isAbstract(_class) {
 
     return isInstantiable(_class) || 
             _class instanceof Interface || 
-            // below condition is for [Function] class
-            typeof _class === 'function' &&
-            typeof _class.prototype === 'function';
+            _class === Function;
 }
 
 function isAbstractOrFail(_class) {
@@ -85,8 +83,8 @@ function isFunctionParamIdentifierOrFail(_key) {
  */
 function isParent(base, derived) {
 
-    isObjectLike(base) &&
-    isObjectLike(derived) &&
+    typeof base === 'function' &&
+    typeof derived === 'function' &&
     derived.prototype instanceof base;
 }
 

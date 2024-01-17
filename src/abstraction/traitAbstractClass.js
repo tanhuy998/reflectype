@@ -1,4 +1,3 @@
-const { isInstantiable } = require("../libs/type");
 const self = require("../utils/self")
 
 /**
@@ -7,7 +6,7 @@ const self = require("../utils/self")
  * @this {Object}
  */
 function preventNonInheritanceTakeEffect(_BaseClass) {
-    
+
     if (
         self(this) === _BaseClass || 
         !(this instanceof _BaseClass)

@@ -129,7 +129,7 @@ function function_metadata_t(_owner) {
     /**
      * @type {any}
      */
-    this.defaultValues = _owner?.value;
+    this.defaultArguments = _owner?.value;
 
     /**
      * @type {Function}

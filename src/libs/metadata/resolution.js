@@ -10,6 +10,11 @@ module.exports = {
  */
 function resolveTypeMetaResolution(_class, _typeMeta) {
 
+    if (typeof _typeMeta.loopback !== 'object') {
+
+        return;
+    } 
+
     _typeMeta.abstract ||= _class;
-    delete _typeMeta.loop;
+    delete _typeMeta.loopback;
 }

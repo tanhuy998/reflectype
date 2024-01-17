@@ -7,7 +7,6 @@ const ReturnValueNotMatchType = require('../error/returnValueNotMatchTypeError.j
 const isAbStract = require('../utils/isAbstract.js');
 const self = require('../utils/self.js');
 const { belongsToCurrentMetadataSession } = require('./metadata/metadataTrace.js');
-const { establishMetadataResolution } = require('../reflection/typeMetadataAction.js');
 const {
     DECORATED_VALUE,
     ORIGIN_VALUE,
@@ -15,6 +14,7 @@ const {
     REGEX_FUNCTION_DETECT,
     REGEX_DEFAULT_ARG
 } = require('./constant.js');
+const { resolveTypeMetaResolution } = require('./metadata/resolution.js');
 
 const FUNCTION_PARAMS = 2;
 
@@ -26,7 +26,7 @@ module.exports = {
 /**
  * 
  * @param {Function} _method 
- * @param {function_metadata_t} propMeta 
+ * @param {property_metadata_t} propMeta 
  * @returns 
  */
 function generateDecorateMethod(_method, propMeta) {
@@ -40,9 +40,9 @@ function generateDecorateMethod(_method, propMeta) {
 
         //const functionMeta = propMeta.functionMeta;
         const injectedArgs = getInjectedArguments(this, propMeta.name ?? _method.name);
-        const defaultArguments = propMeta.value;
+        const defaultArguments = propMeta.functionMeta.defaultArguments;
         const args = arguments.length !== 0 ? arguments : injectedArgs ?? (isIterable(defaultArguments) ? defaultArguments : [defaultArguments]);
-
+        
         compareArgsWithType(propMeta, args);
 
         const returnValue = _method.call(this, ...args);
@@ -124,7 +124,11 @@ function checkReturnValueWith(expectReturnType, _propMeta) {
             return returnValue;
         }
 
-        throw new ReturnValueNotMatchType(expectReturnType, returnValue, _propMeta);
+        throw new ReturnValueNotMatchType({
+            type: expectReturnType, 
+            value: returnValue, 
+            metadata: _propMeta
+        });
     }
 }
 
@@ -157,6 +161,8 @@ function decorateMethod(_method, context, propMeta) {
 
     propMeta.decoratorContext = context;
     propMeta.isInitialized = true;
+
+    context.addInitializer(overrideClassPrototype(propMeta));
 }
 
 /**
@@ -240,13 +246,13 @@ function overrideClassPrototype(propMeta) {
         /**
          *  *this method must be bound to any object
          */
-
-        if (propMeta.isInitialized === true) {
-
-            return;
-        }
-        
+        resolveTypeMetaResolution(self(this), propMeta.owner.typeMeta);
         establishClassPrototypeMethod(this, propMeta);
+
+        if (propMeta.isInitialized) {
+
+            unlinkDecoratorContext(propMeta);
+        }
     }
 }
 
@@ -263,7 +269,6 @@ function overrideClassPrototype(propMeta) {
 function establishClassPrototypeMethod(_unknown, propMeta) {
 
     const abstract = !isInstantiable(_unknown) ? self(_unknown) : _unknown;
-    establishMetadataResolution(abstract);
 
     if (propMeta.isInitialized === true) {
 
@@ -344,7 +349,6 @@ function unlinkPropMeta(_class, decoratorContext) {
     const {name} = decoratorContext;
     const isStatic = decoratorContext.static;
     const typeMeta = metaOf(_class);
-
     const typeMetaProtoProperties = isStatic ? typeMeta?.properties : typeMeta?._prototype?.properties;
 
     if (typeof typeMetaProtoProperties !== 'object') {

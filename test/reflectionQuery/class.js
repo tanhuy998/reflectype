@@ -36,7 +36,6 @@ class A {
     @returnType(Number)
     @defaultArguments(1)
     @paramsType(Number)
-
     func(a, b, c) {
 
         console.log('func', ...arguments)
@@ -56,9 +55,9 @@ class B extends A {
 
     @paramsType(String, Number)
     @returnType(String)
-    func() {
+    func(param1, param2) {
 
-        console.log('B.func()')
+        console.log('B.func()', arguments)
     }
 }
 

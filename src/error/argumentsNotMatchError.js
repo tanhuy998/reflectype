@@ -1,15 +1,13 @@
+const { reproduceReadableFunctionIndentifier } = require("../utils/stringGenerator");
 
-class ArgumentNotMatchError extends TypeError{
+module.exports = class ArgumentNotMatchError extends TypeError{
 
-    constructor(_type, _value) {
+    constructor({type, value, paramName, metadata}) {
+        
+        type = type.name ?? type;
+        const valueType = value?.constructor?.name ?? value;
+        const funcIdentifier = reproduceReadableFunctionIndentifier(metadata);
 
-        const valueType = _value?.constructor?.name ?? _value; 
-
-        const type = _type.name ?? _type;
-        //console.log(_value.constructor.name)
-
-        super(`The argument passed to function not type of [${type}], [${valueType}] given`);
+        super(`The value passed to parameter "${paramName}" of ${funcIdentifier} is not type of [${type}], [${valueType}] given.`);
     }
 }
-
-module.exports = ArgumentNotMatchError;

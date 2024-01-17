@@ -1,5 +1,14 @@
-const matchType = require('./matchType.js');
 const ArgumentsNotMatchError = require('../error/argumentsNotMatchError.js');
+const { matchType } = require('./type.js');
+
+/**
+ * @typedef {import('../reflection/metadata.js').property_metadata_t} property_metadata_t
+ * @typedef {impot('../reflection/metadata.js').function_metadata_t} function_metadata_t
+ */
+
+module.exports = {
+    compareArgsWithType
+};
 
 /**
  * 
@@ -14,7 +23,7 @@ function compareArgsWithType(_propMeta, _args) {
 
     /**@type {Array} */
     const defaultArgs = _args ?? _propMeta.value;  
-    const defaultTypes = _propMeta.defaultParamsType;
+    const defaultTypes = _propMeta.functionMeta.defaultParamsType;
 
     let error = false;
 
@@ -30,6 +39,7 @@ function compareArgsWithType(_propMeta, _args) {
     
     let currentArgValue;
     let currentExpectecType;
+    let paramIndex = 0;
 
     if (!error) {
 
@@ -51,6 +61,8 @@ function compareArgsWithType(_propMeta, _args) {
 
                 break;
             }
+
+            ++paramIndex;
         }
     }
     
@@ -62,12 +74,15 @@ function compareArgsWithType(_propMeta, _args) {
         }
         else {
             
-            throw new ArgumentsNotMatchError(currentExpectecType, currentArgValue);
+            const paramIndentifier = _propMeta.functionMeta.paramsName[paramIndex] || paramIndex;
+            throw new ArgumentsNotMatchError({
+                type: currentExpectecType, 
+                value: currentArgValue, 
+                paramName: paramIndentifier,
+                metadata: _propMeta
+            });
         }
     }
 
     return true;
 }
-
-
-module.exports = {compareArgsWithType};
