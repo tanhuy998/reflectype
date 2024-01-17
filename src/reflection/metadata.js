@@ -31,7 +31,8 @@ module.exports = {
     property_metadata_t, 
     function_metadata_t,
     owner_metadata_t,
-    prototype_metadata_t
+    prototype_metadata_t,
+    parameter_metadata_t
 };
 
 function owner_metadata_t() {
@@ -146,6 +147,11 @@ function function_metadata_t(_owner) {
     this.defaultParamsType;
 
     /**
+     * @type {Array<parameter_metadata_t>}
+     */
+    this.parameters;
+
+    /**
      * @type {boolean}
      */
     this.allowNull;
@@ -154,6 +160,19 @@ function function_metadata_t(_owner) {
      * @type {boolean}
      */
     this.isDiscovered;
+}
+
+function parameter_metadata_t(_owner) {
+
+    /**
+     * @type {string}
+     */
+    this.paramName;
+
+    /**
+     * @type {Function}
+     */
+    this.type;
 }
 
 /**

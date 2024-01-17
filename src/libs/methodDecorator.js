@@ -10,13 +10,9 @@ const { belongsToCurrentMetadataSession } = require('./metadata/metadataTrace.js
 const {
     DECORATED_VALUE,
     ORIGIN_VALUE,
-    REGEX_PARAM_SEPERATOR,
-    REGEX_FUNCTION_DETECT,
-    REGEX_DEFAULT_ARG
 } = require('./constant.js');
 const { resolveTypeMetaResolution } = require('./metadata/resolution.js');
-
-const FUNCTION_PARAMS = 2;
+const { extractFunctionInformations } = require('../utils/function.util.js');
 
 module.exports = {
     decorateMethod, 
@@ -151,7 +147,7 @@ function decorateMethod(_method, context, propMeta) {
         return;
     }
 
-    refreshMeta(propMeta);
+    //refreshMeta(propMeta);
     discoverParams(propMeta);
 
     if (!decoratorHasFootPrint(_method, context, DECORATED_VALUE)) {
@@ -183,9 +179,9 @@ function refreshMeta(propMeta) {
  */
 function discoverParams(propMeta) {
 
-    const funcMeta = propMeta.functionMeta;
+    //const funcMeta = propMeta.functionMeta;
 
-    if (funcMeta?.isDiscovered === true) {
+    if (propMeta.funcMeta?.isDiscovered === true) {
         
         return;
     }
@@ -195,35 +191,80 @@ function discoverParams(propMeta) {
         return;
     }
 
-    const match = getMetadataFootPrintByKey(propMeta, ORIGIN_VALUE)
-                    ?.toString()
-                    ?.match(REGEX_FUNCTION_DETECT);
-    
-    if (!match) {
-
-        throw new TypeError('invalid function returned by _getActualFunction');
-    }
-
-    const list = match[FUNCTION_PARAMS]
-                        ?.replace(REGEX_DEFAULT_ARG, '')
-                        //?.replace(WHITE_SPACE, '')
-                        ?.split(REGEX_PARAM_SEPERATOR);
-
-    funcMeta.paramsName = hasNoParam(list) ? [] : list;
+    const actualFunc = getMetadataFootPrintByKey(propMeta, ORIGIN_VALUE);
+    const funcMeta = propMeta.functionMeta = extractFunctionInformations(actualFunc);
     funcMeta.isDiscovered = true;
 }
 
-/**
- * 
- * @param {Array<string>} _list 
- * @returns 
- */
-function hasNoParam(_list) {
+// /**
+//  * 
+//  * @param {property_metadata_t} propMeta 
+//  * @returns 
+//  */
+// function discoverParams(propMeta) {
 
-    return _list.length === 0 ||
-            _list.length === 1 &&
-            !_list[0];
-}
+//     const funcMeta = propMeta.functionMeta;
+
+//     if (funcMeta?.isDiscovered === true) {
+        
+//         return;
+//     }
+
+//     if (!propMeta.isMethod) {
+
+//         return;
+//     }
+
+//     const functionIdentifier = getMetadataFootPrintByKey(propMeta, ORIGIN_VALUE)
+//                     ?.toString()
+//                     ?.replace(REGEX_FUNCTION_BODY_DETECT, '')
+//                     ?.match(REGEX_FUNCTION_DETECT);
+    
+//     if (!functionIdentifier) {
+
+//         throw new TypeError('invalid function returned by _getActualFunction');
+//     }
+
+//     let paramList = functionIdentifier[FUNCTION_PARAMS]
+//                         //?.replace(REGEX_DEFAULT_ARG, '')
+//                         //?.replace(WHITE_SPACE, '')
+//                         ?.split(REGEX_PARAM_SEPERATOR);
+    
+//     if (config.reflectypeOfficialDecorator) {
+//         /**
+//          * This section just invoke when decorator feature officially
+//          * turn on on Javascript because of babel tranform a lot of 
+//          * information of the original function.
+//          */
+//         paramList = paramList.map(resovleParamName);
+//     }
+//     console.log(paramList)
+//     funcMeta.paramsName = hasNoParam(paramList) ? [] : paramList;
+//     funcMeta.isDiscovered = true;
+// }
+
+// function resovleParamName(str) {
+
+//     if (typeof str !== 'string') {
+
+//         return str;
+//     }
+
+//     return str.replace(REGEX_DECORATOR_DETECT, '')
+//             .replace(REGEX_DEFAULT_ARG, '');
+// }
+
+// /**
+//  * 
+//  * @param {Array<string>} _list 
+//  * @returns 
+//  */
+// function hasNoParam(_list) {
+
+//     return _list.length === 0 ||
+//             _list.length === 1 &&
+//             !_list[0];
+// }
 
 /**
  * @description

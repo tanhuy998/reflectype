@@ -20,7 +20,7 @@ class A {
 
 
     }
-
+    
     constructor(param1 = 1, param2) {
 
 

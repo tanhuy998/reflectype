@@ -1,4 +1,4 @@
-const { reproduceReadableClassAttributeIndentifier } = require("../utils/stringGenerator.js");
+const { reproduceReadableClassAttributeIndentifier } = require("../utils/string.util.js");
 const AccessorDecoratorError = require("./accessorDecoratorError");
 
 /**

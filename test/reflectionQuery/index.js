@@ -27,6 +27,7 @@ const {getDecoratedValue} = require('../../src/libs/propertyDecorator.js');
 const ReflectionPrototypeMethodParameter = require('../../src/metadata/parameter/reflectionPrototypeMethodParameter.js');
 const { type } = require('os');
 const Void = require('../../src/type/void.js');
+const { extractFunctionInformations, extractClassConstructorInformations } = require('../../src/utils/function.util.js');
 // const {A} = require('./compiled.js');
 
 
@@ -63,27 +64,35 @@ const objC = new C();
 
 class D {
 
-    constructor() {
+    constructor(
+        a = 1,
+        b = 5
+    ) {
 
 
     }
 }
 
+function test(a = 1, b = 2) {
+
+
+}
+
+console.log(extractClassConstructorInformations(test))
+
 //obj.func();
-objB.prop = 1;
-objB.func(2);
+// objB.prop = 1;
+// objB.func(2);
 
-// console.log(obj)
+// console.log(obj)c
 
-const refl = new ReflectionPrototypeMethodParameter(objB, 'func', 0);
+// const refl = new ReflectionPrototypeMethodParameter(objB, 'func', 0);
 
 console.log((new ReflectionClass(A)).metadata);
-console.log((new ReflectionClassPrototype(B)).isValid);
+// console.log((new ReflectionClassPrototype(B)).isValid);
 
-console.log(D.toString())
+// console.log(D.toString();
 
-// refl.setValue('true');
-
-console.log(refl.type);
+// console.log(refl.type);
 
 // console.log(refl.prototype.methods[0].isPrivate);

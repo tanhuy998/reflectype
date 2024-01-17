@@ -1,4 +1,4 @@
-const { reproduceReadableFunctionIndentifier } = require("../utils/stringGenerator");
+const { reproduceReadableFunctionIndentifier } = require("../utils/string.util");
 
 module.exports = class ReturnValueNotMatchType extends TypeError{
 
