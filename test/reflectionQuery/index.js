@@ -70,6 +70,7 @@ class D {
 }
 
 //obj.func();
+objB.prop = 1;
 objB.func(2);
 
 // console.log(obj)

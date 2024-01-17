@@ -1,5 +1,5 @@
 const { preventNonInheritanceTakeEffect } = require("../../abstraction/traitAbstractClass.js");
-const AccessorDecoratorError = require("../../libs/error/accessorDecorator/accessorDecoratorError.js");
+const AccessorDecoratorError = require("../../error/accessorDecoratorError.js");
 const { getDecoratedValue } = require("../../libs/propertyDecorator.js");
 const { isObjectKey } = require("../../libs/type.js");
 const { property_metadata_t } = require("../../reflection/metadata.js");

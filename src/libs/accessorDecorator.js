@@ -5,7 +5,7 @@ const {initDecoratorFootPrint, decoratorHasFootPrint, setDecoratorFootPrint} = r
 const matchType = require('./matchType.js');
 const { DECORATED_VALUE } = require('./constant.js');
 const Void = require('../type/void');
-const AccesorDecoratorSetterNotMatchTypeError = require('./error/accessorDecorator/accessorDecoratorSetterNotMatchTypeError.js');
+const AccesorDecoratorSetterNotMatchTypeError = require('../error/accessorDecoratorSetterNotMatchTypeError.js');
 
 
 // will be obsolete
@@ -80,7 +80,7 @@ function generateAccessorSetter(_propMeta, _defaultSet) {
         
         if (!matchType(_propMeta.type, _value)) {
 
-            throw new AccesorDecoratorSetterNotMatchTypeError(this, _propMeta);
+            throw new AccesorDecoratorSetterNotMatchTypeError(_value, _propMeta);
         }
 
         return _defaultSet.call(this, _value);
