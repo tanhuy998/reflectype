@@ -62,9 +62,14 @@ function mapParamsByNames(_typeDic, propMeta) {
         const { paramsName, defaultParamsType } = propMeta.functionMeta;
         mapNames(paramsName, _typeDic, defaultParamsType);
     }
-    catch {
+    catch(e) {
 
-        throw new ReferenceError('trying to define types for undeclared parameter');
+        if (e.undeclaredName) {
+
+            throw new ReferenceError(`trying to define types for undeclared parameter ${e.undeclaredName}`);
+        }
+
+        throw e;        
     }
 }
 
@@ -107,3 +112,4 @@ function mapParamsByList(_list, propMeta) {
     propMeta.functionMeta.defaultParamsType = new Array(..._list);
 }
 
+``

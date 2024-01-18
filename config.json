@@ -1,3 +1,4 @@
 {
-    "reflectypeOfficialDecorator": false
+    "reflectypeOfficialDecorator": false,
+    "parameterDecorator": false
 }

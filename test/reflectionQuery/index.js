@@ -78,7 +78,7 @@ function test(a = 1, b = 2) {
 
 }
 
-console.log(extractClassConstructorInformations(test))
+console.log(extractClassConstructorInformations(D))
 
 //obj.func();
 // objB.prop = 1;

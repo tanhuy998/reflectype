@@ -3,6 +3,4 @@ package-lock.json
 
 src/libs/globalMetadataType.js
 
-src/utils/pseudoDecorator.js
-
 test/**/compiled.js

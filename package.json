@@ -1,6 +1,6 @@
 {
   "name": "reflectype",
-  "version": "0.0.10-beta.14",
+  "version": "0.0.10-beta.15",
   "description": "Support types for Javascript class's property using decorator feature",
   "main": "./index.js",
   "repository": "https://github.com/tanhuy998/reflectype",
@@ -21,6 +21,7 @@
     "test-interface": "npx babel ./test/interface/class.js > ./test/interface/compiled.js && node --trace-warnings ./test/interface",
     "test-metadata": "npx babel ./test/classMetadata/class.js > ./test/classMetadata/compiled.js && node --trace-warnings ./test/classMetadata",
     "test-resolution": "npx babel ./test/metadataResolution/class.js > ./test/metadataResolution/compiled.js && node --trace-warnings ./test/metadataResolution",
+    "test-parameter":  "npx babel ./test/parameter/class.js > ./test/parameter/compiled.js && node --trace-warnings ./test/parameter/compiled",
     "pseudo": "node ./test/pseudoDecorator"
   },
   "author": "tanhuy998",

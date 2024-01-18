@@ -173,6 +173,13 @@ function parameter_metadata_t(_owner) {
      * @type {Function}
      */
     this.type;
+
+    /**
+     * Indicates if the parameter is a rest param
+     * 
+     * @type {boolean}
+     */
+    this.rest;
 }
 
 /**

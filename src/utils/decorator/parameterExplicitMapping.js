@@ -21,6 +21,9 @@ function mapName_checkUndeclared(undeclared) {
     
     if (Object.keys(undeclared).length > 0) {
         
-        throw new ReferenceError('trying to mapp undeclared name');
+        throw {
+            error: new ReferenceError('trying to mapp undeclared name'),
+            undeclaredName: undeclared[0],
+        }
     }
 }
