@@ -1,7 +1,7 @@
 const { DECORATED_VALUE } = require('../libs/constant.js');
-const { retrieveDecoratorFootPrintByKey } = require('../libs/footPrint.js');
+const { retrieveDecoratorFootPrintByKey, getMetadataFootPrintByKey } = require('../libs/footPrint.js');
 const propertyDecorator = require('../libs/propertyDecorator.js');
-
+const parameterDecorator = require('../libs/parameterDecorator.js');
 
 function allowNull(_, _context) {
 
@@ -12,12 +12,19 @@ function allowNull(_, _context) {
         throw new TypeError('cannot apply @allowNull on class');
     }
 
-    const propMeta = propertyDecorator.initMetadata(_, _context);
+    const meta = kind === 'parameter' ?
+                    parameterDecorator.initMetadata(...arguments)
+                    : propertyDecorator.initMetadata(_, _context);
 
-    propMeta.allowNull = true;
-    
-    propertyDecorator.refreshPropMeta(propMeta);
-    return retrieveDecoratorFootPrintByKey(_, _context, DECORATED_VALUE);
+    meta.allowNull = true;
+
+    if (kind !== 'parameter') {
+
+        propertyDecorator.refreshPropMeta(meta);
+    }
+
+    //return retrieveDecoratorFootPrintByKey(_, _context, DECORATED_VALUE);
+    return getMetadataFootPrintByKey(DECORATED_VALUE);
 }
 
 module.exports = allowNull;

@@ -1,8 +1,8 @@
-const {METADATA, property_metadata_t } = require("../reflection/metadata");
+const {METADATA, property_metadata_t, function_metadata_t } = require("../reflection/metadata");
 const {decorateMethod, refreshMeta} = require('./methodDecorator.js');
 const {decorateAccessor} = require('./accessorDecorator.js');
-const {initDecoratorFootPrint, decoratorHasFootPrint, setDecoratorFootPrint, retrieveDecoratorFootPrintByKey, setMetadataFootPrint} = require('./footPrint.js');
-const { traceAndInitContextMetadata } = require("./metadata/metadataTrace.js");
+const {initDecoratorFootPrint, decoratorHasFootPrint, setDecoratorFootPrint, retrieveDecoratorFootPrintByKey, setMetadataFootPrint, initMetadataFootPrint, metadataHasFootPrint} = require('./footPrint.js');
+const { traceAndInitContextMetadata, retrievePropMeta } = require("./metadata/metadataTrace.js");
 const { DECORATED, FOOTPRINT, DECORATED_VALUE, ORIGIN_VALUE } = require("./constant.js");
 const { initConstructorMetadata } = require("./decoratorGeneral.js");
 const { pseudo_decorator_context_t, pseudo_parameter_decorator_context_t } = require("../utils/pseudoDecorator.js");
@@ -30,7 +30,7 @@ function getMetadataOf(_obj) {
 
     if (_obj instanceof Object) {
 
-        return _obj[METADATA];
+        return _obj[META>DATA];
     }
 }
 
@@ -51,7 +51,8 @@ function initMetadata(_, _context) {
 
     const propMeta = resolvePropMeta(_, _context);
 
-    initDecoratorFootPrint(_, _context);
+    //initDecoratorFootPrint(_, _context);
+    initMetadataFootPrint(propMeta);
     initConstructorMetadata(_, _context);
 
     if (decoratorHasFootPrint(_, _context, DECORATED)) {
@@ -68,27 +69,30 @@ function initMetadata(_, _context) {
 /**
  * 
  * @param {any} _ 
- * @param {pseudo_parameter_decorator_context_t} _context 
+ * @param {pseudo_parameter_decorator_context_t} _paramDecoratorCtx 
  * @returns {property_metadata_t}
  */
-function initPropMetaForParameterDecorator(_, _context) {
+function initPropMetaForParameterDecorator(_, _paramDecoratorCtx) {
     /**
      *  property decorator will initialize if there were no propMeta placed 
      *  in the cuurent class. Property decorator does not decorates the propMeta
      *  in this case because parameter decorators do not have enough information
      *  about the method for the property decoration.
      */
-    const pseudoPropContext = new pseudo_decorator_context_t();
-    const actualContextFunc = _context.function;
+    const pseudoMethodCtx = new pseudo_decorator_context_t();
+    const methodContextFunc = _paramDecoratorCtx.function;
+    
+    pseudoMethodCtx.addInitializer = _paramDecoratorCtx.addInitializer;
+    pseudoMethodCtx.metadata = _paramDecoratorCtx.metadata;
+    pseudoMethodCtx.kind = methodContextFunc.kind;
+    pseudoMethodCtx.static = methodContextFunc.static;
+    pseudoMethodCtx.private = methodContextFunc.private;
+    pseudoMethodCtx.name = methodContextFunc.name;
 
-    pseudoPropContext.addInitializer = _context.addInitializer;
-    pseudoPropContext.metadata = _context.metadata;
-    pseudoPropContext.kind = actualContextFunc.kind;
-    pseudoPropContext.static = actualContextFunc.static;
-    pseudoPropContext.private = actualContextFunc.private;
-    pseudoPropContext.name = actualContextFunc.name;
-
-    return resolvePropMeta(_, pseudoPropContext);
+    const propMeta = resolvePropMeta(_, pseudoMethodCtx);
+    standadizePropMeta(propMeta, pseudoMethodCtx);
+    
+    return propMeta;
 }
 
 /**
@@ -102,9 +106,14 @@ function decorate(_, context, propMeta) {
 
     const {kind} = context;
 
-    if (!decoratorHasFootPrint(_, context, ORIGIN_VALUE)) {
+    // if (!decoratorHasFootPrint(_, context, ORIGIN_VALUE)) {
         
-        setDecoratorFootPrint(_, context, ORIGIN_VALUE, _);
+    //     setDecoratorFootPrint(_, context, ORIGIN_VALUE, _);
+    // }
+
+    if (!metadataHasFootPrint(propMeta, ORIGIN_VALUE)) {
+
+        setMetadataFootPrint(propMeta, ORIGIN_VALUE, _);
     }
 
     switch(kind) {

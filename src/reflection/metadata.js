@@ -147,9 +147,11 @@ function function_metadata_t(_owner) {
     this.defaultParamsType;
 
     /**
-     * @type {Array<parameter_metadata_t>}
+     * @type {Object}
      */
-    this.parameters;
+    this.parameters = {};
+
+    this.paramList = [];
 
     /**
      * @type {boolean}
@@ -160,6 +162,11 @@ function function_metadata_t(_owner) {
      * @type {boolean}
      */
     this.isDiscovered;
+
+    /**
+     * @type {Object}
+     */
+    this.params = {};
 }
 
 function parameter_metadata_t(_owner) {
@@ -170,9 +177,19 @@ function parameter_metadata_t(_owner) {
     this.paramName;
 
     /**
+     * @type {boolean}
+     */
+    this.allowNull = false;
+
+    /**
      * @type {Function}
      */
     this.type;
+
+    /**
+     * @type {number}
+     */
+    this.index;
 
     /**
      * Indicates if the parameter is a rest param

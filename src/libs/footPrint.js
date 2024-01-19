@@ -70,9 +70,13 @@ function initMetadataFootPrint(metaObject) {
     return metaObject[FOOTPRINT] ??= {};
 }
 
-function metadataHasFootPrint(metaObj) {
+function metadataHasFootPrint(metaObj, key) {
 
-    return isObject(getMetadataFootPrintObject(metaObj));
+    const footPrintObj = getMetadataFootPrintObject(metaObj);
+
+    return !isObjectKey(key) ? 
+            isObject(footPrintObj) 
+            : isValuable(footPrintObj?.[key]);
 }
 
 function getMetadataFootPrintObject(metaObj) {

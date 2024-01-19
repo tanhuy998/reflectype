@@ -1,5 +1,5 @@
 const {metaOf, metadata_t, property_metadata_t, prototype_metadata_t, PROP_META_INITIALIZED, function_metadata_t} = require('../reflection/metadata.js');
-const {decoratorHasFootPrint, setDecoratorFootPrint, getMetadataFootPrintByKey} = require('./footPrint.js');
+const {decoratorHasFootPrint, setDecoratorFootPrint, getMetadataFootPrintByKey, metadataHasFootPrint, setMetadataFootPrint} = require('./footPrint.js');
 const matchType = require('./matchType.js');
 const {compareArgsWithType} = require('../libs/argumentType.js');
 const {isIterable, isInstantiable} = require('./type.js');
@@ -150,9 +150,14 @@ function decorateMethod(_method, context, propMeta) {
     //refreshMeta(propMeta);
     discoverParams(propMeta);
 
-    if (!decoratorHasFootPrint(_method, context, DECORATED_VALUE)) {
+    // if (!decoratorHasFootPrint(_method, context, DECORATED_VALUE)) {
 
-        setDecoratorFootPrint(_method, context, DECORATED_VALUE, generateDecorateMethod(_method, propMeta));
+    //     setDecoratorFootPrint(_method, context, DECORATED_VALUE, generateDecorateMethod(_method, propMeta));
+    // }
+
+    if (!metadataHasFootPrint(propMeta, DECORATED_VALUE)) {
+
+        setMetadataFootPrint(propMeta, DECORATED_VALUE, generateDecorateMethod(_method, propMeta));
     }
 
     propMeta.decoratorContext = context;
@@ -191,9 +196,13 @@ function discoverParams(propMeta) {
         return;
     }
 
+    const oldFuncMeta = propMeta.functionMeta;
+
     const actualFunc = getMetadataFootPrintByKey(propMeta, ORIGIN_VALUE);
-    const funcMeta = propMeta.functionMeta = extractFunctionInformations(actualFunc);
-    funcMeta.isDiscovered = true;
+    const newFuncMeta = propMeta.functionMeta = extractFunctionInformations(actualFunc);
+
+    newFuncMeta.paramList = oldFuncMeta?.paramList;
+    newFuncMeta.isDiscovered = true;
 }
 
 // /**
