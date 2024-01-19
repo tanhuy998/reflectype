@@ -6,13 +6,16 @@ const { refreshTypeMetadata } = require('../libs/metadata/metadataTrace.js');
 //const initMetadata = require('../reflection/initMetadata');
 //const initPrototypeMetadata = require('../reflection/initPrototypeMetadata');
 const { metaOf, metadata_t, TYPE_JS } = require('../reflection/metadata');
+const { markAsDecorator } = require('../utils/decorator/general.js');
 const self = require('../utils/self.js');
 
 function implement(...interfaces) {
 
     checkInput(interfaces);
 
-    return function (_class, _context) {
+    return function implementDecorator(_class, _context) {
+
+        markAsDecorator(implementDecorator);
 
         const {kind} = _context;
 

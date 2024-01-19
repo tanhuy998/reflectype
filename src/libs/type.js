@@ -1,7 +1,8 @@
 const Void = require('../type/void.js');
 const {IS_CHECKABLE} = require('../interface/constant.js');
 const Any = require('../type/any.js');
-const Interface = require('../interface/interface')
+const Interface = require('../interface/interface');
+const { IS_DECORATOR } = require('../utils/decorator/constant.js');
 
 const OBJECT_KEY_TYPES = ['number', 'string', 'symbol'];
 const INSTANTIABLE_BLACK_LIST = [Interface, Void, Function];
@@ -40,7 +41,17 @@ module.exports = {
     isFunctionParamIdentifier,
     isFunctionParamIdentifierOrFail,
     isAbstract,
-    isAbstractOrFail
+    isAbstractOrFail,
+    isDecorator
+}
+
+/**
+ * 
+ * @param {Function} func 
+ */
+function isDecorator(func) {
+
+    return typeof func === 'function' && func[IS_DECORATOR] === true;
 }
 
 function isAbstract(_class) {

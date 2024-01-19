@@ -1,5 +1,7 @@
 const allowNull = require('../../src/decorators/allowNull');
 const defineParam = require('../../src/decorators/defineParam');
+const parameters = require('../../src/decorators/parameters');
+const paramsType = require('../../src/decorators/paramsType');
 const type = require('../../src/decorators/type');
 const {initMetadata} = require('../../src/libs/propertyDecorator');
 const { metaOf } = require('../../src/reflection/metadata');
@@ -15,11 +17,13 @@ function dec(_, context) {
 
 class A {
 
-    @defineParam({index: 0, decorators: [type(Number), allowNull]})
+    //@defineParam({index: 0, decorators: [type(Number), allowNull]})
+    //@paramsType(String, Boolean, Number)
+    @parameters({param2: String})
     func(param1, param2) {
 
         
     }
 }
 
-console.log(metaOf(A)._prototype.properties.func.functionMeta.parameters.param1)
+console.log(metaOf(A)._prototype.properties.func.functionMeta)

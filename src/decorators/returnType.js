@@ -1,9 +1,12 @@
 const Void = require('../type/void.js');
+const { markAsDecorator } = require('../utils/decorator/general.js');
 const type = require('./type.js');
 
 function returnType(_type) {
 
-    return function (_method, _context) {
+    return function returnTypeDecorator(_method, _context) {
+
+        markAsDecorator(returnTypeDecorator);
 
         const {kind} = _context;
 

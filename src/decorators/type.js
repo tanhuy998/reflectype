@@ -4,6 +4,7 @@ const footprint = require('../libs/footPrint.js');
 const { TYPE, DECORATED_VALUE } = require('../libs/constant.js');
 const { pseudo_parameter_decorator_context_t } = require('../utils/pseudoDecorator.js');
 const { property_metadata_t, parameter_metadata_t } = require('../reflection/metadata.js');
+const { markAsDecorator } = require('../utils/decorator/general.js');
 
 const ACCEPT_DECORATOR_KINDS = ['accessor', 'method', 'parameter'];
 
@@ -14,6 +15,8 @@ function type(_abstract) {
     preventImmediateValue(_abstract);
 
     return function typeDecorator(prop, context) {
+
+        markAsDecorator(typeDecorator);
 
         const {kind} = context;
 

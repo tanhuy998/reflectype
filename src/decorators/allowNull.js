@@ -2,8 +2,11 @@ const { DECORATED_VALUE } = require('../libs/constant.js');
 const { retrieveDecoratorFootPrintByKey, getMetadataFootPrintByKey } = require('../libs/footPrint.js');
 const propertyDecorator = require('../libs/propertyDecorator.js');
 const parameterDecorator = require('../libs/parameterDecorator.js');
+const { markAsDecorator } = require('../utils/decorator/general.js');
 
 function allowNull(_, _context) {
+
+    markAsDecorator(allowNull);
 
     const {kind} = _context;
 

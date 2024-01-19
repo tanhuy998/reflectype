@@ -2,13 +2,16 @@ const propertyDecorator = require('../libs/propertyDecorator.js');
 const { compareArgsWithType } = require('../libs/argumentType.js');
 const { decoratorHasFootPrint, setDecoratorFootPrint, retrieveDecoratorFootPrintByKey } = require('../libs/footPrint.js');
 const { DEFAULT_ARGS, DECORATED_VALUE } = require('../libs/constant.js');
+const { markAsDecorator } = require('../utils/decorator/general.js');
 /**
  * 
  * @param  {...any} values 
  */
 function defaultArguments(...args) {
 
-    return function (_method, _context) {
+    return function defaultArgumentsDecorator(_method, _context) {
+
+        markAsDecorator(defaultArgumentsDecorator);
 
         const { kind } = _context;
 
