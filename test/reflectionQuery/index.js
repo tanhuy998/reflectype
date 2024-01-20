@@ -83,14 +83,14 @@ console.log(extractClassConstructorInformations(D))
 // obj.func();
 // obj.prop = 'asdc'
 // objB.prop = 1;
-// objB.func(2);
+objC.func(undefined);
 
 // console.log(obj)c
 
 const refl = new ReflectionPrototypeMethodParameter(objC, 'func', 'a');
 
 // console.log((new ReflectionClass(A)).metadata);
-// console.log((new ReflectionClassPrototype(B)).isValid);
+// console.log((new ReflectionClassPrototype(B)c).isValid);
 
 // console.log(D.toString();
 

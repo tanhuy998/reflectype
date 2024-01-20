@@ -68,7 +68,10 @@ class C {
 
     //@allowNull
     @returnType(Number)
-    @parameters({ b: Number, a: Function})
+    @parameters({
+        a: [Function, allowNull],
+        b: Number
+    })
     func(a, b) {
 
         console.log('C', ...arguments)

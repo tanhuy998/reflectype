@@ -1,9 +1,10 @@
 const ArgumentsNotMatchError = require('../error/argumentsNotMatchError.js');
-const { matchType } = require('./type.js');
+const { matchType, isObject, isAbstract, isValuable } = require('./type.js');
 
 /**
  * @typedef {import('../reflection/metadata.js').property_metadata_t} property_metadata_t
  * @typedef {impot('../reflection/metadata.js').function_metadata_t} function_metadata_t
+ * @typedef {impot('../reflection/metadata.js').parameter_metadata_t} parameter_metadata_t
  */
 
 module.exports = {
@@ -14,67 +15,67 @@ module.exports = {
  * 
  * @param {property_metadata_t} _propMeta 
  */
-function compareArgsWithType(_propMeta, _args) {
+function compareArgsWithType(_propMeta, _args = []) {
 
     if (!_propMeta.isMethod) {
 
         return false;
     }
 
-    /**@type {Array} */
-    const defaultArgs = _args ?? _propMeta.value;  
-    const defaultTypes = _propMeta.functionMeta.defaultParamsType;
+    const funcMeta = _propMeta.functionMeta
+    const paramsName = funcMeta.paramsName;
+    const parameters = funcMeta.parameters;
+    const defaultTypes = funcMeta.defaultParamsType;
 
-    let error = false;
-
-    if (!defaultTypes || !defaultArgs) {
+    if (paramsName?.length === 0) {
 
         return true;
     }
-
-    // if (defaultArgs.length < defaultTypes.length) {
-
-    //     error = true;
-    // }
     
     let currentArgValue;
     let currentExpectecType;
-    let paramIndex = 0;
+    let index = 0;
 
-    if (!error) {
-
-        const arg = defaultArgs[Symbol.iterator]();
-
-        for (const type of defaultTypes) {
-
-            currentExpectecType = type;
-            currentArgValue = arg.next().value;
-
-            if (currentArgValue === undefined || currentArgValue === null) {
-                
-                continue;
-            }
-
-            if (!matchType(type, currentArgValue)) {
-
-                error = true;
-
-                break;
-            }
-
-            ++paramIndex;
+    while (
+        // safe index shifting
+        index + 1 < (_args?.length + 2 || defaultTypes?.length + 2) ||
+        index + 1 < (paramsName?.length + 2)
+    ) {
+        
+        const i = index++;
+        const name = paramsName[i];
+        const paramMeta = parameters?.[name];
+        
+        if (!isObject(paramMeta)) {
+            /**
+             * there is no parameter defined here
+             */
+            continue;
         }
-    }
-    
-    if (error) {
 
-        if (!_args) {
+        const type = paramMeta.type;
 
-            throw new TypeError('default arguments not match the default parameters\'s type');
+        if (!isAbstract(type)) {c
+            /**
+             * didn't have type for current param
+             */
+            continue;
         }
-        else {
+
+        currentExpectecType = type;
+        currentArgValue = isValuable(_args[i]) ? _args[i] : paramMeta.defaultValue;
+
+        if (
+            !isValuable(currentArgValue) &&
+            paramMeta.allowNull === true
+        ) {
             
-            const paramIndentifier = _propMeta.functionMeta.paramsName[paramIndex] || paramIndex;
+            continue;
+        }
+
+        if (!matchType(type, currentArgValue)) {
+
+            const paramIndentifier = _propMeta.functionMeta.paramsName[i] || i;
             throw new ArgumentsNotMatchError({
                 type: currentExpectecType, 
                 value: currentArgValue, 
