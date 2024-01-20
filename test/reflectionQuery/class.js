@@ -13,7 +13,7 @@ const entries = new Set();
 class A {
     
     @type(Boolean)
-    static prop;
+    static accessor prop;
 
     @paramsType(Boolean)
     static #func() {
@@ -34,7 +34,7 @@ class A {
 
     @allowNull
     @returnType(Number)
-    @defaultArguments(1)
+    //@defaultArguments(1)
     @paramsType(Number)
     func(a, b, c) {
 
@@ -53,6 +53,7 @@ class B extends A {
     @type(String)
     accessor prop
 
+    @allowNull
     @paramsType(String, Number)
     @returnType(String)
     func(param1, param2) {

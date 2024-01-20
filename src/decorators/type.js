@@ -58,7 +58,7 @@ function type(_abstract) {
         meta.type = _abstract;        
 
         return kind === 'parameter' ? prop
-                : footprint.getMetadataFootPrintByKey(propMeta, DECORATED_VALUE);
+                : footprint.getMetadataFootPrintByKey(meta, DECORATED_VALUE);
     }
 }
 

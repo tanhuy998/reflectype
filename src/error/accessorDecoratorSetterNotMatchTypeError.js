@@ -15,7 +15,7 @@ module.exports = class AccesorDecoratorSetterNotMatchTypeError extends AccessorD
     constructor({value, metadata}) {
 
         const expectPropValueType = metadata.type;
-        const settedType = value.constructor?.name ?? value;
+        const settedType = value?.constructor?.name ?? value;
         const attributeName = reproduceReadableClassAttributeIndentifier(metadata);
 
         super(`could not set value of type [${settedType}] to ${attributeName} that expects type of [${expectPropValueType.name}].`);

@@ -80,9 +80,10 @@ function test(a = 1, b = 2) {
 
 console.log(extractClassConstructorInformations(D))
 
-//obj.func();
-// objB.prop = 1;
-// objB.func(2);
+obj.func();
+obj.prop = 'asdc'
+objB.prop = 1;
+objB.func(2);
 
 // console.log(obj)c
 

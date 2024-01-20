@@ -2,9 +2,8 @@ const {metaOf, metadata_t, property_metadata_t, prototype_metadata_t, PROP_META_
 const {decoratorHasFootPrint, setDecoratorFootPrint, getMetadataFootPrintByKey, metadataHasFootPrint, setMetadataFootPrint} = require('./footPrint.js');
 const matchType = require('./matchType.js');
 const {compareArgsWithType} = require('../libs/argumentType.js');
-const {isIterable, isInstantiable} = require('./type.js');
+const {isIterable, isInstantiable, isAbstract} = require('./type.js');
 const ReturnValueNotMatchType = require('../error/returnValueNotMatchTypeError.js');
-const isAbStract = require('../utils/isAbstract.js');
 const self = require('../utils/self.js');
 const { belongsToCurrentMetadataSession } = require('./metadata/metadataTrace.js');
 const {
@@ -108,7 +107,7 @@ function checkReturnValueWith(expectReturnType, _propMeta) {
 
         const valueIsNull = returnValue === undefined || returnValue === null;
         // expectReturnType must be a class, if undefined, the return type is unnecessary
-        const match = isAbStract(expectReturnType) ? matchType(expectReturnType, returnValue) : true;
+        const match = isAbstract(expectReturnType) ? matchType(expectReturnType, returnValue) : true;
         // undefined and null are treated as primitive value called Void
         if (match) {
 
@@ -150,11 +149,6 @@ function decorateMethod(_method, context, propMeta) {
     //refreshMeta(propMeta);
     discoverParams(propMeta);
 
-    // if (!decoratorHasFootPrint(_method, context, DECORATED_VALUE)) {
-
-    //     setDecoratorFootPrint(_method, context, DECORATED_VALUE, generateDecorateMethod(_method, propMeta));
-    // }
-
     if (!metadataHasFootPrint(propMeta, DECORATED_VALUE)) {
 
         setMetadataFootPrint(propMeta, DECORATED_VALUE, generateDecorateMethod(_method, propMeta));
@@ -184,8 +178,6 @@ function refreshMeta(propMeta) {
  */
 function discoverParams(propMeta) {
 
-    //const funcMeta = propMeta.functionMeta;
-
     if (propMeta.funcMeta?.isDiscovered === true) {
         
         return;
@@ -204,76 +196,6 @@ function discoverParams(propMeta) {
     newFuncMeta.paramList = oldFuncMeta?.paramList;
     newFuncMeta.isDiscovered = true;
 }
-
-// /**
-//  * 
-//  * @param {property_metadata_t} propMeta 
-//  * @returns 
-//  */
-// function discoverParams(propMeta) {
-
-//     const funcMeta = propMeta.functionMeta;
-
-//     if (funcMeta?.isDiscovered === true) {
-        
-//         return;
-//     }
-
-//     if (!propMeta.isMethod) {
-
-//         return;
-//     }
-
-//     const functionIdentifier = getMetadataFootPrintByKey(propMeta, ORIGIN_VALUE)
-//                     ?.toString()
-//                     ?.replace(REGEX_FUNCTION_BODY_DETECT, '')
-//                     ?.match(REGEX_FUNCTION_DETECT);
-    
-//     if (!functionIdentifier) {
-
-//         throw new TypeError('invalid function returned by _getActualFunction');
-//     }
-
-//     let paramList = functionIdentifier[FUNCTION_PARAMS]
-//                         //?.replace(REGEX_DEFAULT_ARG, '')
-//                         //?.replace(WHITE_SPACE, '')
-//                         ?.split(REGEX_PARAM_SEPERATOR);
-    
-//     if (config.reflectypeOfficialDecorator) {
-//         /**
-//          * This section just invoke when decorator feature officially
-//          * turn on on Javascript because of babel tranform a lot of 
-//          * information of the original function.
-//          */
-//         paramList = paramList.map(resovleParamName);
-//     }
-//     console.log(paramList)
-//     funcMeta.paramsName = hasNoParam(paramList) ? [] : paramList;
-//     funcMeta.isDiscovered = true;
-// }
-
-// function resovleParamName(str) {
-
-//     if (typeof str !== 'string') {
-
-//         return str;
-//     }
-
-//     return str.replace(REGEX_DECORATOR_DETECT, '')
-//             .replace(REGEX_DEFAULT_ARG, '');
-// }
-
-// /**
-//  * 
-//  * @param {Array<string>} _list 
-//  * @returns 
-//  */
-// function hasNoParam(_list) {
-
-//     return _list.length === 0 ||
-//             _list.length === 1 &&
-//             !_list[0];
-// }
 
 /**
  * @description

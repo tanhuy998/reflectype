@@ -1,4 +1,3 @@
-const isAbstract = require('../../utils/isAbstract.js');
 const {metaOf, property_metadata_t} = require('../../reflection/metadata.js');
 const ReflectorContext = require('../reflectorContext.js');
 const { resolveResolutionFromArbitrayMeta } = require('../../reflection/typeMetadataAction.js');

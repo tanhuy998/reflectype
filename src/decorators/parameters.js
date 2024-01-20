@@ -1,11 +1,10 @@
 const { DECORATED_VALUE } = require("../libs/constant");
 const { retrieveDecoratorFootPrintByKey } = require("../libs/footPrint");
 const { refreshMeta } = require("../libs/methodDecorator");
-const { isDecorator } = require("../libs/type");
+const { isDecorator, isAbstract } = require("../libs/type");
 const { property_metadata_t, function_metadata_t } = require("../reflection/metadata");
 const { markAsDecorator } = require("../utils/decorator/general");
 const { prepareParamsDecorator, mapParamsByNames } = require("../utils/decorator/paramsType.util");
-const isAbStract = require("../utils/isAbstract");
 const defineParam = require("./defineParam");
 const type = require("./type");
 
@@ -61,17 +60,17 @@ function enumerateDeclaredParams(list, funcMeta, _, context) {
 function resolveParamOptions(options) {
 
     return options.map(function(opt) {
-
+        
         if (isDecorator(opt)) {
-
+            
             return opt;
         }
-
-        if (isAbStract(opt)) {
-
+        
+        if (isAbstract(opt)) {
+            
             return type(opt);
         }
-
+        
         return opt;
     })
 }
