@@ -1,4 +1,4 @@
-const {property_metadata_t} = require('../../reflection/metadata.js');
+const {property_metadata_t, function_metadata_t} = require('../../reflection/metadata.js');
 const ReflectionParameterAbstract = require('../abstract/reflectionParameterAbstract.js');
 
 /**
@@ -10,13 +10,43 @@ const ReflectionParameterAbstract = require('../abstract/reflectionParameterAbst
  *  @typedef {import('../abstract/reflectionParameterAbstract.js')} ReflectionParameterAbstract
  */
 
+const LIST = Symbol('__list');
+
+module.exports = {reflectParameters};
+
 /**
- * @this AbstractReflection
+ * @this ReflectionFunction
  * 
  * @param {ReflectionParameterAbstract} _ReflectionParamClass 
  * @returns {Iterable<ReflectionParameterAbstract>}
  */
-function reflectParameters(_ReflectionParamClass) {
+function reflectParameters() {
+
+    // const propMeta = this.metadata;
+
+    // if (!(propMeta instanceof property_metadata_t)) {
+
+    //     return undefined;
+    // }
+
+    // //const declaredParamsCount = this.target.length;
+    // const declaredParamTypes = propMeta.defaultParamsType?.length ?? 0;
+    // const declaredParamValues = propMeta.value?.length ?? 0;
+
+    // // const maxCount = max(declaredParamTypes, max(declaredParamsCount, declaredParamValues));
+    // const maxCount = max(declaredParamTypes, declaredParamValues);
+
+    // let ret;
+
+    // for (let i = 0; i < maxCount; ++i) {
+
+    //     /**@type {ReflectionParameterAbstract} */
+    //     const reflection = new _ReflectionParamClass(this.target, propMeta.name, i);
+
+    //     (ret ??= []).push(reflection.isValid ? reflection : undefined);
+    // }
+
+    // return ret;
 
     const propMeta = this.metadata;
 
@@ -25,30 +55,48 @@ function reflectParameters(_ReflectionParamClass) {
         return undefined;
     }
 
-    //const declaredParamsCount = this.target.length;
-    const declaredParamTypes = propMeta.defaultParamsType?.length ?? 0;
-    const declaredParamValues = propMeta.value?.length ?? 0;
+    const funcMeta = propMeta.functionMeta;
+    const fnName = this.methodName;
+    const targetOfReflection = this.originClass || this.target;
+    const ReflectionParamClass = this._getReflectionParameterClass();
 
-    // const maxCount = max(declaredParamTypes, max(declaredParamsCount, declaredParamValues));
-    const maxCount = max(declaredParamTypes, declaredParamValues);
+    return generateResult(targetOfReflection, funcMeta, ReflectionParamClass, fnName);
+}
 
-    let ret;
+/**
+ * 
+ * @param {Function} target 
+ * @param {function_metadata_t} funcMeta 
+ * @param {typeof ReflectionParameterAbstract} RflClass 
+ * @param {string} fnName 
+ */
+function generateResult(target, funcMeta, RflClass, fnName) {
 
-    for (let i = 0; i < maxCount; ++i) {
+    const paramsName = funcMeta.paramsName;
+    const ret = []
 
-        /**@type {ReflectionParameterAbstract} */
-        const reflection = new _ReflectionParamClass(this.target, propMeta.name, i);
+    for (const name of paramsName || []) {
 
-        (ret ??= []).push(reflection.isValid ? reflection : undefined);
+        const reflection = new RflClass(target, fnName, name) ;
+        ret.push(reflection);
     }
-
+    
     return ret;
+}
+
+function* iterate() {
+
+    const iterator = this[LIST][Symbol.iterator]();
+    let iteration = iterator.next();
+
+    while (!iteration.done) {
+        
+        yield iteration.value;
+        iteration = iterator.next();
+    }
 }
 
 function max(left, right) {
 
     return left >= right ? left : right;
 }
-
-
-module.exports = {reflectParameters};

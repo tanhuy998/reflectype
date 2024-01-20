@@ -17,6 +17,7 @@ class ReflectionFunction extends AbstractReflection {
     #argsType;
     #methodName;
     //#paramsNameResolved = false;
+    #params;
 
     get isValid() {
 
@@ -36,9 +37,7 @@ class ReflectionFunction extends AbstractReflection {
     /**@type {Array<ReflectionPrototypeMethodParameter>} */
     get parameters() {
 
-        const ReflectionParameterClass = this._getReflectionParameterClass();
-
-        return reflectParameters.call(this, ReflectionParameterClass);
+        return this.#params ??= reflectParameters.call(this);
     }
 
     get methodName() {
@@ -152,8 +151,16 @@ class ReflectionFunction extends AbstractReflection {
      */
     _getReflectionParameterClass() {
 
-        return require('../parameter/reflectionFunctionParameter.js');
-    }
+        const base = require('../parameter/reflectionFunctionParameter.js');
+
+        return class extends base {
+
+            constructor(func, methodName, index) {
+
+                super(func, index);
+            }
+        }
+     }
 }
 
 module.exports = ReflectionFunction;

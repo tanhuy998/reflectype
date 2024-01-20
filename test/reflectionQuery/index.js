@@ -83,15 +83,25 @@ console.log(extractClassConstructorInformations(D))
 // obj.func();
 // obj.prop = 'asdc'
 // objB.prop = 1;
-objC.func(undefined);
+// c
 
 // console.log(obj)c
 
-const refl = new ReflectionPrototypeMethodParameter(objC, 'func', 'a');
+// const refl = new ReflectionPrototypeMethodParameter(objC, 'func', 'a');
+const refl = new ReflectionPrototypeMethod(objB, 'func');
 
 // console.log((new ReflectionClass(A)).metadata);
 // console.log((new ReflectionClassPrototype(B)c).isValid);
 
 // console.log(D.toString();
 
-console.log(refl.type);
+console.log(refl.parameters);
+console.time(1)
+for (let i = 0; i < 1000; ++i) {
+    console.time(2)
+    new ReflectionPrototypeMethod(objB, 'func').parameters;
+    new ReflectionPrototypeMethod(objB, 'func').parameters;
+    new ReflectionPrototypeMethod(objB, 'func').parameters;
+    console.timeEnd(2)
+}
+console.timeEnd(1)
