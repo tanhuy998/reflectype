@@ -80,6 +80,11 @@ class A {
     @type(Number)
     accessor id;
 }
+
+const obj = new A;
+
+obj.id = 'foo'; // error
+obj.id = 1; // valid set
 ```
 #### Type with interfaces
 
@@ -127,6 +132,10 @@ class A {
     @type(ILoggable)
     accessor logger;
 }
+
+const obj = new A();
+obj.logger = new SomeClass(); // no Error
+
 ```
 
 
@@ -237,6 +246,26 @@ class A {
     // invalid
     @parameters({param: Number})
     anotherMethod() {
+
+    }
+}
+```
+
+### We can add multiple metadata to parameter when using @parameters
+
+```js
+const {parameters, allowNull} = require('reflectype');
+
+class Component {}
+
+class A {
+
+    // valid
+    @parameters({
+        param1: [Number, allowNull],
+        param2: String
+    })
+    foo(param1, param2) {
 
     }
 }
