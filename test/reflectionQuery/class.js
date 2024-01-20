@@ -1,3 +1,4 @@
+const { Console } = require('console');
 const {paramsType, returnType, type} = require('../../src/');
 const {METADATA, TYPE_JS} = require('../../src/constants.js');
 const allowNull = require('../../src/decorators/allowNull.js');
@@ -36,11 +37,12 @@ class A {
     @returnType(Number)
     //@defaultArguments(1)
     @paramsType(Number)
-    func(a, b, c) {
+    func(a, b, ...c) {
 
         console.log('func', ...arguments)
     }
 
+    @dec
     test() {
 
         this.func(...arguments);
@@ -76,8 +78,7 @@ class C {
 function dec(_, context) {
 
     const {name, metadata} = context;
-
-    console.log(name, metadata[ORIGIN] === metadata)
+    //console.log(name, metadata[ORIGIN] === metadata)
 }
 
 //module.exports = {A}

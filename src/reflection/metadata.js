@@ -197,6 +197,16 @@ function parameter_metadata_t(_owner) {
      * @type {boolean}
      */
     this.rest;
+
+    /**
+     * @type {any}
+     */
+    this.defaultValue;
+
+    /**
+     * @type {function_metadata_t}
+     */
+    this.owner = _owner; 
 }
 
 /**

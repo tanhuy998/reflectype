@@ -12,5 +12,6 @@ module.exports = {
     REGEX_DEFAULT_ARG: REGEX_ASIGNMENT_EXPRESSION_RHS,
     REGEX_ES6_CLASS_DETECT: /^class/,
     REGEX_ES6_CONSTRUCTOR_DETECT: /constructor\s*\(((.|\n)*)\)/,
-    REGEX_ES6_CONSTRUCTOR_EXTRACT: /constructor\s*(\((.|\n)*\))(.|\n)(.|\n)*}/
+    REGEX_ES6_CONSTRUCTOR_EXTRACT: /constructor\s*(\((.|\n)*\))(.|\n)(.|\n)*}/,
+    REGEX_REST_PARAM_DETECT: /^\.\.\./,
 }

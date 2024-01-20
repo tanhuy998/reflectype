@@ -8,7 +8,8 @@ const {
     REGEX_PARAM_SEPERATOR, 
     REGEX_DECORATOR_DETECT,
     REGEX_ES6_CONSTRUCTOR_EXTRACT,
-    REGEX_WHITE_SPACE
+    REGEX_WHITE_SPACE,
+    REGEX_REST_PARAM_DETECT
 } = require("./constant");
 
 const config = require('../../config.json');
@@ -88,6 +89,7 @@ function resolveFunctionMeta(paramStr, _func) {
 
     const funcMeta = new function_metadata_t();
     funcMeta.name = _func.name;
+
     funcMeta.paramsName = resolveParamsName(paramStr);
     funcMeta.isDiscovered = true;
 
@@ -147,5 +149,8 @@ function resolveParamsOnOfficialDecoratorRelease(str) {
         return str;
     }
 
-    return str.replace(REGEX_DECORATOR_DETECT, EMPTY_STRING);
+    return str.replace(REGEX_DECORATOR_DETECT, EMPTY_STRING)
+            .replace(REGEX_REST_PARAM_DETECT, EMPTY_STRING);
+    
 }
+

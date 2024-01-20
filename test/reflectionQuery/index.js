@@ -66,7 +66,7 @@ class D {
 
     constructor(
         a = 1,
-        b = 5
+        ...b
     ) {
 
 
@@ -80,20 +80,18 @@ function test(a = 1, b = 2) {
 
 console.log(extractClassConstructorInformations(D))
 
-obj.func();
-obj.prop = 'asdc'
-objB.prop = 1;
-objB.func(2);
+// obj.func();
+// obj.prop = 'asdc'
+// objB.prop = 1;
+// objB.func(2);
 
 // console.log(obj)c
 
-// const refl = new ReflectionPrototypeMethodParameter(objB, 'func', 0);
+const refl = new ReflectionPrototypeMethodParameter(objC, 'func', 'a');
 
-console.log((new ReflectionClass(A)).metadata);
+// console.log((new ReflectionClass(A)).metadata);
 // console.log((new ReflectionClassPrototype(B)).isValid);
 
 // console.log(D.toString();
 
-// console.log(refl.type);
-
-// console.log(refl.prototype.methods[0].isPrivate);
+console.log(refl.type);
