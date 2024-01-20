@@ -28,6 +28,7 @@ const ReflectionPrototypeMethodParameter = require('../../src/metadata/parameter
 const { type } = require('os');
 const Void = require('../../src/type/void.js');
 const { extractFunctionInformations, extractClassConstructorInformations } = require('../../src/utils/function.util.js');
+const { FOOTPRINT, TYPE } = require('../../src/libs/constant.js');
 // const {A} = require('./compiled.js');
 
 
@@ -88,20 +89,32 @@ console.log(extractClassConstructorInformations(D))
 // console.log(obj)c
 
 // const refl = new ReflectionPrototypeMethodParameter(objC, 'func', 'a');
-const refl = new ReflectionPrototypeMethod(objB, 'func');
+const refl = new ReflectionClassPrototype(objB);
+
+const meta = refl.mirror()
+                .select('prop')
+                .from(ReflectionQuerySubject.PROTOTYPE)
+                .on('properties')
+                .where({
+                    [FOOTPRINT]: {
+                        isDecorated: true
+                    }
+                })
+                .retrieve();
+console.log(meta)
 
 // console.log((new ReflectionClass(A)).metadata);
 // console.log((new ReflectionClassPrototype(B)c).isValid);
 
 // console.log(D.toString();
 
-console.log(refl.parameters);
-console.time(1)
-for (let i = 0; i < 1000; ++i) {
-    console.time(2)
-    new ReflectionPrototypeMethod(objB, 'func').parameters;
-    new ReflectionPrototypeMethod(objB, 'func').parameters;
-    new ReflectionPrototypeMethod(objB, 'func').parameters;
-    console.timeEnd(2)
-}
-console.timeEnd(1)
+// console.log(refl.parameters);
+// console.time(1)
+// for (let i = 0; i < 1000; ++i) {
+//     console.time(2)
+//     new ReflectionPrototypeMethod(objB, 'func').parameters;
+//     new ReflectionPrototypeMethod(objB, 'func').parameters;
+//     new ReflectionPrototypeMethod(objB, 'func').parameters;
+//     console.timeEnd(2)
+// }
+// console.timeEnd(1)

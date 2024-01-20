@@ -115,7 +115,9 @@ module.exports = class CriteriaResovler {
      * @returns {boolean}
      */
     #_checkCriteria(criteria) {
-        
+
+        const recursion_match_criteria = this.#_checkCriteria;
+
         return function (element) {
             
             if (!isObjectLike(element)) {
@@ -124,9 +126,29 @@ module.exports = class CriteriaResovler {
             }
 
             for (const [condIndex, condVal] of Object.entries(criteria)) {
-                
+                console.log('-----------')
                 if (isIterable(element[condIndex]) || isIterable(condVal)) {
 
+                    continue;
+                }
+
+                if (isObject(condVal)) {
+                    console.log(1)
+                    if (Reflect.ownKeys(condVal).length === 0) {
+                        console.log(2)
+                        continue;
+                    }
+                    console.log(2)
+                    if (!isObject(element[condIndex])) {
+                        console.log(3)
+                        return false;
+                    }
+                    console.log(3)
+                    if (!recursion_match_criteria(condVal)(element[condIndex])) {
+                        console.log(4)
+                        return false;
+                    }          
+                    console.log(5)
                     continue;
                 }
                 
