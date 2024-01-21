@@ -5,14 +5,13 @@ const ReflectionQuerySubject = require("./reflectionQuerySubject");
 module.exports = class ReflectionQuery {
 
     #criteria;
-
     #subject;
     /**@type {string?|Symbol?} */
     #propName;
-
     #field;
-
     #options;
+
+    #reflectionQueryOptions;
 
     get field() {
 
@@ -40,9 +39,14 @@ module.exports = class ReflectionQuery {
         return this.#options;
     }
 
+    get ReflectionQueryOptions() {
+
+        return this.#reflectionQueryOptions;
+    }
+
     constructor({
         subject, propName, field, criteria, options
-    }) {
+    }, queryOptions = {}) {
 
         if (typeof criteria !== 'object' &&
         isValuable(criteria)) {
@@ -55,6 +59,7 @@ module.exports = class ReflectionQuery {
         this.#field = field;
         this.#criteria = criteria;
         this.#options = options;
+        this.#reflectionQueryOptions = queryOptions;
 
         this.#init();
     }

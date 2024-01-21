@@ -16,9 +16,12 @@ module.exports = class ReflectionQueryBuilder {
 
     #reflectionObject
 
-    constructor(_reflectionObj) {
+    #reflectionQueryOptions;
+
+    constructor(_reflectionObj, queryOptions = {}) {
 
         this.#reflectionObject = _reflectionObj;
+        this.#reflectionQueryOptions = queryOptions;
     }
 
     select(_propName) {
@@ -76,13 +79,16 @@ module.exports = class ReflectionQueryBuilder {
 
     build() {
 
-        return new ReflectionQuery({
-            subject: this.#subject,
-            propName: this.#prop,
-            field: this.#field,
-            criteria: this.#criteria,
-            options: this.#options
-        });
+        return new ReflectionQuery(
+            {
+                subject: this.#subject,
+                propName: this.#prop,
+                field: this.#field,
+                criteria: this.#criteria,
+                options: this.#options
+            }, 
+            this.#reflectionQueryOptions
+        );
     }
 
     retrieve() {

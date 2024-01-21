@@ -7,6 +7,7 @@ const Reflector = require("../reflector.js");
 const ReflectionQuery = require("../query/reflectionQuery.js");
 const CriteriaResovler = require("./criteriaResolver.js");
 const optionResolver = require("./optionResolver.js");
+const CriteriaMode = require("./criteriaMode.js");
 
 /**
  * @typedef {import('../query/reflectionQuery.js')} ReflectionQuery
@@ -51,13 +52,14 @@ module.exports = class ReflectionAspect {
     }
 
     /**
-     * 
+     * @param {Object} options 
+     * @param {boolean} options.deepCriteria
      * @returns {ReflectionQueryBuilder}
      */
-    query() {
+    query(options) {
 
         this.#isValidOrFail();
-        return new ReflectionQueryBuilder(this);
+        return new ReflectionQueryBuilder(this, options);
     }
 
     /**

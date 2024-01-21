@@ -71,8 +71,14 @@ module.exports = class Reflection {
         this.#reflectionAspect = new ReflectionAspect(this.#reflector);
     }
 
-    mirror() {
+    /**
+     * 
+     * @param {Object} options 
+     * @param {boolean} options.deepCriteria
+     * @returns 
+     */
+    mirror(options) {
 
-        return this.#reflectionAspect.query();
+        return this.#reflectionAspect.query(options);
     }
 }

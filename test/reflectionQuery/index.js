@@ -29,6 +29,7 @@ const { type } = require('os');
 const Void = require('../../src/type/void.js');
 const { extractFunctionInformations, extractClassConstructorInformations } = require('../../src/utils/function.util.js');
 const { FOOTPRINT, TYPE } = require('../../src/libs/constant.js');
+const { isTypeOf } = require('../../src/metadata/aspect/criteriaOperator.js');
 // const {A} = require('./compiled.js');
 
 
@@ -87,21 +88,25 @@ console.log(extractClassConstructorInformations(D))
 // c
 
 // console.log(obj)c
-
+//console.time(1)
 // const refl = new ReflectionPrototypeMethodParameter(objC, 'func', 'a');
 const refl = new ReflectionClassPrototype(objB);
-
-const meta = refl.mirror()
-                .select('prop')
-                .from(ReflectionQuerySubject.PROTOTYPE)
-                .on('properties')
-                .where({
-                    [FOOTPRINT]: {
-                        isDecorated: true
-                    }
-                })
-                .retrieve();
-console.log(meta)
+// console.timeEnd(1)
+// console.time(1)
+// const meta = refl.mirror({deepCriteria: true})
+//                 //.select('prop')
+//                 .from(ReflectionQuerySubject.PROTOTYPE)
+//                 .on('properties')
+//                 .where({
+//                     [FOOTPRINT]: {
+//                         //isDecorated: true
+//                         paramDecorated: true
+//                     },
+//                     type: isTypeOf(String)
+//                 })
+//                 .retrieve();
+// console.timeEnd(1)
+// console.log(meta)
 
 // console.log((new ReflectionClass(A)).metadata);
 // console.log((new ReflectionClassPrototype(B)c).isValid);

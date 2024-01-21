@@ -3,6 +3,7 @@ const {IS_CHECKABLE} = require('../interface/constant.js');
 const Any = require('../type/any.js');
 const Interface = require('../interface/interface');
 const { IS_DECORATOR } = require('../utils/decorator/constant.js');
+const { markAsCriteriaOperator } = require('../utils/criteriaOperator.util.js');
 
 const OBJECT_KEY_TYPES = ['number', 'string', 'symbol'];
 const INSTANTIABLE_BLACK_LIST = [Interface, Void, Function];
@@ -14,6 +15,17 @@ const PRIMITIVE_CLASS_NAMES_MAP = {
     'bigint': 'BigInt',
     'undefined': Void.name,
 }
+
+markAsCriteriaOperator(isAbstract);
+markAsCriteriaOperator(isPrimitive);
+markAsCriteriaOperator(isIterable);
+markAsCriteriaOperator(isObject);
+markAsCriteriaOperator(isValuable);
+markAsCriteriaOperator(isInstantiable);
+markAsCriteriaOperator(isAbstract);
+markAsCriteriaOperator(isObjectLike);
+markAsCriteriaOperator(isNonIterableObjectKey);
+markAsCriteriaOperator(isObjectKey);
 
 module.exports = {
     isParent,

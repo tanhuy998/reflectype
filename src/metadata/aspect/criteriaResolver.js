@@ -5,12 +5,16 @@
 
 const { isObject, isObjectLike, isIterable, isPrimitive } = require('../../libs/type');
 const { property_metadata_t } = require('../../reflection/metadata');
+const { isCriteriaOperator } = require('../../utils/criteriaOperator.util');
+const CriteriaMode = require('./criteriaMode');
+const { equal } = require('./criteriaOperator');
 
 
 module.exports = class CriteriaResovler {
 
     #targetData;
     #query;
+    #mode;
 
     /**
      * 
@@ -21,6 +25,12 @@ module.exports = class CriteriaResovler {
 
         this.#query = _query;
         this.#targetData = _targetData;
+        this.#init();
+    }
+
+    #init() {
+
+        this.#mode = this.#query.ReflectionQueryOptions.deepCriteria === true ?  CriteriaMode.DETAIL : CriteriaMode.SIMPLE;
     }
 
     /**
@@ -116,49 +126,64 @@ module.exports = class CriteriaResovler {
      */
     #_checkCriteria(criteria) {
 
-        const recursion_match_criteria = this.#_checkCriteria;
+        return check(criteria, this.#mode);
+    }
+}
 
-        return function (element) {
-            
-            if (!isObjectLike(element)) {
+function check(criteria, mode = CriteriaMode.DETAIL) {
 
-                return false;
+    return function (element) {
+        
+        if (!isObject(criteria)) {
+
+            return true;
+        }
+
+        if (!isObjectLike(element)) {
+
+            return false;
+        }
+
+        for (const [condName, condVal] of Object.entries(criteria)) {
+
+            if (isIterable(element[condName]) || isIterable(condVal)) {
+
+                continue;
             }
 
-            for (const [condIndex, condVal] of Object.entries(criteria)) {
-                console.log('-----------')
-                if (isIterable(element[condIndex]) || isIterable(condVal)) {
-
-                    continue;
-                }
-
-                if (isObject(condVal)) {
-                    console.log(1)
-                    if (Reflect.ownKeys(condVal).length === 0) {
-                        console.log(2)
-                        continue;
-                    }
-                    console.log(2)
-                    if (!isObject(element[condIndex])) {
-                        console.log(3)
-                        return false;
-                    }
-                    console.log(3)
-                    if (!recursion_match_criteria(condVal)(element[condIndex])) {
-                        console.log(4)
-                        return false;
-                    }          
-                    console.log(5)
-                    continue;
-                }
+            if (
+                isObject(condVal) &&
+                mode === CriteriaMode.DETAIL
+            ) {
                 
-                if (element[condIndex] !== condVal) {
+                if (Reflect.ownKeys(condVal).length === 0) {
+
+                    continue;
+                }
+
+                if (!isObject(element[condName])) {
 
                     return false;
                 }
+
+                if (!check(condVal)(element[condName])) {
+
+                    return false;
+                }
+
+                continue;
             }
-            
-            return true;
+
+            if (isCriteriaOperator(condVal)) {
+
+                return condVal(element[condName]);
+            }
+            else { 
+
+                return equal(condVal)(element[condName]);
+            }
         }
+
+        return true;
     }
 }
