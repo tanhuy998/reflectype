@@ -60,16 +60,17 @@ module.exports = class ReflectionQuery {
         this.#criteria = criteria;
         this.#options = options;
         this.#reflectionQueryOptions = queryOptions;
-
+        
         this.#init();
     }
 
     #init() {
         
-        this.#setDefaultSubjectIfUndefined();        
+        this.#setDefaultSubjectIfUndefined();
         this.#setDefaultFieldIfUndefined();
-        this.#removeCriteriaIfNoMatchCondition();
+        //this.#removeCriteriaIfNoMatchCondition();
         this.#removeOptionsIfNotMatchCondition();
+        
     }
 
     #setDefaultSubjectIfUndefined() {
@@ -97,10 +98,10 @@ module.exports = class ReflectionQuery {
     #removeCriteriaIfNoMatchCondition() {
 
         if (
-            !isObjectKey(this.#field) || 
+            //!isObjectKey(this.#field) || 
             !isObject(this.#criteria) ||
             isObject(this.#criteria) && 
-        Object.keys(this.#criteria).length === 0
+        Reflect.ownKeys(this.#criteria).length === 0
         ) {
 
             this.#criteria = undefined;

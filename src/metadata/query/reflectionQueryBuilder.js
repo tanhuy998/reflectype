@@ -1,4 +1,5 @@
 const matchType = require("../../libs/matchType");
+const { isObject, isValuable } = require("../../libs/type");
 const ReflectionQuery = require("./reflectionQuery");
 const ReflectionQuerySubject = require("./reflectionQuerySubject");
 
@@ -49,7 +50,7 @@ module.exports = class ReflectionQueryBuilder {
 
         this.#expect(criteria, isTypeOf, Object, 'Reflection query error: where() argument must be an object that represent criterias');
         this.#criteria = criteria;
-
+        
         return this;
     }
 
@@ -77,8 +78,19 @@ module.exports = class ReflectionQueryBuilder {
         return this;
     }
 
-    build() {
+    prolarize(...filter) {
 
+        this.#options ??= {};
+        this.#options.isPolarized = true;
+        this.#options.filter = filter.length > 0 ? filter : undefined;
+
+        return this;
+    }
+
+    build() {
+        
+        this.#manipulatePolarization();
+        
         return new ReflectionQuery(
             {
                 subject: this.#subject,
@@ -89,6 +101,17 @@ module.exports = class ReflectionQueryBuilder {
             }, 
             this.#reflectionQueryOptions
         );
+    }
+
+    #manipulatePolarization() {
+
+        if (
+            this.#options?.isPolarized &&
+            !isValuable(this.#options.filter)
+        ) {
+
+            this.#options.filter = isObject(this.#criteria) ? Reflect.ownKeys(this.#criteria) : undefined;
+        }
     }
 
     retrieve() {

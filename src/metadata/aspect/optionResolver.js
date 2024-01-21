@@ -21,16 +21,18 @@ module.exports = class optionResolver {
     resolve() {
 
         const options = this.#query?.options
-
-        if (!isObject(options)) {
+        
+        if (typeof options !== 'object') {
 
             return this.#meta;
         }
 
-        if (options.onlyFirst === true) {
+        if (options?.onlyFirst === true) {
 
             return this.#_resolveFirstElement();
         }
+        
+        return this.#meta;
     }
 
     #_resovleLimitElements() {

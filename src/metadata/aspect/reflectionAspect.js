@@ -1,4 +1,4 @@
-const { isObject, isObjectKey } = require("../../libs/type.js");
+const { isObject, isObjectKey, isValuable, isNonIterableObjectKey } = require("../../libs/type.js");
 const { property_metadata_t } = require("../../reflection/metadata.js");
 const ReflectionQueryBuilder = require("../query/reflectionQueryBuilder.js");
 const ReflectionQuerySubject = require("../query/reflectionQuerySubject.js");
@@ -6,7 +6,7 @@ const { ReflectionSubjectNotFoundError, ReflectionFieldNotFoundError } = require
 const Reflector = require("../reflector.js");
 const ReflectionQuery = require("../query/reflectionQuery.js");
 const CriteriaResovler = require("./criteriaResolver.js");
-const optionResolver = require("./optionResolver.js");
+const OptionResolver = require("./optionResolver.js");
 const CriteriaMode = require("./criteriaMode.js");
 
 /**
@@ -16,6 +16,8 @@ const CriteriaMode = require("./criteriaMode.js");
  * @typedef {import('../../reflection/metadata.js').prototype_metadata_t} prototype_metadata_t
  * @typedef {import('../../interface/interfacePrototype.js')} InterfacePrototype
  */
+
+
 
 /**
  * ReflectionAspect is the evaluation of ReflectionQuery. It reads reflection query's properties,
@@ -76,21 +78,87 @@ module.exports = class ReflectionAspect {
         }
 
         try {
-
+            
             this.#isValidOrFail();
             
-            return new optionResolver(_query,
-                            new CriteriaResovler(_query,
-                                this.#_resolvePropMeta(_query,
-                                this.#_resolveField(_query,
-                                this.#_resolveSubject(_query))))
-                            .resolve())
-                        .resolve();
+            const primaryMeta = this.#_resolvePrimaryPhase(_query);
+            
+            if (!isValuable(primaryMeta)) {
+
+                return undefined;
+            }
+            
+            const secondaryMeta = this.#_resolveSecondaryPhase(_query, primaryMeta);
+            
+            if (!isValuable(secondaryMeta)) {
+
+                return undefined;
+            }
+            
+            return this.#_resolveTertiaryPhase(_query, secondaryMeta);
+
+            // return new optionResolver(_query,
+            //                 new CriteriaResovler(_query,
+            //                     this.#_resolvePropMeta(_query,
+            //                     this.#_resolveField(_query,
+            //                     this.#_resolveSubject(_query))))
+            //                 .resolve())
+            //             .resolve();
         }
-        catch {
+        catch (e) {
             
             return undefined;
         }
+    }
+
+    #_resolvePrimaryPhase(_query) {
+        /**
+         * Phase 1: resolve reflection query subject, field and target propMeta
+         * of the metadata_t object
+         */
+        return this.#_resolvePropMeta(_query,
+            this.#_resolveField(_query,
+            this.#_resolveSubject(_query)));
+    }
+
+    #_resolveSecondaryPhase(_query, _primaryMeta) {
+        /**
+         * Phase 2: resolve criteria and polariztion.
+         */
+
+        const transformed = this.#_tranformMetaWhenNeccessary(_query, _primaryMeta);
+        
+        return new CriteriaResovler(_query, transformed).resolve();
+    }
+
+    #_resolveTertiaryPhase(_query, _secondaryMeta) {
+        /**
+         * Phase 3: resolve the rest options
+         */
+        return new OptionResolver(_query, _secondaryMeta).resolve();
+    }
+
+    /**
+     * 
+     * @param {ReflectionQuery} _query 
+     * @param {any} _primaryMeta 
+     */
+    #_tranformMetaWhenNeccessary(_query, _primaryMeta) {
+        
+        if (CriteriaResovler.couldTransform(_query, _primaryMeta)) {
+            
+            return Object.values(_primaryMeta);
+        }
+        
+        if (
+            CriteriaResovler.couldOperateQuery(_query) &&
+            isObject(_primaryMeta.properties)
+        ) {
+            
+            return Object.values(_primaryMeta.properties);
+        }
+        
+        return _primaryMeta;
     }
 
     /**

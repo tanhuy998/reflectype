@@ -3,7 +3,7 @@
  * @typedef {import('../../reflection/metadata').property_metadata_t} property_metadata_t
  */
 
-const { isObject, isObjectLike, isIterable, isPrimitive } = require('../../libs/type');
+const { isObject, isObjectLike, isIterable, isPrimitive, isValuable, isNonIterableObjectKey } = require('../../libs/type');
 const { property_metadata_t } = require('../../reflection/metadata');
 const { isCriteriaOperator } = require('../../utils/criteriaOperator.util');
 const CriteriaMode = require('./criteriaMode');
@@ -12,9 +12,50 @@ const { equal } = require('./criteriaOperator');
 
 module.exports = class CriteriaResovler {
 
+    /**
+     * 
+     * @param {ReflectionQuery} _query 
+     * @param {any} _meta 
+     * @returns {boolean}
+     */
+    static couldTransform(_query, _meta) {
+
+        const metaIsObject = typeof _meta === 'object';
+        
+        if (isNonIterableObjectKey(_query.propName)) {
+            
+            return false;
+        }
+        else if (
+            metaIsObject &&
+            _query.field === 'properties'
+        ) {
+            
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * 
+     * @param {ReflectionQuery} _query 
+     * @returns {boolean}
+     */
+    static couldOperateQuery(_query) {
+
+        const criteria = _query.criteria;
+        const polarizeFilter = _query.options?.filter;
+        
+        return isObject(criteria) && Reflect.ownKeys(criteria).length > 0 ||
+                Array.isArray(polarizeFilter) && polarizeFilter.length > 0;
+    }
+
     #targetData;
     #query;
     #mode;
+
+    #hasPolarizationFilter;
 
     /**
      * 
@@ -31,6 +72,9 @@ module.exports = class CriteriaResovler {
     #init() {
 
         this.#mode = this.#query.ReflectionQueryOptions.deepCriteria === true ?  CriteriaMode.DETAIL : CriteriaMode.SIMPLE;
+
+        const filter = this.#query?.options?.filter;
+        this.#hasPolarizationFilter = Array.isArray(filter) && filter.length > 0;
     }
 
     /**
@@ -40,71 +84,14 @@ module.exports = class CriteriaResovler {
      */
     resolve() {
 
-        const criteria = this.#query?.criteria
         const targetData = this.#targetData;
 
-        if (!isObject(criteria)) {
+        if (!Array.isArray(targetData)) {
             
-            return targetData;
+            return this.#_resolveElement(targetData);
         }
-
-        if (targetData instanceof property_metadata_t) {
-            
-            return this.#_checkCriteria(criteria)(targetData) ? targetData : undefined;
-        }
-
-        const queryList = this.#_convertIfIterable(targetData);
-
-        return this.#_iterateCriteria(queryList, criteria);
-    }
-
-    /**
-     * 
-     * @param {Iterable?} _any 
-     * @returns {Array}
-     */
-    #_convertIfIterable(_any) {
-
-        if (isObjectLike(_any)) {
-
-            return this.#_convertObject(_any);
-        }
-
-        if (isIterable(_any)) {
-
-            return this.#_convertArray(_any);
-        }
-    }
-
-    /**
-     * 
-     * @param {Object|Function} _obj 
-     */
-    #_convertObject(_obj) {
-
-        let ret;
-
-        for (const key in _obj) {
-
-            (ret ??= []).push(_obj[key]);
-        }
-
-        return ret;
-    }
-
-    /**
-     * 
-     * @param {*} _any 
-     * @returns 
-     */
-    #_convertArray(_any) {
-
-        if (!Array.isArray(_any)) {
-
-            return undefined;
-        }
-
-        return _any;
+        
+        return this.#_iterateCriteria(targetData);
     }
 
     /**
@@ -114,9 +101,70 @@ module.exports = class CriteriaResovler {
      * 
      * @returns {Iterable}
      */
-    #_iterateCriteria(list, criteria) {
+    #_iterateCriteria(list) {
 
-        return list?.filter(this.#_checkCriteria(criteria));
+        //return list?.filter(this.#_matchCriteria(criteria));
+
+        let ret;
+
+        for (const element of list || []) {
+
+            const res = this.#_resolveElement(element);
+
+            if (!isValuable(res)) {
+
+                continue;
+            }
+            // console.log(res)
+            (ret ||= []).push(res);
+        }
+        
+        return ret;
+    }
+
+    #_resolveElement(element) {
+
+        if (!this.#_matchCriteria(element)) {
+
+            return undefined;
+        }
+
+        return this.#_transformElement(element);
+    }
+
+    #_transformElement(element) {
+        
+        element = this.#_resolvePolarization(element);
+        
+        return element;
+    }
+
+    #_resolvePolarization(element) {
+        
+        if (!this.#hasPolarizationFilter) {
+            
+            return element;
+        }
+
+        const polarizationFilter = this.#query.options.filter;
+        const ret = {};
+
+        for (const pol_prop of polarizationFilter) {
+            
+            if (!isNonIterableObjectKey(pol_prop)) {
+
+                throw new TypeError('polarization prop must be type of either string or symbol');
+            }
+
+            if (!(pol_prop in element)) {
+
+                return undefined;
+            }
+
+            ret[pol_prop] = element[pol_prop];
+        }
+
+        return ret;
     }
 
     /**
@@ -124,9 +172,11 @@ module.exports = class CriteriaResovler {
      * @param {Object} criteria 
      * @returns {boolean}
      */
-    #_checkCriteria(criteria) {
+    #_matchCriteria(element) {
 
-        return check(criteria, this.#mode);
+        const criteria = this.#query?.criteria
+
+        return check(criteria, this.#mode)(element);
     }
 }
 
