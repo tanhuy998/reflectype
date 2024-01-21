@@ -92,21 +92,21 @@ console.log(extractClassConstructorInformations(D))
 // const refl = new ReflectionPrototypeMethodParameter(objC, 'func', 'a');
 const refl = new ReflectionClassPrototype(objB);
 // console.timeEnd(1)
-// console.time(1)
-// const meta = refl.mirror({deepCriteria: true})
-//                 //.select('prop')
-//                 .from(ReflectionQuerySubject.PROTOTYPE)
-//                 .on('properties')
-//                 .where({
-//                     [FOOTPRINT]: {
-//                         //isDecorated: true
-//                         paramDecorated: true
-//                     },
-//                     type: isTypeOf(String)
-//                 })
-//                 .retrieve();
-// console.timeEnd(1)
-// console.log(meta)
+console.time(1)
+const meta = refl.mirror({deepCriteria: true})
+                //.select('prop')
+                .from(ReflectionQuerySubject.PROTOTYPE)
+                .on('properties')
+                .where({
+                    [FOOTPRINT]: {
+                        //isDecorated: true
+                        paramDecorated: true
+                    },
+                    type: isTypeOf(String)
+                })
+                .retrieve();
+console.timeEnd(1)
+console.log(meta)
 
 // console.log((new ReflectionClass(A)).metadata);
 // console.log((new ReflectionClassPrototype(B)c).isValid);

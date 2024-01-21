@@ -4,9 +4,7 @@ const type = require('./type.js');
 
 function returnType(_type) {
 
-    return function returnTypeDecorator(_method, _context) {
-
-        markAsDecorator(returnTypeDecorator);
+    function returnTypeDecorator(_method, _context) {
 
         const {kind} = _context;
 
@@ -17,6 +15,9 @@ function returnType(_type) {
 
         return type(_type)(_method, _context);
     }
+
+    markAsDecorator(returnTypeDecorator);
+    return returnTypeDecorator;
 }
 
 module.exports = returnType;

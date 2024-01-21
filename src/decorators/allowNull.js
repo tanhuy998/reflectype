@@ -4,9 +4,11 @@ const propertyDecorator = require('../libs/propertyDecorator.js');
 const parameterDecorator = require('../libs/parameterDecorator.js');
 const { markAsDecorator } = require('../utils/decorator/general.js');
 
-function allowNull(_, _context) {
+markAsDecorator(allowNull);
 
-    markAsDecorator(allowNull);
+module.exports = allowNull;
+
+function allowNull(_, _context) {
 
     const {kind} = _context;
 
@@ -29,5 +31,3 @@ function allowNull(_, _context) {
     //return retrieveDecoratorFootPrintByKey(_, _context, DECORATED_VALUE);
     return getMetadataFootPrintByKey(DECORATED_VALUE);
 }
-
-module.exports = allowNull;

@@ -17,9 +17,7 @@ function parameters(paramsList) {
         throw new Error('paramList must be an object');
     }
 
-    return function parametersDecorator(_, context) {
-
-        markAsDecorator(parametersDecorator);
+    function parametersDecorator(_, context) {
 
         const propMeta = prepareParamsDecorator(_, context);
 
@@ -29,6 +27,9 @@ function parameters(paramsList) {
 
         return retrieveDecoratorFootPrintByKey(_, context, DECORATED_VALUE);
     }
+
+    markAsDecorator(parametersDecorator);
+    return parametersDecorator;
 }
 
 /**

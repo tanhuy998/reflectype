@@ -12,9 +12,7 @@ function paramsType(..._types) {
 
     mapList_validateInput(_types);
 
-    return function paramsTypeDecorator(_, _context) {
-
-        markAsDecorator(paramsTypeDecorator);
+    function paramsTypeDecorator(_, _context) {
 
         const propMeta = prepareParamsDecorator(_, _context);
         // mapParamsByList(_types, propMeta);
@@ -23,6 +21,9 @@ function paramsType(..._types) {
 
         return footprint.retrieveDecoratorFootPrintByKey(_, _context, DECORATED_VALUE);
     }
+
+    markAsDecorator(paramsTypeDecorator);
+    return paramsTypeDecorator;
 }
 
 function iterateTypeList(typeList, _, context) {

@@ -9,13 +9,13 @@ const { metaOf, metadata_t, TYPE_JS } = require('../reflection/metadata');
 const { markAsDecorator } = require('../utils/decorator/general.js');
 const self = require('../utils/self.js');
 
+module.exports = implement;
+
 function implement(...interfaces) {
 
     checkInput(interfaces);
 
-    return function implementDecorator(_class, _context) {
-
-        markAsDecorator(implementDecorator);
+    function implementDecorator(_class, _context) {
 
         const {kind} = _context;
 
@@ -29,6 +29,9 @@ function implement(...interfaces) {
         
         return _class;
     }
+
+    markAsDecorator(implementDecorator);
+    return implementDecorator;
 }
 
 function checkInput(inputs) {
@@ -132,5 +135,3 @@ function isInterface(_class) {
 
     return _class.prototype instanceof Interface;
 }
-
-module.exports = implement;

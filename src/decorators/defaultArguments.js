@@ -9,9 +9,7 @@ const { markAsDecorator } = require('../utils/decorator/general.js');
  */
 function defaultArguments(...args) {
 
-    return function defaultArgumentsDecorator(_method, _context) {
-
-        markAsDecorator(defaultArgumentsDecorator);
+    function defaultArgumentsDecorator(_method, _context) {
 
         const { kind } = _context;
 
@@ -38,6 +36,9 @@ function defaultArguments(...args) {
         
         return retrieveDecoratorFootPrintByKey(_method, _context, DECORATED_VALUE);
     }
+
+    markAsDecorator(defaultArgumentsDecorator);
+    return defaultArgumentsDecorator;
 }
 
 
