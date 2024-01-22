@@ -96,14 +96,6 @@ module.exports = class ReflectionAspect {
             }
             
             return this.#_resolveTertiaryPhase(_query, secondaryMeta);
-
-            // return new optionResolver(_query,
-            //                 new CriteriaResovler(_query,
-            //                     this.#_resolvePropMeta(_query,
-            //                     this.#_resolveField(_query,
-            //                     this.#_resolveSubject(_query))))
-            //                 .resolve())
-            //             .resolve();
         }
         catch (e) {
             

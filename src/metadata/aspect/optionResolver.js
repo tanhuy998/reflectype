@@ -21,11 +21,6 @@ module.exports = class optionResolver {
     resolve() {
 
         const options = this.#query?.options
-        
-        if (typeof options !== 'object') {
-
-            return this.#meta;
-        }
 
         if (options?.onlyFirst === true) {
 
