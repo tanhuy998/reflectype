@@ -99,12 +99,12 @@ function resolvePropMeta(_, decoratorContext) {
 
 function retrieveTypeMetaProperties(_, decoratorContext) {
 
-    const {metadata, static} = decoratorContext;
+    const {metadata} = decoratorContext;
     /**@type {metadata_t} */
     const refreshedTypeMeta = metadata[TYPE_JS];
 
     try {
-        return static ? refreshedTypeMeta.properties :
+        return decoratorContext.static ? refreshedTypeMeta.properties :
             refreshedTypeMeta._prototype.properties;
     }
     catch {
