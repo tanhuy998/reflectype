@@ -72,13 +72,23 @@ module.exports = class AbstractReflection extends Reflection {
 
         this.#meetPrerequisite = true;
         this.#metadata = this._resolveAspectOfReflection();
-        this.#isValid = isObject(this.#metadata);
+        this.#isValid = this._validateMetadata();
+
+        if (!this.#isValid) {
+
+            this.#metadata = undefined;
+        }
     }
 
     __dispose() {
 
         this.#metadata = undefined;
         this.reflector._dispose();
+    }
+
+    _validateMetadata() {
+
+        return isObject(this.#metadata);
     }
 
     _resolveAspectOfReflection() {
