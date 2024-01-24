@@ -1,10 +1,10 @@
-const {METADATA, property_metadata_t, function_metadata_t } = require("../reflection/metadata");
+const {METADATA, property_metadata_t } = require("../reflection/metadata");
 const {decorateMethod, refreshMeta} = require('./methodDecorator.js');
 const {decorateAccessor} = require('./accessorDecorator.js');
-const {initDecoratorFootPrint, decoratorHasFootPrint, setDecoratorFootPrint, retrieveDecoratorFootPrintByKey, setMetadataFootPrint, initMetadataFootPrint, metadataHasFootPrint} = require('./footPrint.js');
-const { traceAndInitContextMetadata, retrievePropMeta } = require("./metadata/metadataTrace.js");
+const { decoratorHasFootPrint, setDecoratorFootPrint, setMetadataFootPrint, initMetadataFootPrint, metadataHasFootPrint} = require('./footPrint.js');
+const { traceAndInitContextMetadata } = require("./metadata/metadataTrace.js");
 const { DECORATED, FOOTPRINT, DECORATED_VALUE, ORIGIN_VALUE } = require("./constant.js");
-const { initConstructorMetadata } = require("./decoratorGeneral.js");
+const { initGeneralMetadata } = require("./decoratorGeneral.js");
 const { pseudo_decorator_context_t, pseudo_parameter_decorator_context_t } = require("../utils/pseudoDecorator.js");
 
 const PSEUDO_DECORATION = '_pseudo_decoration';
@@ -30,7 +30,7 @@ function getMetadataOf(_obj) {
 
     if (_obj instanceof Object) {
 
-        return _obj[META>DATA];
+        return _obj[METADATA];
     }
 }
 
@@ -51,9 +51,8 @@ function initMetadata(_, _context) {
 
     const propMeta = resolvePropMeta(_, _context);
 
-    //initDecoratorFootPrint(_, _context);
+    initGeneralMetadata(_, _context);
     initMetadataFootPrint(propMeta);
-    initConstructorMetadata(_, _context);
 
     if (decoratorHasFootPrint(_, _context, DECORATED)) {
         
@@ -105,11 +104,6 @@ function initPropMetaForParameterDecorator(_, _paramDecoratorCtx) {
 function decorate(_, context, propMeta) {
 
     const {kind} = context;
-
-    // if (!decoratorHasFootPrint(_, context, ORIGIN_VALUE)) {
-        
-    //     setDecoratorFootPrint(_, context, ORIGIN_VALUE, _);
-    // }
 
     if (!metadataHasFootPrint(propMeta, ORIGIN_VALUE)) {
 

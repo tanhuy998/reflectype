@@ -38,6 +38,18 @@ const { property_metadata_t, metadata_t, TYPE_JS, metaOf } = require('../../refl
 const { ORIGIN } = require('./constant.js');
 const {classStack, propStack, globalStack} = require('./initialStack.js');
 
+module.exports = {
+    retrieveTypeMetadata,
+    currentPropMeta, 
+    currentClassMeta, 
+    traceAndInitContextMetadata,
+    refreshTypeMetadata,
+    retrievePropMeta,
+    retrieveTypeMetaProperties,
+    belongsToCurrentMetadataSession,
+    retrieveMetaObject
+}
+
 function currentClassMeta() {
     
     return classStack.head;
@@ -68,9 +80,7 @@ function registerPropMeta(propMeta) {
 function traceAndInitContextMetadata(_, decoratorContext) {
 
     refreshTypeMetadata(_, decoratorContext);
-    
     const propMeta = resolvePropMeta(_, decoratorContext);
-        
     refreshDecoratorMetadataSession(decoratorContext);
     
     return propMeta;
@@ -83,12 +93,9 @@ function resolvePropMeta(_, decoratorContext) {
     /**@type {metadata_t} */
     const typeMeta = metadata[TYPE_JS];
     let propMeta = properties[name];
-    //let propMeta = retrievePropMeta(_, decoratorContext);
 
     if (noPropMetaOrSubClassOverride(_, decoratorContext)) {
         
-        //propMeta = properties[name] = new property_metadata_t();
-        //propMeta = addPropertyMetadata(typeMeta, name);
         propMeta = properties[name] = new property_metadata_t(undefined, typeMeta);
         propMeta.owner = typeMeta.loopback;
         registerPropMeta(propMeta);
@@ -232,8 +239,6 @@ function registerTypeMeta(_typeMeta) {
 
     globalStack.push(_typeMeta);
     classStack.push(_typeMeta);
-
-    //_typeMeta[GLOBAL_STACK_OFFSET] = globalStack.indexOf(_typeMeta);
 }
 
 /**
@@ -268,14 +273,14 @@ function retrieveMetaObject(_, decoratorContext) {
     return retrievePropMeta(_, decoratorContext);
 }
 
-module.exports = {
-    currentPropMeta, 
-    currentClassMeta, 
-    traceAndInitContextMetadata,
-    refreshTypeMetadata,
-    retrievePropMeta,
-    retrieveTypeMetaProperties,
-    belongsToCurrentMetadataSession,
-    retrieveMetaObject
+/**
+ * 
+ * @param {any} _ 
+ * @param {Object} decoratorContext 
+ * @returns {metadata_t}
+ */
+function retrieveTypeMetadata(_, decoratorContext) {
+
+    return decoratorContext?.metadata?.[TYPE_JS];
 }
 

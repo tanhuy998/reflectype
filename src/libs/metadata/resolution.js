@@ -1,5 +1,4 @@
 const { metadata_t } = require("../../reflection/metadata");
-const { discoverClassConstructor } = require('../decoratorGeneral');
 
 module.exports = {
     resolveTypeMetaResolution,
@@ -15,9 +14,7 @@ function resolveTypeMetaResolution(_class, _typeMeta) {
 
         return;
     } 
-
+    
     _typeMeta.abstract ||= _class;
     delete _typeMeta.loopback;
-
-    discoverClassConstructor.call(_class);
 }
