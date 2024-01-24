@@ -54,7 +54,7 @@ class B extends A {
     
     @type(String)
     accessor prop
-    
+
     @allowNull
     @paramsType(String, Number)
     @returnType(String)
@@ -62,11 +62,6 @@ class B extends A {
 
         console.log('B.func()', arguments)
     }
-
-    // func() {
-
-    //     console.log('override without type');
-    // }
 }
 
 class C {

@@ -1,14 +1,7 @@
-const { Console } = require('console');
-const {paramsType, returnType, type} = require('../../src/');
-const {METADATA, TYPE_JS} = require('../../src/constants.js');
-const allowNull = require('../../src/decorators/allowNull.js');
-const defaultArguments = require('../../src/decorators/defaultArguments.js');
-const parameters = require('../../src/decorators/parameters.js');
-const { ORIGIN } = require('../../src/libs/metadata/constant.js');
-
-const stack = [];
-const entries = new Set();
-
+const {paramsType, returnType, type} = require('../../../index.js');
+const allowNull = require('../../../decorators/allowNull.js');
+const defaultArguments = require('../../../decorators/defaultArguments.js');
+const parameters = require('../../../decorators/parameters.js');
 
 
 class A {
@@ -54,19 +47,11 @@ class B extends A {
     
     @type(String)
     accessor prop
-    
-    @allowNull
-    @paramsType(String, Number)
-    @returnType(String)
-    func(param1, param2) {
 
-        console.log('B.func()', arguments)
+    func() {
+
+
     }
-
-    // func() {
-
-    //     console.log('override without type');
-    // }
 }
 
 class C {
@@ -77,7 +62,7 @@ class C {
         a: [Function, allowNull],
         b: Number
     })
-    func(a, b) {
+    func(a, b, c) {
 
         console.log('C', ...arguments)
     }
@@ -88,7 +73,5 @@ function dec(_, context) {
     const {name, metadata} = context;
     //console.log(name, metadata[ORIGIN] === metadata)
 }
-
-//module.exports = {A}
 
 module.exports = {A, B, C};

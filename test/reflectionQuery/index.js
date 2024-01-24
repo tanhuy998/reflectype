@@ -53,6 +53,11 @@ const obj = new A();
 const objB = new B()
 const objC = new C();
 
+
+const ref = new ReflectionPrototypeMethod(objB, 'func');
+console.log(ref.metadata)
+
+
 // const reflectMethod = new ReflectionPrototypeMethod(obj, 'func');
 
 // const propMeta = new Reflection(A).mirror()
@@ -62,25 +67,7 @@ const objC = new C();
 //                 })
 //                 .from(ReflectionQuerySubject.PROTOTYPE)
 //                 .on('properties')
-//                 .retrieve();
-
-class D {
-
-    constructor(
-        a = 1,
-        ...b
-    ) {
-
-
-    }
-}
-
-function test(a = 1, b = 2) {
-
-
-}
-
-console.log(extractClassConstructorInformations(D))
+//                 .retrieve()
 
 // obj.func();
 // obj.prop = 'asdc'
@@ -90,25 +77,25 @@ console.log(extractClassConstructorInformations(D))
 // console.log(obj)c
 //console.time(1)
 // const refl = new ReflectionPrototypeMethodParameter(objC, 'func', 'a');
-const refl = new ReflectionClassPrototype(objB);
+// const refl = new ReflectionClassPrototype(objB);
 
 // console.timeEnd(1)
-console.time(1)
-const meta = refl.mirror({deepCriteria: true})
-                .select('func')
-                .from(ReflectionQuerySubject.PROTOTYPE)
-                //.on('properties')
-                .where({
-                    [FOOTPRINT]: {
-                        //isDecorated: true
-                        paramDecorated: true
-                    },
-                    type: isTypeOf(String)
-                })
-                .prolarize()
-                .retrieve();
-console.timeEnd(1)
-console.log(meta)
+// console.time(1)
+// const meta = refl.mirror({deepCriteria: true})
+//                 //.select('func')
+//                 .from(ReflectionQuerySubject.PROTOTYPE)
+//                 .on('properties')
+//                 .where({
+//                     // [FOOTPRINT]: {
+//                     //     //isDecorated: true
+//                     //     paramDecorated: true
+//                     // },
+//                     type: isTypeOf(String)
+//                 })
+//                 .prolarize('type', 'name')
+//                 .retrieve();
+// console.timeEnd(1)
+// console.log(meta)
 
 // console.log((new ReflectionClass(A)).metadata);
 // console.log((new ReflectionClassPrototype(B)c).isValid);

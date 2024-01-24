@@ -1,0 +1,9 @@
+node_modules
+
+test/
+
+**/test/
+
+src/test
+
+**/*.test.js

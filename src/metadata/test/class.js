@@ -1,10 +1,9 @@
-const { Console } = require('console');
-const {paramsType, returnType, type} = require('../../src/');
-const {METADATA, TYPE_JS} = require('../../src/constants.js');
-const allowNull = require('../../src/decorators/allowNull.js');
-const defaultArguments = require('../../src/decorators/defaultArguments.js');
-const parameters = require('../../src/decorators/parameters.js');
-const { ORIGIN } = require('../../src/libs/metadata/constant.js');
+const {paramsType, returnType, type} = require('../../index.js');
+const {METADATA, TYPE_JS} = require('../../constants.js');
+const allowNull = require('../../decorators/allowNull.js');
+const defaultArguments = require('../../decorators/defaultArguments.js');
+const parameters = require('../../decorators/parameters.js');
+const { ORIGIN } = require('../../libs/metadata/constant.js');
 
 const stack = [];
 const entries = new Set();
@@ -54,7 +53,7 @@ class B extends A {
     
     @type(String)
     accessor prop
-    
+
     @allowNull
     @paramsType(String, Number)
     @returnType(String)
@@ -62,11 +61,6 @@ class B extends A {
 
         console.log('B.func()', arguments)
     }
-
-    // func() {
-
-    //     console.log('override without type');
-    // }
 }
 
 class C {
