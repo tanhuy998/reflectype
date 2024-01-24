@@ -83,10 +83,10 @@ function getOwnerClass() {
 
     const propMeta = this.metadata;
 
-    if (!(propMeta instanceof property_metadata_t)) {
+    // if (!(propMeta instanceof property_metadata_t)) {
 
-        throw new TypeError('invalid type of refleftion to resolve property\'s origin');
-    }
+    //     throw new TypeError('invalid type of refleftion to resolve property\'s origin');
+    // }
 
     return propMeta?.owner?.typeMeta?.abstract;
 }
