@@ -9,7 +9,7 @@ const AbstractReflection = require("../abstract/abstractReflection.js");
  * @typedef {import('../../../src/reflection/metadata.js').property_metadata_t} property_metadata_t
  */
 
-class ReflectionFunction extends AbstractReflection {
+module.exports = class ReflectionFunction extends AbstractReflection {
 
     #isValid = false;
     #returnType;
@@ -18,6 +18,7 @@ class ReflectionFunction extends AbstractReflection {
     #methodName;
     //#paramsNameResolved = false;
     #params;
+    #allowNull;
 
     get isValid() {
 
@@ -51,6 +52,11 @@ class ReflectionFunction extends AbstractReflection {
         return super.metadata;
     }
 
+    get allowNull() {
+
+        return this.#isValid ? this.#allowNull : undefined;
+    }
+
     constructor(_target) {
 
         super(...arguments);
@@ -76,6 +82,7 @@ class ReflectionFunction extends AbstractReflection {
         this.#defaultArgs = funcMeta.value;
         this.#returnType = funcMeta.type;
         this.#methodName = funcMeta.name;
+        this.#allowNull = funcMeta.allowNull;
     }
 
     /**
@@ -118,8 +125,6 @@ class ReflectionFunction extends AbstractReflection {
             return undefined;
         }
 
-        //const methodName = this.name;
-        //const actualMethod = this.originClass.prototype[methodName];
         const actualMethod = this.target;
 
         if (typeof actualMethod === 'function') {
@@ -162,5 +167,3 @@ class ReflectionFunction extends AbstractReflection {
         }
      }
 }
-
-module.exports = ReflectionFunction;

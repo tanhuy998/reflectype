@@ -17,22 +17,20 @@ module.exports = class ReflectionParameterAbstract extends AbstractReflection {
     #index;
     #type;
     #value;
-
     #isDeclared;
-    #isValid;
     #name
     #isVarArgs;
+    #allowNull;
 
-    // get isValid() {
+    get allowNull() {
 
-    //     return this.#isValid;
-    // }
+        return this.isValid ? this.#allowNull : undefined;
+    }
 
     get paramName() {
 
         return this.#name;
     }
-
 
     get type() {
 
@@ -70,16 +68,6 @@ module.exports = class ReflectionParameterAbstract extends AbstractReflection {
         return super.metadata;
     }
 
-    get #paramKey() {
-
-        return this.options[PARAM_KEY];
-    }
-
-    get #methodName() {
-
-        return this.options[METHOD_NAME];
-    }
-
     get isDeclared() {
 
         return this.#isDeclared;
@@ -88,12 +76,6 @@ module.exports = class ReflectionParameterAbstract extends AbstractReflection {
     get isVarArgs() {
 
         return this.#isVarArgs;
-    }
-
-    /**@type {} */
-    get owner() {
-
-        return;
     }
 
     constructor(_target, paramIndex, methodName) {
@@ -232,5 +214,6 @@ module.exports = class ReflectionParameterAbstract extends AbstractReflection {
         this.#isVarArgs = paramMeta.rest;
         this.#type = paramMeta.type;
         this.#value = paramMeta.defaultValue;
+        this.#allowNull = paramMeta.allowNull;
     }
 }
