@@ -1,4 +1,4 @@
-const { ReflectionClassPrototype, ReflectionPrototypeMethod, ReflectionPrototypeProperty, ReflectionPrototypeAttribute } = require('../index');
+const {ReflectionStaticAttribute} = require('../index.js')
 
 const ReflectionPrototypeMethodParameter = require('../../parameter/reflectionPrototypeMethodParameter');
 
@@ -7,9 +7,9 @@ const { describe, test, expect, it } = require('@jest/globals');
 
 describe("Test reflection attributes of class's prototype", () => {
 
-    const r1 = new ReflectionPrototypeAttribute(A, 'prop');
-    const r2 = new ReflectionPrototypeAttribute(B, 'prop');
-    const r3 = new ReflectionPrototypeAttribute(C, 'prop');
+    const r1 = new ReflectionStaticAttribute(A, 'prop');
+    const r2 = new ReflectionStaticAttribute(B, 'prop');
+    const r3 = new ReflectionStaticAttribute(C, 'prop');
     
     test.each([
         {reflection: r1, isValid: true, isPrivate: false, ownerClass: A},

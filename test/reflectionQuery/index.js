@@ -54,8 +54,23 @@ const objB = new B()
 const objC = new C();
 
 
-const ref = new ReflectionPrototypeMethod(objB, 'func');
-console.log(ref.metadata)
+const ref = new ReflectionClassMethodParameter(obj, '#func', 1);
+
+console.log(ref.isValid)
+// for (const p of ref.parameters || []) {
+
+//     console.log(p.isValidReflection);
+//     const meta = p.mirror().select('#func')
+//     .on('properties')
+//     .from(ReflectionQuerySubject.STATIC)
+//     .where({
+//         isMethod: true
+//     })
+//     .first()
+//     .retrieve()
+
+//     console.log(meta)
+// }
 
 
 // const reflectMethod = new ReflectionPrototypeMethod(obj, 'func');
