@@ -151,7 +151,7 @@ module.exports = class ReflectionPropertyAbstract extends AbstractReflection {
         if (targetPropMeta instanceof property_metadata_t) {
 
             this.#type = targetPropMeta.type;
-            this.#isPrivate = targetPropMeta.type || false;
+            this.#isPrivate = targetPropMeta.private || false;
 
             this.#defaultValue = targetPropMeta.value;
             this.#isStatic = targetPropMeta.static;
