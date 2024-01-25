@@ -2,7 +2,30 @@
 
 ### Runtime type checking for Javascript.
 
-### .babelrc setup
+### Prerequisites
+
+#### Babel version
+
+To achieve accurate transpilatio, this package needs the latest version of Babel dependencies after version 7.23 because since version 7.23, Babel add implementation for TC-39 proposal decorator metadata.
+
+This is configuration dependencies when developing this pacakage
+
+```
+{
+    "devDependencies": {
+        "@babel/core": "^7.23.5",
+        "@babel/node": "^7.22.19",
+        "@babel/plugin-proposal-decorators": "^7.23.5",
+        "@babel/preset-env": "^7.23.5",
+        "@babel/register": "^7.22.15",
+        "@types/node": "^20.10.4",
+        "babel-jest": "^29.7.0",
+        "jest": "^29.7.0"
+    }
+}
+```
+
+#### .babelrc setup
 
 ```json
 {
@@ -14,6 +37,7 @@
     ]
 }
 ```
+
 
 ## Usage
 
@@ -311,11 +335,4 @@ class A {
 ```
 
 ## Reflection API
-
-Beside type checking, Reflectype provide Reflection API to help users understand about their classes.
-
-## Property Reflection
-
-### Reflect on static property
-### Reflect on prototype property
 
