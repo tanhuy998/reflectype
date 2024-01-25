@@ -10,13 +10,8 @@ module.exports = class ReflectionPrototypeMethodParameter extends ReflectionMeth
         super(_target, _methodKey, _index);
     }
 
-    /**
-     * @override
-     * 
-     * @returns {property_metadata_t?}
-     */
-    _childFunctionMeta() {
-        
+    _resolveAspectOfReflection() {
+
         const methodName = super.methodName;
         
         if (!isObjectKey(methodName)) {
@@ -31,6 +26,7 @@ module.exports = class ReflectionPrototypeMethodParameter extends ReflectionMeth
                             .where({
                                 isMethod: true
                             })
+                            .first()
                             .retrieve()
                         || metaOf(super.originClass.prototype[methodName]);
     }

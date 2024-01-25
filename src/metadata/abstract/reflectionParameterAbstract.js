@@ -90,7 +90,7 @@ module.exports = class ReflectionParameterAbstract extends AbstractReflection {
                 throw new TypeError('parameter _index must be a number indicating the order of the function\'s param');
             }
         }
-
+        
         super(_target, paramIndex, methodName);
         
         preventNonInheritanceTakeEffect.call(this, ReflectionParameterAbstract);
@@ -99,10 +99,11 @@ module.exports = class ReflectionParameterAbstract extends AbstractReflection {
         this.#init();
     }
 
-    
-    _meetPrerequisite() {
+    _validateMetadata() {
 
-        return this.isValidReflection;
+        //console.log(this.options, this.metadata)
+
+        return super._validateMetadata();
     }
 
     /**
@@ -122,14 +123,70 @@ module.exports = class ReflectionParameterAbstract extends AbstractReflection {
 
     }
 
-    _resolveAspectOfReflection() {
+    // _resolveAspectOfReflection() {
+        
+    //     if (!super.isValidReflection) {
+
+    //         return undefined;
+    //     }
+        
+    //     const propMeta = this._resovleFunctionMetadata();
+
+    //     if (
+    //         propMeta?.isMethod !== true &&
+    //         !(propMeta instanceof property_metadata_t)
+    //     ) {
+
+    //         return undefined;
+    //     }
+
+    //     /**
+    //      * There are two strategies, either input is number indicate the index of the parameter
+    //      * or the method's declared parameter's name.
+    //      */
+    //     const index_or_name = this.options[PARAM_KEY];
+    //     const funcMeta = propMeta.functionMeta;
+        
+    //     // if (
+    //     //     typeof index_or_name === 'number' &&
+    //     //     // safe index shifting
+    //     //     index_or_name + 1 <= funcMeta.paramsName?.length + 2
+    //     // ) {
+
+    //     //     //this.#isDeclared = true;
+    //     //     const paramName = funcMeta[index_or_name];
+
+    //     //     return funcMeta.parameters?.[paramName];
+    //     // }
+
+    //     // const params = funcMeta.parameters;
+
+    //     // if (
+    //     //     typeof index_or_name === 'string'
+    //     // ) {
+
+    //     //     //this.#isDeclared = true;
+    //     //     return funcMeta.parameters?.[index_or_name];
+    //     // }
+
+    //     const paramName = (
+    //         typeof index_or_name === 'number' &&
+    //         // safe index shifting
+    //         index_or_name + 1 <= funcMeta.paramsName?.length + 2
+    //     ) ?  funcMeta.paramsName[index_or_name] 
+    //     : typeof index_or_name === 'string' ? index_or_name : undefined;
+    
+    //     return funcMeta.parameters?.[paramName];
+    // }
+
+    _transformMetadata() {
 
         if (!super.isValidReflection) {
 
             return undefined;
         }
-
-        const propMeta = this._resovleFunctionMetadata();
+        
+        const propMeta = this.metadata;
 
         if (
             propMeta?.isMethod !== true &&

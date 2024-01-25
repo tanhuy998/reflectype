@@ -63,15 +63,23 @@ module.exports = class AbstractReflection extends Reflection {
 
             return;
         }
-
+        
         if (!this._meetPrerequisite()) {
-
+            
             this.#meetPrerequisite = false;
             return;
         }
-
+        
         this.#meetPrerequisite = true;
         this.#metadata = this._resolveAspectOfReflection();
+        
+        if (!isObject(this.#metadata)) {
+
+            this.#isValid = false;
+            return;
+        }
+ 
+        this.#metadata = this._transformMetadata();
         this.#isValid = this._validateMetadata();
 
         if (!this.#isValid) {
@@ -86,6 +94,11 @@ module.exports = class AbstractReflection extends Reflection {
         this.reflector._dispose();
     }
 
+    _transformMetadata() {
+
+        return this.#metadata
+    }
+
     _validateMetadata() {
 
         return isObject(this.#metadata);
@@ -98,6 +111,6 @@ module.exports = class AbstractReflection extends Reflection {
 
     _meetPrerequisite() {
 
-
+        return this.isValidReflection === true;
     } 
 }
