@@ -40,6 +40,10 @@ function owner_metadata_t() {
      * @type {metadata_t}
      */
     this.typeMeta = undefined;
+    /**
+     * @type {Object}
+     */
+    this.decoratorContext;
 }
 
 /**

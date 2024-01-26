@@ -31,7 +31,8 @@ function manipulateMetadataResolution(_, decoratorContext) {
 
         const _class = isInstantiable(this) ? this : self(this);
         
-        resolveTypeMetaResolution(_class, typeMeta)
+        assignAbstractToTypeMeta(_class, typeMeta);
+        resolveTypeMetaResolution(_class);
     });
 }
 
@@ -68,4 +69,22 @@ function discoverClassConstructor() {
     typeMeta._constructor = config.reflectypeOfficialDecorator === true ? 
                             extractClassConstructorInformations(abstract)
                             : extractFunctionInformations(abstract);
+}
+
+/**
+ * This function is used by decorator for the addInitializer()
+ * when the decorator know and understand it's class and typeMeta placemnet.
+ * 
+ * @param {Function} _class
+ * @param {metadata_t} _typeMeta 
+ */
+function assignAbstractToTypeMeta(_class, _typeMeta) {
+
+    if (typeof _typeMeta.loopback !== 'object') {
+
+        return;
+    } 
+    
+    _typeMeta.abstract = _class;
+    delete _typeMeta.loopback;
 }

@@ -10,7 +10,7 @@ const {
     DECORATED_VALUE,
     ORIGIN_VALUE,
 } = require('./constant.js');
-const { resolveTypeMetaResolution } = require('./metadata/resolution.js');
+//const { resolveTypeMetaResolution } = require('./metadata/resolution.js');
 const { extractFunctionInformations } = require('../utils/function.util.js');
 
 module.exports = {
@@ -218,7 +218,7 @@ function overrideClassPrototype(propMeta) {
         /**
          *  *this method must be bound to any object
          */
-        resolveTypeMetaResolution(self(this), propMeta.owner.typeMeta);
+        //resolveTypeMetaResolution(self(this), propMeta.owner.typeMeta);
         establishClassPrototypeMethod(this, propMeta);
 
         if (propMeta.isInitialized) {

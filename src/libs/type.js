@@ -54,7 +54,29 @@ module.exports = {
     isFunctionParamIdentifierOrFail,
     isAbstract,
     isAbstractOrFail,
-    isDecorator
+    isDecorator,
+    isFirstClass,
+    isFirstClassOrFalse,
+}
+
+function isFirstClass(_unknown) {
+
+    if (!isAbstract(_unknown)) {
+
+        throw new TypeError('Not a class.');
+    }
+
+    return _unknown.__proto__ === Function.__proto__;
+}
+
+function isFirstClassOrFalse(_unknown) {
+
+    if (!isFirstClass(_unknown)) {
+
+        throw new Error();
+    }
+
+    return true;
 }
 
 /**

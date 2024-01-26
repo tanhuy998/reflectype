@@ -34,7 +34,7 @@
  */
 
 
-const { property_metadata_t, metadata_t, TYPE_JS, metaOf } = require('../../reflection/metadata.js');
+const { property_metadata_t, metadata_t, TYPE_JS, metaOf, wrapperOf } = require('../../reflection/metadata.js');
 const { ORIGIN } = require('./constant.js');
 const {classStack, propStack, globalStack} = require('./initialStack.js');
 
@@ -47,7 +47,9 @@ module.exports = {
     retrievePropMeta,
     retrieveTypeMetaProperties,
     belongsToCurrentMetadataSession,
-    retrieveMetaObject
+    retrieveMetaObject,
+    refreshTypeMetaObjectForDecoratorMetadata,
+    refreshClassTypeMetadata
 }
 
 function currentClassMeta() {
@@ -219,7 +221,9 @@ function refreshTypeMetadata(_, decoratorContext) {
         return oldTypeMeta;
     }
 
-    const newTypeMeta = metadata[TYPE_JS] = new metadata_t(undefined, oldTypeMeta);
+    //const newTypeMeta = metadata[TYPE_JS] = new metadata_t(undefined, oldTypeMeta);
+    const newTypeMeta = refreshTypeMetaObjectForDecoratorMetadata(metadata, oldTypeMeta);
+    newTypeMeta.loopback.decoratorContext = decoratorContext;
 
     if (kind === 'class') {
 
@@ -229,6 +233,26 @@ function refreshTypeMetadata(_, decoratorContext) {
     newTypeMeta._prototype.owner = newTypeMeta.loopback;
     registerTypeMeta(newTypeMeta);
     return newTypeMeta;
+}
+
+function refreshClassTypeMetadata(_class) {
+
+    const wrapper = wrapperOf(_class);
+    refreshTypeMetaObjectForDecoratorMetadata(wrapper);
+}
+
+/**
+ * 
+ * @param {Object} decoratorMetadata 
+ */
+function refreshTypeMetaObjectForDecoratorMetadata(decoratorMetadata, oldTypeMeta) {
+
+    if (typeof decoratorMetadata !== 'object') {
+
+        throw new TypeError('decoratorMetadata must be an object');
+    }
+
+    return decoratorMetadata[TYPE_JS] = new metadata_t(undefined, oldTypeMeta);
 }
 
 /**
