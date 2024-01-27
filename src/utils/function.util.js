@@ -21,7 +21,15 @@ const EMPTY_STRING = '';
 
 module.exports = {
     extractFunctionInformations,
-    extractClassConstructorInformations
+    extractClassConstructorInformations,
+    extractClassConstructorInfoBaseOnConfig,
+}
+
+function extractClassConstructorInfoBaseOnConfig(_class) {
+
+    return config.reflectypeOfficialDecorator === true ? 
+            extractClassConstructorInformations(_class)
+            : extractFunctionInformations(_class);
 }
 
 /**

@@ -4,9 +4,9 @@
 //     ]
 // })
 
-const {A, B, C} = require('./compiled.js');
+const {A, B, C, D, E, F, G, H} = require('./compiled.js');
 const {METADATA} = require('../../src/constants.js');
-const { TYPE_JS, property_metadata_t } = require('../../src/reflection/metadata.js');
+const { TYPE_JS, property_metadata_t, metaOf } = require('../../src/reflection/metadata.js');
 
 const Reflector = require('../../src/metadata/reflector.js');
 const ReflectionAspect = require('../../src/metadata/aspect/reflectionAspect.js');
@@ -49,14 +49,24 @@ const { isTypeOf } = require('../../src/metadata/aspect/criteriaOperator.js');
 
 // console.log(obj)
 
-const obj = new A();
-const objB = new B()
-const objC = new C();
+// const obj = new A();
+// const objB = new B()
+// const objC = new C();
+const objD = new D();
 
 
-const ref = new ReflectionClassMethodParameter(obj, '#func', 1);
+//console.log(meta)
 
-console.log(ref.isValid)
+new ReflectionClassPrototype(B);
+
+//const ref = new ReflectionClassMethodParameter(obj, '#func', 1);
+//const ref = new ReflectionPrototypeMethod(C, 'func');
+//const ref = new ReflectionPrototypeMethod(E, 'func')
+const ref = new ReflectionClass(E);
+
+//objD.func()
+//console.log(metaOf(E))
+console.log(ref.metadata);
 // for (const p of ref.parameters || []) {
 
 //     console.log(p.isValidReflection);

@@ -13,6 +13,9 @@
     "type-metadata",
     "interface"
   ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "test": "npx babel ./test/testSuite/classes.js > ./test/testSuite/compiled.js && node --trace-warnings ./test/testSuite",
     "test-reflect-query": "npx babel ./test/reflectionQuery/class.js > ./test/reflectionQuery/compiled.js && node --trace-warnings ./test/reflectionQuery",

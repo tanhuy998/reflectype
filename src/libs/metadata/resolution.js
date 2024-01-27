@@ -1,8 +1,8 @@
 const { METADATA } = require("../../constants");
 const { metadata_t, metaOf, prototype_metadata_t, property_metadata_t, wrapperOf } = require("../../reflection/metadata");
+const { extractClassConstructorInfoBaseOnConfig } = require("../../utils/function.util");
 const { DECORATED_VALUE } = require("../constant");
 const { getMetadataFootPrintByKey } = require("../footPrint");
-const { isFirstClass } = require("../type");
 const { refreshTypeMetaObjectForDecoratorMetadata } = require("./metadataTrace");
 
 const RESOLVED_CLASSES = new Set();
@@ -12,80 +12,128 @@ module.exports = {
     recursiveResolveResolution,
 };
 
+/**
+ *  Metadata resolution
+ *  There are two situation that metadata resolution must be evaluated:
+ *  - When an instance of a class is instantiated.
+ *  - When a reflection read metadata of a class.
+ *  Metadata resolution is evaluated on a class when the first of the above actions occurs.
+ * 
+ *  when classes inherit another, they would acquire it's base class type meta.
+ *  There are no problems when a decorated class inherits another decorated class
+ *  because decorators "know" (not yet) which class (decorator metadata context) that
+ *  they're placed.
+ *  Problems just comes when undecorated class inherit decorated class.
+ *  When we reflect on an undecorated class that inherits decorated class, it's override
+ *  properties on base's class decorated properties would be invalid convention.  
+ *
+ *  Two common types of the problem are:
+ *  U <- D <- U   or   D <- U <- D
+ *  
+ *  => ...U <- ...D <- ...U   or  ...D <- ...U <- ...D 
+ */
+
+/**
+ * 
+ * @param {Function} _class 
+ * @returns 
+ */
 function recursiveResolveResolution(_class) {
 
-    if (isFirstClass(_class)) {
+    if (RESOLVED_CLASSES.has(_class)) {
 
         return;
     }
 
-    console.log('-----------------------------')
     const stack = [];
-    //_class = _class.__proto__;
-    let limit = undefined;
+    const limits = [-1]; // -1 is the anchor
 
-    const limits = [];
-
-    while (
-        _class !== Function.__proto__ &&
-        !RESOLVED_CLASSES.has(_class)
-    ) {
-        
-        stack.push(_class);
-        _class = _class.__proto__;
+    while (_class !== Function.__proto__) {
 
         const HEAD = stack.length - 1;
 
         if (
-            limit !== HEAD &&
-            _class !== Function.__proto__ &&
-            wrapperOf(stack[HEAD]) !== wrapperOf(_class)
+            !(METADATA in _class) || 
+            RESOLVED_CLASSES.has(_class)
         ) {
-            //console.log(HEAD, stack[HEAD]?.name)
-            limit = HEAD;
-            limits.push(limit);
+
+            break;
         }
-    }
-    console.log([], limits)
 
-    limit = limits.pop();
+        if (
+            HEAD >= 0 &&
+            wrapperOf(_class) !== wrapperOf(stack[HEAD])
+        ) {
+            
+            limits.push(HEAD);
+        }
 
-    while (limit) {
+        stack.push(_class);
+        _class = _class.__proto__;
+    }   
+    console.log(_class?.name, limits);
+    while (
+        limits.length > 0
+    ) {
 
-        manipulateMetaDependentClasses(stack, limit)
+        const limit = limits.pop();
 
-        limit = limits.pop();
+        manipulateMetaDependentClasses(stack, limit);
     }
 }
 
 function manipulateMetaDependentClasses(stack = [], limit) {
 
-    const HEAD = stack.length - 1;
-    let CUR = HEAD;
-    console.log([2])
+    if (stack.length <= 0) {
+
+        return;
+    }
+
+    const initialStackLength = stack.length;
+    
     while (
-        CUR >= 0 &&
-        CUR > limit &&
-        stack.length > 0
+        stack.length > 0 &&
+        (limit === -1 || stack.length -1 !==  limit)
     ) { 
-        const currentClass = stack[CUR];
-        const currentClassMetaWrapper = wrapperOf(currentClass);
         
-        /**
-         * The class at HEAD of the stack at the moment that this function is called 
-         * is determined as the origin metadata declaration until limit.
-         */
-        if (CUR !== HEAD) {
+        const currentClass = stack.pop();
+        const oldClassWrapper = wrapperOf(currentClass);
+
+        if (stack.length + 1 < initialStackLength) {
             
-            const wrapper = currentClass[METADATA] = Object.setPrototypeOf({}, currentClassMetaWrapper);
-            refreshTypeMetaObjectForDecoratorMetadata(wrapper);
+            const wrapper = currentClass[METADATA] = Object.setPrototypeOf({}, oldClassWrapper);
+            const newTypeMeta = refreshTypeMetaObjectForDecoratorMetadata(wrapper);
+            
+            newTypeMeta.abstract = currentClass;
+            newTypeMeta._constructor = extractClassConstructorInfoBaseOnConfig(currentClass);
+            console.log([currentClass?.name], newTypeMeta)
         }
 
+        const typeMeta = metaOf(currentClass);
+
+        assignAbstractToTypeMeta(currentClass, typeMeta);
         unlinkIndependentPropeMeta(currentClass);
-        
-        --CUR;
-        stack.pop();
+
+        RESOLVED_CLASSES.add(currentClass);
     }
+}
+
+/**
+ * This function is used by decorator for the addInitializer()
+ * when the decorator know and understand it's class and typeMeta placemnet.
+ * 
+ * @param {Function} _class
+ * @param {metadata_t} _typeMeta 
+ */
+function assignAbstractToTypeMeta(_class, _typeMeta) {
+
+    if (typeof _typeMeta.loopback !== 'object') {
+
+        return;
+    } 
+    
+    _typeMeta.abstract = _class;
+    delete _typeMeta.loopback;
 }
 
 /**
@@ -97,17 +145,6 @@ function manipulateMetaDependentClasses(stack = [], limit) {
  */
 function resolveTypeMetaResolution(_class) {
 
-    // if (typeof _typeMeta.loopback !== 'object') {
-
-    //     return;
-    // } 
-    
-    // _typeMeta.abstract = _class;
-    // delete _typeMeta.loopback;
-
-    // scanAndResolveStaticProperties(_class);
-    // scanAndResolvePrototypeProperties(_class);
-
     recursiveResolveResolution(_class);
 }
 
@@ -115,8 +152,6 @@ function unlinkIndependentPropeMeta(_class) {
 
     scanAndResolveStaticProperties(_class);
     scanAndResolvePrototypeProperties(_class);
-
-    RESOLVED_CLASSES.add(_class);
 }
 
 function scanAndResolveStaticProperties(_class) {

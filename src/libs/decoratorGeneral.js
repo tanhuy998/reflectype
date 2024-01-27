@@ -2,9 +2,11 @@ const { metaOf, function_metadata_t, metadata_t } = require("../reflection/metad
 const self = require("../utils/self");
 const config = require('../../config.json');
 const { isInstantiable } = require("./type");
-const { extractClassConstructorInformations, extractFunctionInformations } = require("../utils/function.util");
+const { extractClassConstructorInformations, extractFunctionInformations, extractClassConstructorInfoBaseOnConfig } = require("../utils/function.util");
 const { resolveTypeMetaResolution } = require("./metadata/resolution");
 const { retrieveTypeMetadata } = require("./metadata/metadataTrace");
+
+const INITIALIZED_META_WRAPPER = new Set();
 
 module.exports = {
     initConstructorMetadata,
@@ -14,8 +16,17 @@ module.exports = {
 
 function initGeneralMetadata(_, decoratorContext) {
 
+    const {metadata} = decoratorContext;
+
+    if (INITIALIZED_META_WRAPPER.has(metadata)) {
+
+        return;
+    }
+
     initConstructorMetadata(...arguments);
     manipulateMetadataResolution(...arguments);
+
+    INITIALIZED_META_WRAPPER.add(metadata);
 }
 
 function manipulateMetadataResolution(_, decoratorContext) {
@@ -31,7 +42,7 @@ function manipulateMetadataResolution(_, decoratorContext) {
 
         const _class = isInstantiable(this) ? this : self(this);
         
-        assignAbstractToTypeMeta(_class, typeMeta);
+        //assignAbstractToTypeMeta(_class, typeMeta);
         resolveTypeMetaResolution(_class);
     });
 }
@@ -66,25 +77,5 @@ function discoverClassConstructor() {
         return;
     }
 
-    typeMeta._constructor = config.reflectypeOfficialDecorator === true ? 
-                            extractClassConstructorInformations(abstract)
-                            : extractFunctionInformations(abstract);
-}
-
-/**
- * This function is used by decorator for the addInitializer()
- * when the decorator know and understand it's class and typeMeta placemnet.
- * 
- * @param {Function} _class
- * @param {metadata_t} _typeMeta 
- */
-function assignAbstractToTypeMeta(_class, _typeMeta) {
-
-    if (typeof _typeMeta.loopback !== 'object') {
-
-        return;
-    } 
-    
-    _typeMeta.abstract = _class;
-    delete _typeMeta.loopback;
+    typeMeta._constructor = extractClassConstructorInfoBaseOnConfig(abstract);
 }

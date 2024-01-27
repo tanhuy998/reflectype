@@ -1,13 +1,8 @@
-const { Console } = require('console');
-const {paramsType, returnType, type} = require('../../src/');
-const {METADATA, TYPE_JS} = require('../../src/constants.js');
-const allowNull = require('../../src/decorators/allowNull.js');
-const defaultArguments = require('../../src/decorators/defaultArguments.js');
-const parameters = require('../../src/decorators/parameters.js');
-const { ORIGIN } = require('../../src/libs/metadata/constant.js');
+const {paramsType, returnType, type} = require('../../../index.js');
+const allowNull = require('../../../decorators/allowNull.js');
+const defaultArguments = require('../../../decorators/defaultArguments.js');
+const parameters = require('../../../decorators/parameters.js');
 
-const stack = [];
-const entries = new Set();
 
 class Z {}
 
@@ -118,12 +113,5 @@ class H extends C {
     }
 }
 
-function dec(_, context) {
 
-    const {name, metadata} = context;
-    //console.log(name, metadata[ORIGIN] === metadata)
-}
-
-//module.exports = {A}
-
-module.exports = {A, B, C, D, E, F, G, H};
+module.exports = {Z, A, B, C, D, E, F, G, H};
