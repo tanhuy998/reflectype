@@ -4,3 +4,5 @@ package-lock.json
 src/libs/globalMetadataType.js
 
 test/**/compiled.js
+
+.vscode

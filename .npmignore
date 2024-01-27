@@ -7,3 +7,5 @@ test/
 src/test
 
 **/*.test.js
+
+.vscode
