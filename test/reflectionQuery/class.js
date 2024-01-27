@@ -1,4 +1,3 @@
-const { Console } = require('console');
 const {paramsType, returnType, type} = require('../../src/');
 const {METADATA, TYPE_JS} = require('../../src/constants.js');
 const allowNull = require('../../src/decorators/allowNull.js');
@@ -13,15 +12,15 @@ class Z {}
 
 class A extends Z {
     
-    @type(Boolean)
-    static accessor prop;
+    // @type(Boolean)
+    // static accessor prop;
 
-    //@paramsType(Boolean)
-    @parameters({b: Boolean})
-    static #func(a, b) {
+    // // //@paramsType(Boolean)
+    // @parameters({b: Boolean})
+    // static #func(a, b) {
 
 
-    }
+    // }
     
 
     @type(Number)
@@ -47,7 +46,7 @@ class A extends Z {
 
 class B extends A {
 
-
+    func() {}
 }
 
 class C extends B {

@@ -252,7 +252,10 @@ function refreshTypeMetaObjectForDecoratorMetadata(decoratorMetadata, oldTypeMet
         throw new TypeError('decoratorMetadata must be an object');
     }
 
-    return decoratorMetadata[TYPE_JS] = new metadata_t(undefined, oldTypeMeta);
+    const newTypeMeta = decoratorMetadata[TYPE_JS] = new metadata_t(undefined, oldTypeMeta);
+    newTypeMeta.loopback.typeMeta = newTypeMeta;
+
+    return newTypeMeta;
 }
 
 /**

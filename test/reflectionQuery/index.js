@@ -25,7 +25,6 @@ const Reflection = require('../../src/metadata/reflection.js');
 
 const {getDecoratedValue} = require('../../src/libs/propertyDecorator.js');
 const ReflectionPrototypeMethodParameter = require('../../src/metadata/parameter/reflectionPrototypeMethodParameter.js');
-const { type } = require('os');
 const Void = require('../../src/type/void.js');
 const { extractFunctionInformations, extractClassConstructorInformations } = require('../../src/utils/function.util.js');
 const { FOOTPRINT, TYPE } = require('../../src/libs/constant.js');
@@ -52,21 +51,27 @@ const { isTypeOf } = require('../../src/metadata/aspect/criteriaOperator.js');
 // const obj = new A();
 // const objB = new B()
 // const objC = new C();
-const objD = new D();
+//const objD = new D();
 
 
 //console.log(meta)
 
-new ReflectionClassPrototype(B);
+// new ReflectionClassPrototype(B);
 
 //const ref = new ReflectionClassMethodParameter(obj, '#func', 1);
 //const ref = new ReflectionPrototypeMethod(C, 'func');
 //const ref = new ReflectionPrototypeMethod(E, 'func')
+
+
+
+//console.log(A)
+
 const ref = new ReflectionClass(E);
 
-//objD.func()
-//console.log(metaOf(E))
 console.log(ref.metadata);
+const ref2 = new ReflectionClass(D);
+
+
 // for (const p of ref.parameters || []) {
 
 //     console.log(p.isValidReflection);

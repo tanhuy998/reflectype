@@ -39,47 +39,34 @@ module.exports = {
  * @returns 
  */
 function recursiveResolveResolution(_class) {
-
+    
     if (RESOLVED_CLASSES.has(_class)) {
 
         return;
     }
 
+    if (!(METADATA in _class)) {
+
+        return;
+    }
+
     const stack = [];
-    const limits = [-1]; // -1 is the anchor
 
     while (_class !== Function.__proto__) {
 
-        const HEAD = stack.length - 1;
-
         if (
-            !(METADATA in _class) || 
+            !(METADATA in _class) ||
             RESOLVED_CLASSES.has(_class)
         ) {
 
             break;
         }
 
-        if (
-            HEAD >= 0 &&
-            wrapperOf(_class) !== wrapperOf(stack[HEAD])
-        ) {
-            
-            limits.push(HEAD);
-        }
-
         stack.push(_class);
         _class = _class.__proto__;
     }   
-    console.log(_class?.name, limits);
-    while (
-        limits.length > 0
-    ) {
 
-        const limit = limits.pop();
-
-        manipulateMetaDependentClasses(stack, limit);
-    }
+    manipulateMetaDependentClasses(stack);
 }
 
 function manipulateMetaDependentClasses(stack = [], limit) {
@@ -89,31 +76,27 @@ function manipulateMetaDependentClasses(stack = [], limit) {
         return;
     }
 
-    const initialStackLength = stack.length;
-    
-    while (
-        stack.length > 0 &&
-        (limit === -1 || stack.length -1 !==  limit)
-    ) { 
-        
-        const currentClass = stack.pop();
-        const oldClassWrapper = wrapperOf(currentClass);
+    console.log('--------------------')
+    while (stack.length) {
 
-        if (stack.length + 1 < initialStackLength) {
-            
-            const wrapper = currentClass[METADATA] = Object.setPrototypeOf({}, oldClassWrapper);
-            const newTypeMeta = refreshTypeMetaObjectForDecoratorMetadata(wrapper);
-            
-            newTypeMeta.abstract = currentClass;
-            newTypeMeta._constructor = extractClassConstructorInfoBaseOnConfig(currentClass);
-            console.log([currentClass?.name], newTypeMeta)
+        const currentClass = stack.pop();
+        const currTypeMeta = metaOf(currentClass);
+        
+        if (typeof currTypeMeta.loopback !== 'object') {
+
+            const currentWrapper = wrapperOf(currentClass);
+
+            Object.defineProperty(currentClass, METADATA, {
+                value: Object.setPrototypeOf({}, currentWrapper)
+            })
         }
 
         const typeMeta = metaOf(currentClass);
+        typeMeta._constructor = extractClassConstructorInfoBaseOnConfig(currentClass);
 
         assignAbstractToTypeMeta(currentClass, typeMeta);
         unlinkIndependentPropeMeta(currentClass);
-
+       
         RESOLVED_CLASSES.add(currentClass);
     }
 }
@@ -126,7 +109,7 @@ function manipulateMetaDependentClasses(stack = [], limit) {
  * @param {metadata_t} _typeMeta 
  */
 function assignAbstractToTypeMeta(_class, _typeMeta) {
-
+    
     if (typeof _typeMeta.loopback !== 'object') {
 
         return;
