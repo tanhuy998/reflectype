@@ -1,30 +1,15 @@
-const { metaOf, property_metadata_t, metadata_t} = require('../reflection/metadata.js');
-const { METADATA, TYPE_JS } = require('../constants.js');
-//const isPrimitive = require('../utils/isPrimitive.js');
-const {initDecoratorFootPrint, decoratorHasFootPrint, setDecoratorFootPrint} = require('./footPrint.js');
+const { property_metadata_t} = require('../reflection/metadata.js');
+const {decoratorHasFootPrint, setDecoratorFootPrint} = require('./footPrint.js');
 const matchType = require('./matchType.js');
 const { DECORATED_VALUE } = require('./constant.js');
 const Void = require('../type/void');
 const AccesorDecoratorSetterNotMatchTypeError = require('../error/accessorDecoratorSetterNotMatchTypeError.js');
 
-
-// will be obsolete
-function resolveAccessorTypeMetadata(_accessor, _propMeta) {
-
-    const { get } = _accessor;
-
-    get[METADATA] ??= {};
-    get[METADATA][TYPE_JS] ??= _propMeta;
-
-    const actualMeta = metaOf(get);
-    actualMeta.isMethod = false;
-
-    initDecoratorFootPrint(actualMeta);
-
-    get[METADATA] ??= {};
-
-    return get[METADATA][TYPE_JS] ??= actualMeta;
-}
+module.exports = {
+    generateAccessorInitializer, 
+    generateAccessorSetter, 
+    decorateAccessor
+};
 
 /**
  * 
@@ -37,13 +22,6 @@ function generateAccessorInitializer(_propMeta) {
     const {type} = _propMeta;
 
     return function(initValue) {
-
-        const wrapper = this[METADATA] ??= {};
-
-        /**@type {metadata_t} */
-        const typeMeta = wrapper[TYPE_JS] ??= new metadata_t();
-
-        typeMeta.properties[propName] = _propMeta;
 
         if (initValue === undefined || initValue === null) {
 
@@ -116,20 +94,6 @@ function decorateAccessor(_accessor, context, initPropMeta) {
 
         throw new TypeError('class field could not be type of [Void]');
     }
-
-    const {addInitializer, name} = context;
-
-    // addInitializer(function() {
-
-    //     if (initPropMeta.initialized === true) {
-
-    //         return;
-    //     } 
-
-    //     this[name];
-
-    //     initPropMeta.initialized = true;
-    // })
     
     setDecoratorFootPrint(_accessor, context, DECORATED_VALUE, {
         init: generateAccessorInitializer(initPropMeta),
@@ -137,5 +101,3 @@ function decorateAccessor(_accessor, context, initPropMeta) {
         get: _accessor.get
     });
 }
-
-module.exports = {resolveAccessorTypeMetadata, generateAccessorInitializer, generateAccessorSetter, decorateAccessor};

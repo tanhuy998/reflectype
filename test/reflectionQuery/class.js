@@ -12,8 +12,8 @@ class Z {}
 
 class A extends Z {
     
-    // @type(Boolean)
-    // static accessor prop;
+    @type(Boolean)
+    static accessor prop;
 
     // // //@paramsType(Boolean)
     // @parameters({b: Boolean})
@@ -67,6 +67,8 @@ class D extends C {
 }
 
 class E extends D {
+
+    accessor prop 
 
     func() {
 

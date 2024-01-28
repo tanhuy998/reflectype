@@ -205,12 +205,40 @@ function manipulateProperties(_target, meta) {
     const properties = meta.properties;
 
     for (const [propName, propMeta] of Object.entries(properties) || []) {
-        
-        if (isMethodOverridenWithoutDecorattion.call(_target, propName, propMeta)) {
-            // unlink the propMeta
-            delete properties[propName];
+
+        if (
+            !isMethodOverridedWithoutDecorattion.call(_target, propName, propMeta) &&
+            !isAttributeOverridedWithoutDecoration.call(
+                _target, 
+                propName, 
+                propMeta,
+                meta.constructor === metadata_t ? meta : meta.owner.typeMeta
+            )
+        ) {
+            
+            continue;
         }
+
+        // unlink the propMeta
+        delete properties[propName];
     }
+}
+
+/**
+ * 
+ * @param {string|symbol} propName 
+ * @param {property_metadata_t} propMeta 
+ * @param {metadata_t} referencTypeMeta 
+ * 
+ * @this Function|Object
+ * 
+ * @returns 
+ */
+function isAttributeOverridedWithoutDecoration(propName, propMeta, referencTypeMeta) {
+
+    return !propMeta.isMethod &&
+            Reflect.ownKeys(this).includes(propName) &&
+            propMeta.owner.typeMeta !== referencTypeMeta;
 }
 
 /**
@@ -224,14 +252,12 @@ function manipulateProperties(_target, meta) {
  * 
  * @returns 
  */
-function isMethodOverridenWithoutDecorattion(methodName, propMeta) {
+function isMethodOverridedWithoutDecorattion(methodName, propMeta) {
 
-    if (!propMeta.isMethod) {
-
-        return false;
-    }
-    
-    if (typeof this[methodName] !== 'function') {
+    if (
+        !propMeta.isMethod ||
+        typeof this[methodName] !== 'function'
+    ) {
 
         return false;
     }

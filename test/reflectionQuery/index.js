@@ -87,12 +87,17 @@ const { isTypeOf } = require('../../src/metadata/aspect/criteriaOperator.js');
 
 
 //console.log(A)
+const obj = new E();
+const ref = new ReflectionPrototypeAttribute(obj, 'prop');
+//obj.prop = 1;
+console.log(metaOf(E));
+console.log(metaOf(A))
+//ref.setValue(2);
+//const objA = new A();
+//console.log(Reflect.ownKeys(E.prototype));
 
-const ref = new ReflectionClass(E);
-
-//console.log(ref.metadata, ref.isValid);
 const ref2 = new ReflectionClass(D);
-console.log(ref2.metadata)
+// console.log(ref2.metadata)
 
 // for (const p of ref.parameters || []) {
 
