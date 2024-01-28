@@ -1,9 +1,6 @@
 const IDisposable = require('../libs/iDisposable.js');
-// const isAbStract = require('../utils/isAbstract.js');
-// const getMetadata = require('../reflection/getMetadata.js');
 const ReflectorContext = require('./reflectorContext.js');
-const { metadata_t, metaOf, property_metadata_t } = require('../reflection/metadata.js');
-//const { resolveResolutionFromArbitrayMeta } = require('../reflection/typeMetadataAction.js');
+const { metadata_t, metaOf, property_metadata_t, function_metadata_t } = require('../reflection/metadata.js');
 const { isInstantiable } = require('../libs/type.js');
 const self = require('../utils/self.js');
 const { resolveTypeMetaResolution } = require('../libs/metadata/resolution.js');
@@ -15,20 +12,15 @@ const { resolveTypeMetaResolution } = require('../libs/metadata/resolution.js');
  */
 class Reflector extends IDisposable{
 
-    /**@type {! metadata_t | property_metadata_t} */
+    /**@type {metadata_t | property_metadata_t | function_metadata_t} */
     #metadata;
-
     /**@type {boolean} */
-    #isValid = true;
-
+    #isValid = false;
     /**@type {boolean} */
     #isDisposed = false;
-
     /**@type {keyof ReflectorContext} */
     #context;
-
     #originClass;
-
     #target;
 
     get target() {
@@ -64,7 +56,6 @@ class Reflector extends IDisposable{
         return this.#isDisposed;
     }
 
-
     /**
      * 
      * @param {Object} _unknown 
@@ -72,21 +63,18 @@ class Reflector extends IDisposable{
     constructor(_unknown) {
 
         super();
-
-        //this.#resolveMetadata(_unknown);
         this.#target = _unknown;
         this.#init();
     }
 
     #init() {
 
-        this.#resolveMetadata();
-        this.#applyMetadataResolution();   
+        this.#clarifyReflectionTarget();
+        this.#clarifyMetadataResolution();
+        this.#clarifyMetadata();   
     }
 
-    #resolveMetadata() {
-
-        const _target = this.#target;
+    #clarifyMetadata() {
 
         // if (isAbStract(_target)) {
 
@@ -114,39 +102,80 @@ class Reflector extends IDisposable{
         //     this.#context = ReflectorContext.OTHER;
         // }
 
+        if (!this.isValidReflection) {
+
+            return;
+        }
+
         /**
          *  Short version of the above block
          */
-        const _class = !isInstantiable(_target)? self(_target) : _target;
-        
-        this.#originClass = _class;
+        const _target = this.#target;
+        const _class = this.#originClass;
+
         this.#metadata = metaOf(_class) || metaOf(_target);
         this.#context = isInstantiable(_class) ? 
                         (_class === _target ? ReflectorContext.ABSTRACT : ReflectorContext.INSTANCE) 
                         : ReflectorContext.OTHER;
 
-        this.#isValid = typeof this.#metadata === 'object';
         this.#isDisposed = !this.#isValid;
     }
 
-    #applyMetadataResolution() {
+    #clarifyReflectionTarget() {
+
+        const _target = this.#target;
+        const type = typeof _target;
 
         if (
-            !this.isValidReflection ||
-            this.reflectionContext === ReflectorContext.OTHER    
+            type !== 'function' &&
+            type !== 'object'
+        ) {
+
+            throw new TypeError('invalid reflection target');
+        }
+
+        this.#originClass = !isInstantiable(_target)? self(_target) : _target;
+        const meta = metaOf(this.#originClass);
+
+        if (
+            typeof meta !== 'object'
         ) {
 
             return;
         }
-        
-        //resolveResolutionFromArbitrayMeta(this.metadata, this.originClass);
-        resolveTypeMetaResolution(this.#originClass, this.#metadata);
+
+        /**
+         * Temporarily set here, will be clarfy again when metadata
+         * resolution is resolved.
+         */
+        this.#metadata = meta;
+        this.#isValid = true;   
+    }
+
+    #clarifyMetadataResolution() {
+
+        if (!this.isValidReflection) {
+
+            return;
+        }
+
+        resolveTypeMetaResolution(this.#originClass);
+        this.#refreshMetadata();
+    }
+
+    #refreshMetadata() {
+
+        if (!this.isValidReflection) {
+
+            return;
+        }
+
+        this.#metadata = metaOf(this.#originClass);
     }
 
     _dispose() {
 
         this.#metadata = undefined;
-
         this.#isDisposed = true;
     }
 }

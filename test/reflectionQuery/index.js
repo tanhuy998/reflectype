@@ -63,14 +63,36 @@ const { isTypeOf } = require('../../src/metadata/aspect/criteriaOperator.js');
 //const ref = new ReflectionPrototypeMethod(E, 'func')
 
 
+// class M extends A {
+
+
+// }
+
+// class N extends M {
+
+
+// }
+
+// Object.defineProperty(M, METADATA, {
+//     value: Object.setPrototypeOf({}, A[METADATA])
+// })
+
+// const wrapperA = A[METADATA]
+// const wrapperM = M[METADATA]
+
+// console.log(wrapperM === wrapperA)
+// console.log(N[METADATA] === wrapperM)
+// console.log(N[METADATA] === wrapperA)
+
+
 
 //console.log(A)
 
 const ref = new ReflectionClass(E);
 
-console.log(ref.metadata);
+//console.log(ref.metadata, ref.isValid);
 const ref2 = new ReflectionClass(D);
-
+console.log(ref2.metadata)
 
 // for (const p of ref.parameters || []) {
 

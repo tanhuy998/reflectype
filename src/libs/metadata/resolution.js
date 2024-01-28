@@ -14,19 +14,48 @@ module.exports = {
 
 /**
  *  Metadata resolution
- *  There are two situation that metadata resolution must be evaluated:
+ *  There are two situations that metadata resolution must be evaluated:
  *  - When an instance of a class is instantiated.
- *  - When a reflection read metadata of a class.
+ *  - When a reflection reads metadata of a class.
  *  Metadata resolution is evaluated on a class when the first of the above actions occurs.
  * 
  *  when classes inherit another, they would acquire it's base class type meta.
  *  There are no problems when a decorated class inherits another decorated class
- *  because decorators "know" (not yet) which class (decorator metadata context) that
+ *  because decorators "know" (not yet) which class (exactly decorator metadata context) that
  *  they're placed.
- *  Problems just comes when undecorated class inherit decorated class.
+ *  Problems just come when undecorated classes inherit decorated classes.
  *  When we reflect on an undecorated class that inherits decorated class, it's override
  *  properties on base's class decorated properties would be invalid convention.  
  *
+ *  Consider this situation:
+ *  
+ *  class A {
+ *      
+ *      @returnType(String)
+ *      func() {
+ *          
+ *          return 'foo';
+ *      }
+ *  }
+ * 
+ *  class B extends A {
+ *      
+ *      func() {
+ *          
+ *          
+ *      }
+ *  }
+ * 
+ *  const refl = new ReflectionPrototypeMethod(B, 'func');
+ *  
+ *  refl.isValid // should be false
+ *  refl.returnType // should be undefined
+ * 
+ *  When metadata resolution progress no in action. Any reflections on method B.func() 
+ *  should be considered as invalid reflections, but the result would be a valid reflection 
+ *  and the return type of the method that the reflection retrieves from the class's metadata
+ *  is [String] because the metadata belongs to class A. 
+ * 
  *  Two common types of the problem are:
  *  U <- D <- U   or   D <- U <- D
  *  
@@ -40,24 +69,16 @@ module.exports = {
  */
 function recursiveResolveResolution(_class) {
     
-    if (RESOLVED_CLASSES.has(_class)) {
-
-        return;
-    }
-
-    if (!(METADATA in _class)) {
+    if (!needToBeManipulateResolution(_class)) {
 
         return;
     }
 
     const stack = [];
-
+    
     while (_class !== Function.__proto__) {
 
-        if (
-            !(METADATA in _class) ||
-            RESOLVED_CLASSES.has(_class)
-        ) {
+        if (!needToBeManipulateResolution(_class)) {
 
             break;
         }
@@ -69,36 +90,54 @@ function recursiveResolveResolution(_class) {
     manipulateMetaDependentClasses(stack);
 }
 
-function manipulateMetaDependentClasses(stack = [], limit) {
+function needToBeManipulateResolution(_class) {
 
-    if (stack.length <= 0) {
+    return !RESOLVED_CLASSES.has(_class) &&
+            METADATA in _class &&
+            metaOf(_class) instanceof metadata_t;
+}
 
-        return;
-    }
+function manipulateMetaDependentClasses(stack = []) {
 
-    console.log('--------------------')
     while (stack.length) {
 
         const currentClass = stack.pop();
-        const currTypeMeta = metaOf(currentClass);
-        
-        if (typeof currTypeMeta.loopback !== 'object') {
 
-            const currentWrapper = wrapperOf(currentClass);
-
-            Object.defineProperty(currentClass, METADATA, {
-                value: Object.setPrototypeOf({}, currentWrapper)
-            })
-        }
+        checkAndReAssignMetaWrapper(currentClass);
 
         const typeMeta = metaOf(currentClass);
         typeMeta._constructor = extractClassConstructorInfoBaseOnConfig(currentClass);
 
         assignAbstractToTypeMeta(currentClass, typeMeta);
         unlinkIndependentPropeMeta(currentClass);
-       
+        
         RESOLVED_CLASSES.add(currentClass);
     }
+}
+
+function checkAndReAssignMetaWrapper(_class) {
+
+    const typeMeta = metaOf(_class);
+
+    if (typeof typeMeta.loopback === 'object') {
+
+        return;
+    }
+    /**
+     * when metadata_t.loopback is undefined,
+     * it means the the metadata_t object belongs to 
+     * base class. Therefore, the metadata wrapper of 
+     * the current class also belongs to base class
+     * and the current clas is undecorated class.
+     */
+    const baseClassWrapper = wrapperOf(_class);
+
+    Object.defineProperty(_class, METADATA, {
+        writable: false,
+        value: Object.setPrototypeOf({}, baseClassWrapper)
+    })
+
+    refreshTypeMetaObjectForDecoratorMetadata(_class[METADATA], typeMeta);
 }
 
 /**
@@ -131,6 +170,13 @@ function resolveTypeMetaResolution(_class) {
     recursiveResolveResolution(_class);
 }
 
+/**
+ * Independent propMeta is property_metadata_t object
+ * that a class inherited from it base class but the current
+ * class override that property without any decorations.
+ * 
+ * @param {Function} _class 
+ */
 function unlinkIndependentPropeMeta(_class) {
 
     scanAndResolveStaticProperties(_class);
