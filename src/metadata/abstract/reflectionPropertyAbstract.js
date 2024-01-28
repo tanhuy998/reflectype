@@ -181,7 +181,7 @@ module.exports = class ReflectionPropertyAbstract extends AbstractReflection {
 
         if (
             !this.isValid ||
-            super.reflectionContext !== ReflectorContext.INSTANCE
+            super.reflectionContext === ReflectorContext.OTHER
         ) {
 
             return false;
