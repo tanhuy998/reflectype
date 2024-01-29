@@ -17,13 +17,9 @@ const Reflection = require("../reflection");
  */
 module.exports = class AbstractReflection extends Reflection {
 
-    #options;
-
     /**@type {metadata_t|property_metadata_t} */
     #metadata;
-
     #isValid;
-
     #meetPrerequisite;
 
     get metadata() {
@@ -36,11 +32,6 @@ module.exports = class AbstractReflection extends Reflection {
         return this.#isValid;
     }
 
-    get options() {
-
-        return this.#options;
-    }
-
     get meetPrerequisite() {
 
         return this.#meetPrerequisite;
@@ -48,12 +39,9 @@ module.exports = class AbstractReflection extends Reflection {
 
     constructor(target, ...options) {
 
-        super(target);
+        super(target, ...options);
 
         preventNonInheritanceTakeEffect.call(this, AbstractReflection);
-
-        this.#options = options;
-
         this.#init(); 
     }
 
@@ -71,6 +59,24 @@ module.exports = class AbstractReflection extends Reflection {
         }
         
         this.#meetPrerequisite = true;
+
+        if (super.isReflectionAspectCached) {
+            
+            this.#retrieveMetadataFromCache();
+            return;
+        }
+
+        this.#queryAndHandleMetadata();
+    }
+
+    #retrieveMetadataFromCache() {
+
+        this.#metadata = super.cache;
+        this.#isValid = this._validateMetadata();
+    }
+
+    #queryAndHandleMetadata() {
+
         this.#metadata = this._resolveAspectOfReflection();
         
         if (!isObject(this.#metadata)) {
@@ -86,6 +92,18 @@ module.exports = class AbstractReflection extends Reflection {
 
             this.#metadata = undefined;
         }
+
+        this.#manageCache();
+    }
+
+    #manageCache() {
+
+        super._cache(this.#metadata);
+    }
+
+    _cache() {
+
+
     }
 
     __dispose() {

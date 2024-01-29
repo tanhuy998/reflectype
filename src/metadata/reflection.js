@@ -1,4 +1,7 @@
+const { isValuable } = require("../libs/type");
+const self = require("../utils/self");
 const ReflectionAspect = require("./aspect/reflectionAspect");
+const { getCache, setCache, isValidCache, extract } = require("./cache");
 const Reflector = require("./reflector");
 
 /**
@@ -14,6 +17,14 @@ module.exports = class Reflection {
 
     /**@type {Function|Object} */
     #target;
+    #cache;
+    #options;
+    #isCached = false;
+
+    get options() {
+
+        return this.#options;
+    }
 
     /**@type {Reflector} */
     get reflector() {
@@ -51,11 +62,20 @@ module.exports = class Reflection {
         return this.#reflector.isDisposed;
     }
 
+    get isReflectionAspectCached() {
 
-    constructor(_target) {
+        return this.#isCached;
+    }
 
+    get cache() {
+
+        return this.#isCached ? extract(this.#cache) : undefined;
+    }
+
+    constructor(_target, ...options) {
+        
         this.#target = _target;
-
+        this.#options = options;
         this.#init();
     }
 
@@ -69,6 +89,28 @@ module.exports = class Reflection {
         }
 
         this.#reflectionAspect = new ReflectionAspect(this.#reflector);
+        this.#retrieveCache();
+    }
+
+    #retrieveCache() {
+
+        this.#cache = getCache(this.originClass, self(this), ...(this.#options || []));
+        this.#verifyCache();
+    }
+
+    #verifyCache() {
+
+        this.#isCached = isValidCache(this.#cache);
+
+        if (!this.#isCached) {
+
+            this.#cache = undefined;
+        }
+    }
+
+    _cache(meta) {
+        
+        setCache(meta, this.originClass, self(this), ...(this.#options || []));
     }
 
     /**

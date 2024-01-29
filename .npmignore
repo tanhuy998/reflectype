@@ -9,3 +9,11 @@ src/test
 **/*.test.js
 
 .vscode
+
+package-lock.json
+DOC-REFLECTION.md
+jest.config.js
+.babelrc
+babel.config.js
+specs.js
+
