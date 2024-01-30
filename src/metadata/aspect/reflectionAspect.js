@@ -1,14 +1,3 @@
-const { isObject, isObjectKey, isValuable, isNonIterableObjectKey } = require("../../libs/type.js");
-const { property_metadata_t } = require("../../reflection/metadata.js");
-const ReflectionQueryBuilder = require("../query/reflectionQueryBuilder.js");
-const ReflectionQuerySubject = require("../query/reflectionQuerySubject.js");
-const { ReflectionSubjectNotFoundError, ReflectionFieldNotFoundError } = require("../error/reflectionAspect.js");
-const Reflector = require("../reflector.js");
-const ReflectionQuery = require("../query/reflectionQuery.js");
-const CriteriaResovler = require("./criteriaResolver.js");
-const OptionResolver = require("./optionResolver.js");
-const CriteriaMode = require("./criteriaMode.js");
-
 /**
  * @typedef {import('../query/reflectionQuery.js')} ReflectionQuery
  * @typedef {import("../reflector.js")} Reflector
@@ -17,13 +6,14 @@ const CriteriaMode = require("./criteriaMode.js");
  * @typedef {import('../../interface/interfacePrototype.js')} InterfacePrototype
  */
 
-
+const Reflector = require('../reflector.js');
+const MetadataAspect = require('./metadataAspect.js');
 
 /**
  * ReflectionAspect is the evaluation of ReflectionQuery. It reads reflection query's properties,
  * therefore, retrieve piece(s) of metadata of a Reflector object.
  */
-module.exports = class ReflectionAspect {
+module.exports = class ReflectionAspect extends MetadataAspect {
 
     #reflector;
 
@@ -33,11 +23,12 @@ module.exports = class ReflectionAspect {
      */
     constructor(reflector) {
 
+        super();
         this.#reflector = reflector;
         this.#init();
     }
 
-    #init() {
+    #isValidOrFail() {
 
         if (!(this.#reflector instanceof Reflector)) {
 
@@ -45,177 +36,36 @@ module.exports = class ReflectionAspect {
         }
     }
 
-    #isValidOrFail() {
+    #init() {
 
-        if (!this.#reflector.isValidReflection) {
-
-            throw new Error();
-        }
+        this.#isValidOrFail();
+        super.setMetadata(this.#reflector.metadata);
     }
 
     /**
-     * @param {Object} options 
-     * @param {boolean} options.deepCriteria
-     * @returns {ReflectionQueryBuilder}
+     * @inheritdoc
      */
     query(options) {
 
-        this.#isValidOrFail();
-        return new ReflectionQueryBuilder(this, options);
+        if (!this.#reflector.isValidReflection) {
+
+            throw new Error('the reflector could not retrieve any metadata');
+        }
+
+        return super.query(options);
     }
 
     /**
-     * 
-     * @param {ReflectionQuery} _query 
-     * 
-     * @returns {metadata_t|prototype_metadata_t|InterfacePrototype|property_metadata_t|Object}
+     * @inheritdoc
      */
     execQuery(_query) {
 
-        if (!(_query instanceof ReflectionQuery)) {
-
-            throw new TypeError('invalid query');
-        }
-
-        try {
-            
-            this.#isValidOrFail();
-            
-            const primaryMeta = this.#_resolvePrimaryPhase(_query);
-            
-            if (!isValuable(primaryMeta)) {
-
-                return undefined;
-            }
-            
-            const secondaryMeta = this.#_resolveSecondaryPhase(_query, primaryMeta);
-            
-            if (!isValuable(secondaryMeta)) {
-
-                return undefined;
-            }
-            
-            return this.#_resolveTertiaryPhase(_query, secondaryMeta);
-        }
-        catch (e) {
-            
-            return undefined;
-        }
+        this.#isValidOrFail();
+        return super.execQuery(_query);
     }
 
-    #_resolvePrimaryPhase(_query) {
-        /**
-         * Phase 1: resolve reflection query subject, field and target propMeta
-         * of the metadata_t object
-         */
-        return this.#_resolvePropMeta(_query,
-            this.#_resolveField(_query,
-            this.#_resolveSubject(_query)));
+    setMetadata() {
+
+
     }
-
-    #_resolveSecondaryPhase(_query, _primaryMeta) {
-        /**
-         * Phase 2: resolve criteria and polariztion.
-         */
-
-        const transformed = this.#_tranformMetaWhenNeccessary(_query, _primaryMeta);
-        
-        return new CriteriaResovler(_query, transformed).resolve();
-    }
-
-    #_resolveTertiaryPhase(_query, _secondaryMeta) {
-        /**
-         * Phase 3: resolve the rest options
-         */
-        return new OptionResolver(_query, _secondaryMeta).resolve();
-    }
-
-    /**
-     * 
-     * @param {ReflectionQuery} _query 
-     * @param {any} _primaryMeta 
-     */
-    #_tranformMetaWhenNeccessary(_query, _primaryMeta) {
-        
-        if (CriteriaResovler.couldTransform(_query, _primaryMeta)) {
-            
-            return Object.values(_primaryMeta);
-        }
-        
-        if (
-            CriteriaResovler.couldOperateQuery(_query) &&
-            isObject(_primaryMeta.properties)
-        ) {
-            
-            return Object.values(_primaryMeta.properties);
-        }
-        
-        return _primaryMeta;
-    }
-
-    /**
-     * 
-     * @param {ReflectionQuery} _query 
-     * @returns {metadata_t|prototype_metadata_t|InterfacePrototype}
-     */
-    #_resolveSubject(_query) {
-
-        const reflector = this.#reflector;
-        
-        if (!reflector.isValidReflection) {
-
-            return undefined;
-        }
-
-        return _query.subject === ReflectionQuerySubject.STATIC ? 
-                        reflector.metadata : reflector.metadata[_query.subject];
-    }
-
-    /**
-     * 
-     * @param {*} _query 
-     * @param {*} _metaSubject 
-     * 
-     * @returns {Object}
-     */
-    #_resolveField(_query, _metaSubject) {
-
-        if (!isObject(_metaSubject)) {
-
-            throw new ReflectionSubjectNotFoundError();
-        }
-
-        const queryField = _query.field;
-
-        if (!isObjectKey(queryField)) {
-
-            return _metaSubject;
-        }
-
-        return _metaSubject[queryField];
-    }
-
-    /**
-     * 
-     * @param {Object|any} subject 
-     * @param {ReflectionQuery} _query 
-     * 
-     * @returns {property_metadata_t|Object}
-     */
-    #_resolvePropMeta(_query, _metaField) {
-
-        if (!isObject(_metaField)) {
-
-            throw new ReflectionFieldNotFoundError();
-        }
-
-        const queryProp = _query.propName;
-        
-        if (!isObjectKey(queryProp)) {
-
-            return _metaField;
-        }
-
-        return _metaField[queryProp];
-    }
-}
+} 
