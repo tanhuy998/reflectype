@@ -1,11 +1,25 @@
-const { IS_DECORATOR } = require("./constant");
+const { IS_DECORATOR, IS_PARAM_DESTRUCTURE } = require("./constant");
 
 module.exports = {
-    markAsDecorator
+    markAsDecorator,
+    markAsDestructureParamDecorator
+}
+
+function markAsDestructureParamDecorator(func) {
+
+    checkFunction(func);
+    func[IS_PARAM_DESTRUCTURE] = true;
+
 }
 
 function markAsDecorator(func) {
     
+    checkFunction(func);
+    func[IS_DECORATOR] = true;
+}
+
+function checkFunction(func) {
+
     if (
         typeof func !== 'function' &&
         typeof func !== Proxy
@@ -13,6 +27,4 @@ function markAsDecorator(func) {
 
         throw new TypeError('cannot mark no function like as a decorator');
     }
-
-    func[IS_DECORATOR] = true;
 }
