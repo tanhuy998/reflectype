@@ -32,7 +32,8 @@ module.exports = {
     function_metadata_t,
     owner_metadata_t,
     prototype_metadata_t,
-    parameter_metadata_t
+    parameter_metadata_t,
+    function_variant_param_node_metadata_t
 };
 
 function owner_metadata_t() {
@@ -132,6 +133,11 @@ function function_metadata_t(_owner) {
     this.paramsName;
 
     /**
+     * @type {property_metadata_t}
+     */
+    this.owner = _owner;
+
+    /**
      * @type {any}
      */
     this.defaultArguments = _owner?.value;
@@ -171,6 +177,56 @@ function function_metadata_t(_owner) {
      * @type {Object}
      */
     this.params = {};
+
+    /**
+     * @type {function_variant_param_node_metadata_t}
+     */
+    this.lastTrieNode;
+
+    /**
+     * @type {function_variant_param_node_metadata_t?}
+     */
+    this.variantTrie;
+
+    /**
+     * @type {boolean}
+     */
+    this.allowOverride = false;
+}
+
+/**
+ * 
+ * @param {function_variant_param_node_metadata_t} ref 
+ */
+function function_variant_param_node_metadata_t (ref) {
+
+    /**
+     * @type {Set<Function, function_variant_param_node_metadata_t>}
+     */
+    this.next = new Set();
+
+    /**
+     * @type {number};
+     */
+    this.depth = ref?.depth + 1 || 0;
+
+    /**
+     * To indicate that the current resolution is has any type,
+     * so parameter types look up progresss will find skip the exact
+     * match type of the argument. if unmatch, the look up progress
+     * will choose this node.
+     * 
+     * @type {boolean}
+     */
+    this.isCompliant;
+
+    /**
+     * To indicate the end of parameter list of a varient of the 
+     * overloaded method.
+     * 
+     * @type {function_metadata_t?}
+     */
+    this.functionVariant;
 }
 
 function parameter_metadata_t(_owner) {

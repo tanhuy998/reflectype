@@ -5,6 +5,7 @@ const { TYPE, DECORATED_VALUE } = require('../libs/constant.js');
 const { pseudo_parameter_decorator_context_t } = require('../utils/pseudoDecorator.js');
 const { property_metadata_t, parameter_metadata_t } = require('../reflection/metadata.js');
 const { markAsDecorator } = require('../utils/decorator/general.js');
+const { resolvePropMetaForParameter, resolvePropMetaForProperty } = require('../utils/decorator/type.util.js');
 
 const ACCEPT_DECORATOR_KINDS = ['accessor', 'method', 'parameter'];
 
@@ -14,40 +15,15 @@ function type(_abstract) {
 
     preventImmediateValue(_abstract);
 
-    return function typeDecorator(prop, context) {
-
-        markAsDecorator(typeDecorator);
+    function typeDecorator(prop, context) {
 
         const {kind} = context;
 
         isValidKindOrFail(kind);
 
-        // const propMeta = propertyDecorator.initMetadata(prop, context);
-
-        // const alreadyApplied = footprint.decoratorHasFootPrint(prop, context, TYPE)
-
-        // if (alreadyApplied) {
-
-        //     throw new Error('cannot apply @type multiple times');
-        // }
-
-        // if (context.kind === 'parameter') {
-
-        //     return handleParameter(_abstract, ...arguments);
-        // }
-
-        /**
-        //  * When the decorator is applied on attribute or method
-        //  */
-        // propMeta.type = _abstract;
-        // //footprint.setDecoratorFootPrint(prop, context, TYPE);
-        // footprint.setMetadataFootPrint(propMeta, TYPE);
-
-        // return footprint.retrieveDecoratorFootPrintByKey(prop, context, DECORATED_VALUE);
-
         const meta = kind === 'parameter' ? 
-                    parameterDecorator.initMetadata(...arguments)
-                    : propertyDecorator.initMetadata(...arguments);
+                    resolvePropMetaForParameter(...arguments)
+                    : resolvePropMetaForProperty(...arguments);
 
         if (footprint.metadataHasFootPrint(meta, TYPE)) {
 
@@ -60,6 +36,9 @@ function type(_abstract) {
         return kind === 'parameter' ? prop
                 : footprint.getMetadataFootPrintByKey(meta, DECORATED_VALUE);
     }
+
+    markAsDecorator(typeDecorator);
+    return typeDecorator;
 }
 
 function isValidKindOrFail(decoratorKind) {
@@ -71,6 +50,8 @@ function isValidKindOrFail(decoratorKind) {
 
     return true;
 }
+
+
 
 // /**
 //  * 
