@@ -36,6 +36,9 @@ module.exports = {
     function_variant_param_node_metadata_t
 };
 
+/**
+ *  
+ */
 function owner_metadata_t() {
     /**
      * @type {metadata_t}
@@ -151,7 +154,7 @@ function function_metadata_t(_owner) {
      * @type {string|symbol}
      */
     this.name = _owner?.name;
-    /**
+    /***
      * @type {Array<Function>}
      */
     this.defaultParamsType;
@@ -178,17 +181,25 @@ function function_metadata_t(_owner) {
      */
     this.params = {};
 
-    /**
-     * @type {function_variant_param_node_metadata_t}
-     */
-    this.lastTrieNode;
+    // /**
+    //  * Indicate last manipulated variant tree node
+    //  * 
+    //  * @type {function_variant_param_node_metadata_t}
+    //  */
+    // this.lastVariantTrieNode;
 
     /**
+     * Indicate the root node of the function variants.
+     * 
      * @type {function_variant_param_node_metadata_t?}
      */
     this.variantTrie;
 
     /**
+     * Indicate the current variant method is virtual method
+     * and can be overriden by it's similar derived class's 
+     * signature method.
+     * 
      * @type {boolean}
      */
     this.allowOverride = false;
@@ -201,9 +212,9 @@ function function_metadata_t(_owner) {
 function function_variant_param_node_metadata_t (ref) {
 
     /**
-     * @type {Set<Function, function_variant_param_node_metadata_t>}
+     * @type {Map<Function, function_variant_param_node_metadata_t>}
      */
-    this.next = new Set();
+    this.current = new Map();
 
     /**
      * @type {number};
@@ -220,6 +231,18 @@ function function_variant_param_node_metadata_t (ref) {
      */
     this.isCompliant;
 
+    // /**
+    //  * @type {parameter_metadata_t}
+    //  */
+    // this.paramMeta;
+
+    /**
+     * Indicating that the current depth has Type that is not Any and 
+     * allow null
+     * @type {boolean}
+     */
+    this.allowNul;
+
     /**
      * To indicate the end of parameter list of a varient of the 
      * overloaded method.
@@ -232,7 +255,7 @@ function function_variant_param_node_metadata_t (ref) {
 function parameter_metadata_t(_owner) {
 
     /**
-     * @type {string}
+     * @type {string|symbol}
      */
     this.paramName;
 
@@ -319,6 +342,10 @@ function property_metadata_t(_ref, _ownerTypeMeta) {
     this.isInitialized = undefined;
 
     /**
+     * For resolving metadata resolution.
+     * Is manipulated by the metadata tracing progress
+     * when initializing propMeta during first applied
+     * decorator.
      * 
      * @type {owner_metadata_t}
      */
@@ -343,6 +370,10 @@ function property_metadata_t(_ref, _ownerTypeMeta) {
     // this.paramsName;
 
     /**
+     * If the current property is kind of method. This field
+     * will be evaluated to store extra metadata about the 
+     * function object.
+     * 
      * @type {function_metadata_t}
      */
     this.functionMeta;

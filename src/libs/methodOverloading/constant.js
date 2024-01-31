@@ -15,4 +15,5 @@ module.exports = {
     OVERLOAD_TARGET: '_overload_target',
     OVERLOAD_APPLIED: '_isOverloadMethod',
     OVERLOAD_PENDING: '_overload_pending',
+    LAST_TRIE_NODE: '_last_trie_node'
 }

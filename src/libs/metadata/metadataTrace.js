@@ -18,7 +18,7 @@
  *      accessor prop;
  *  }
  * 
- *  @type decorator would throw "cannot apply @type multiple times" error.
+ *  @type decorator would throw "cannot apply @type multiple times" ercurrentPropMetaror.
  * 
  *  Class A'prototype define a property named "prop" as type of Number, then B extends and overrides it with 
  *  type of String. Decorator Metadata descriptions mentioned that subclass metadata field will inherits it's

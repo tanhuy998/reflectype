@@ -33,7 +33,7 @@ class A extends Z {
     @returnType(Number)
     //@defaultArguments(1)
     @paramsType(Number)
-    func(a, b, ...c) {
+    func(a, b) {
 
         console.log('func', ...arguments)
     }

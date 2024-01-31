@@ -84,21 +84,20 @@ const { isTypeOf } = require('../../src/metadata/aspect/criteriaOperator.js');
 // console.log(N[METADATA] === wrapperM)
 // console.log(N[METADATA] === wrapperA)
 
-
 console.time(2)
 //console.log(A)
 const obj = new D();
-const ref = new ReflectionClass(obj);
-new ReflectionClass(obj);
+const ref = new ReflectionPrototypeMethod(obj, 'func');
+new ReflectionPrototypeMethod(obj, 'func');
 console.log(ref.isValid)
 console.timeEnd(2)
 
 
-for (let i = 0; i < 1000; ++i) {
-console.time(2)
-const ref = new ReflectionPrototypeAttribute(obj, 'prop');
-console.timeEnd(2)
-}
+// for (let i = 0; i < 1000; ++i) {
+// console.time(2)
+// const ref = new ReflectionPrototypeAttribute(obj, 'prop');
+// console.timeEnd(2)
+// }
 
 
 //obj.prop = 1;
