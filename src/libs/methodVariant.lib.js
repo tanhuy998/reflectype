@@ -23,8 +23,8 @@ module.exports = {
 function initOverloadedMethodPropeMeta(targetFuncMeta) {
     
     if (
-        !metadataHasFootPrint(targetFuncMeta, LAST_TRIE_NODE) ||
-        typeof targetFuncMeta.variantTrie !== 'object'
+        //!metadataHasFootPrint(targetFuncMeta, LAST_TRIE_NODE) ||
+        typeof targetFuncMeta.variantTrie === 'object'
     ) {
 
         return;
@@ -56,12 +56,35 @@ function locateBaseHostTrieNodeForParamMeta(paramMeta, hostFuncMeta) {
     const paramPropMeta = paramMeta.owner.owner;
     initOverloadedMethodPropeMeta(hostFuncMeta)
 
-    return currentPropMeta() === paramPropMeta ? 
-            getMetadataFootPrintByKey(hostFuncMeta, LAST_TRIE_NODE) 
-            : hostFuncMeta.variantTrie;
+    // return currentPropMeta() === paramPropMeta ? 
+    //         getMetadataFootPrintByKey(hostFuncMeta, LAST_TRIE_NODE) 
+    //         : hostFuncMeta.variantTrie;
+
+    let currentTrieNode = hostFuncMeta.variantTrie;
+
+    while (true) {
+
+        if (
+            currentTrieNode.depth === paramMeta.index
+        ) {
+
+            return currentTrieNode;
+        }
+
+        if (
+            currentTrieNode.depth < paramMeta.index &&
+            (currentTrieNode.current.size === 0 || !currentTrieNode.current.has(paramMeta.type))
+        ) {
+
+            return currentTrieNode;            
+        }
+
+        currentTrieNode = currentTrieNode.current.get(paramMeta.type);
+    }
 }
 
 /**
+ * Is called when a parameter is type hinted
  * 
  * @param {parameter_metadata_t} paramMeta 
  */
@@ -70,28 +93,29 @@ function locateNewFuncVariantTrieNode(paramMeta) {
     const paramIndex = paramMeta.index;
     const hostFuncMeta = paramMeta.owner; 
     let currentHostTrieNode = locateBaseHostTrieNodeForParamMeta(paramMeta, hostFuncMeta);
-
+    //console.log('-----------------' , hostFuncMeta.name, paramMeta.index, paramMeta.type ,'---------------------')
     while (true) {
-
+        console.log(1)
         if (currentHostTrieNode.depth === paramIndex) {
 
+            manipulateNewTrieNode(paramMeta, currentHostTrieNode);
             break;
         }
-
+        console.log(2)
         if (currentHostTrieNode.depth < paramIndex) {
 
             currentHostTrieNode = manipulateNewTrieNode(null, currentHostTrieNode);
             continue;
         }
-
-        if (currentHostTrieNode.depth > paramIndex) {
+        console.log(3)
+        if (currentHostTrieNode.depth >= paramIndex) {
 
             currentHostTrieNode = manipulateNewTrieNode(paramMeta, currentHostTrieNode);
             continue;
         }
     }
 
-    currentHostTrieNode.functionVariant = hostFuncMeta;
+    //console.log(hostFuncMeta.variantTrie)
 }
 
 /**
@@ -100,6 +124,8 @@ function locateNewFuncVariantTrieNode(paramMeta) {
  * @param {function_variant_param_node_metadata_t} hostTrieNode 
  */
 function manipulateNewTrieNode(paramMeta, hostTrieNode) {
+
+    const paramType = paramMeta?.type ?? Any;
 
     if (
         hostTrieNode.current.has(paramType) &&
@@ -119,7 +145,6 @@ function manipulateNewTrieNode(paramMeta, hostTrieNode) {
         return hostTrieNode.current.get(paramType);
     }
 
-    const paramType = paramMeta?.type ?? Any;
     const newHostTrieNode = new function_variant_param_node_metadata_t(hostTrieNode);
     hostTrieNode.current.set(paramType, newHostTrieNode);
 
@@ -173,8 +198,7 @@ function searchForMethodVariant(funcMeta, list, transform) {
     let currentNode = funcMeta.variantTrie;
 
     while (
-        !iteration.done &&
-        trie
+        !iteration.done
     ) {
 
         const _type = typeof transform === 'function' ? transform(iteration.value) : iteration.value;
@@ -186,8 +210,6 @@ function searchForMethodVariant(funcMeta, list, transform) {
 
         const paramIndex = currentNode.depth;
         const paramMeta = getParamMetaByIndex(funcMeta, paramIndex);
-
-
 
         currentNode = currentNode.current.get(_type);
         iteration = iterator.next();

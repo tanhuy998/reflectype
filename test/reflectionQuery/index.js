@@ -29,6 +29,7 @@ const Void = require('../../src/type/void.js');
 const { extractFunctionInformations, extractClassConstructorInformations } = require('../../src/utils/function.util.js');
 const { FOOTPRINT, TYPE } = require('../../src/libs/constant.js');
 const { isTypeOf } = require('../../src/metadata/aspect/criteriaOperator.js');
+const { searchForMethodVariant } = require('../../src/libs/methodVariant.lib.js');
 // const {A} = require('./compiled.js');
 
 
@@ -87,9 +88,13 @@ const { isTypeOf } = require('../../src/metadata/aspect/criteriaOperator.js');
 console.time(2)
 //console.log(A)
 const obj = new D();
-const ref = new ReflectionPrototypeMethod(obj, 'func');
+const ref = new ReflectionPrototypeMethod(H, 'func');
 new ReflectionPrototypeMethod(obj, 'func');
-console.log(ref.isValid)
+
+
+console.log(ref.metadata.functionMeta)
+const funcMeta = ref.metadata.functionMeta;
+console.log(searchForMethodVariant(funcMeta, [Function, Number]))
 console.timeEnd(2)
 
 

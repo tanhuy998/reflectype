@@ -1,10 +1,22 @@
 const parameterDecorator = require('../../libs/parameterDecorator');
 const propertyDecorator = require('../../libs/propertyDecorator')
 const { pseudo_parameter_decorator_context_t } = require('../pseudoDecorator');
+const methodVariant = require('../../libs/methodVariant.lib');
+const { parameter_metadata_t } = require('../../reflection/metadata');
 
 module.exports = {
     resolvePropMetaForParameter,
     resolvePropMetaForProperty,
+    manipulateMethodParameterTrie,
+}
+
+/**
+ * 
+ * @param {parameter_metadata_t} paramMeta 
+ */
+function manipulateMethodParameterTrie(paramMeta) {
+
+    methodVariant.locateNewFuncVariantTrieNode(paramMeta);
 }
 
 /**
@@ -16,8 +28,6 @@ module.exports = {
 function resolvePropMetaForParameter(_, context) {
 
     const paramMeta = parameterDecorator.initMetadata(...arguments);
-
-
 
     return paramMeta;
 }

@@ -5,7 +5,7 @@ const { TYPE, DECORATED_VALUE } = require('../libs/constant.js');
 const { pseudo_parameter_decorator_context_t } = require('../utils/pseudoDecorator.js');
 const { property_metadata_t, parameter_metadata_t } = require('../reflection/metadata.js');
 const { markAsDecorator } = require('../utils/decorator/general.js');
-const { resolvePropMetaForParameter, resolvePropMetaForProperty } = require('../utils/decorator/type.util.js');
+const { resolvePropMetaForParameter, resolvePropMetaForProperty, manipulateMethodParameterTrie } = require('../utils/decorator/type.util.js');
 
 const ACCEPT_DECORATOR_KINDS = ['accessor', 'method', 'parameter'];
 
@@ -32,6 +32,11 @@ function type(_abstract) {
         
         footprint.setMetadataFootPrint(meta, TYPE);
         meta.type = _abstract;        
+
+        if (kind === 'parameter') {
+
+            manipulateMethodParameterTrie(meta);
+        }
 
         return kind === 'parameter' ? prop
                 : footprint.getMetadataFootPrintByKey(meta, DECORATED_VALUE);
