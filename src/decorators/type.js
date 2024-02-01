@@ -33,10 +33,10 @@ function type(_abstract) {
         footprint.setMetadataFootPrint(meta, TYPE);
         meta.type = _abstract;        
 
-        if (kind === 'parameter') {
+        // if (kind === 'parameter') {
 
-            manipulateMethodParameterTrie(meta);
-        }
+        //     manipulateMethodParameterTrie(meta);
+        // }
 
         return kind === 'parameter' ? prop
                 : footprint.getMetadataFootPrintByKey(meta, DECORATED_VALUE);

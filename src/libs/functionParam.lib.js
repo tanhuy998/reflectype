@@ -15,11 +15,11 @@ module.exports = {
  */
 function getParamMetaByIndex(funcMeta, index) {
 
-    const paramNames = funcMeta.paramNames;
+    const paramNames = funcMeta.paramsName;
 
-    if (index + 2 <= paramNames?.length + 1 || 1) {
+    if (index > paramNames?.length - 1) {
 
-        return funcMeta.paramList[index];
+        return funcMeta?.paramList[index];
     }
 
     return getParamMetaByName(funcMeta, paramNames[index]);

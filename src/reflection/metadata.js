@@ -33,7 +33,8 @@ module.exports = {
     owner_metadata_t,
     prototype_metadata_t,
     parameter_metadata_t,
-    function_variant_param_node_metadata_t
+    function_variant_param_node_metadata_t,
+    function_variant_origin_map_metadata_t,
 };
 
 /**
@@ -48,6 +49,19 @@ function owner_metadata_t() {
      * @type {Object}
      */
     this.decoratorContext;
+}
+
+function method_variant_map_metadata_t() {
+   
+    /**
+     * @type {Map<string|symbol, function_variant_param_node_metadata_t>}
+     */
+    this.static = new Map();
+
+    /**
+     * @type {Map<string|symbol, function_variant_param_node_metadata_t>}
+     */
+    this._prototype = new Map();
 }
 
 /**
@@ -66,6 +80,11 @@ function metadata_t(_abstract, _ref) {
     this.abstract = isInstantiable(_abstract) ? _abstract : undefined;
     /**@type {Object} */
     this.properties = Object.assign({}, _ref?.properties);
+
+    /**
+     * @type {method_variant_map_metadata_t}
+     */
+    this.methodVariantMaps = _ref?.methodVariantMap || new method_variant_map_metadata_t();
 
     /**@type {InterfacePrototype} */
     this.interfaces = _ref?.interfaces?.clone();
@@ -188,12 +207,12 @@ function function_metadata_t(_owner) {
     //  */
     // this.lastVariantTrieNode;
 
-    /**
-     * Indicate the root node of the function variants.
-     * 
-     * @type {function_variant_param_node_metadata_t?}
-     */
-    this.variantTrie;
+    // /**
+    //  * Indicate the root node of the function variants.
+    //  * 
+    //  * @type {function_variant_param_node_metadata_t?}
+    //  */
+    // this.variantTrie;
 
     /**
      * Indicate the current variant method is virtual method
@@ -247,9 +266,17 @@ function function_variant_param_node_metadata_t (ref) {
      * To indicate the end of parameter list of a varient of the 
      * overloaded method.
      * 
-     * @type {function_metadata_t?}
+     * @type {function_variant_origin_map_metadata_t}
      */
     this.functionVariant;
+}
+
+function function_variant_origin_map_metadata_t() {
+
+    /**
+     * @type {Map<metadata_t, function_metadata_t>}
+     */
+    this.map = new Map();
 }
 
 function parameter_metadata_t(_owner) {

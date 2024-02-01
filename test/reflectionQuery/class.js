@@ -10,102 +10,102 @@ const entries = new Set();
 
 class Z {}
 
-class A extends Z {
+// class A extends Z {
     
-    @type(Boolean)
-    static accessor prop;
+//     @type(Boolean)
+//     static accessor prop;
 
-    // // //@paramsType(Boolean)
-    // @parameters({b: Boolean})
-    // static #func(a, b) {
+//     // // //@paramsType(Boolean)
+//     // @parameters({b: Boolean})
+//     // static #func(a, b) {
 
 
-    // }
+//     // }
     
 
-    @type(Number)
-    accessor prop;
+//     @type(Number)
+//     accessor prop;
 
-    @type(Number)
-    accessor strProp;
+//     @type(Number)
+//     accessor strProp;
 
-    @allowNull
-    @returnType(Number)
-    //@defaultArguments(1)
-    @paramsType(Number)
-    func(a, b) {
+//     @allowNull
+//     @returnType(Number)
+//     //@defaultArguments(1)
+//     @paramsType(Number)
+//     func(a, b) {
 
-        console.log('func', ...arguments)
-    }
+//         console.log('func', ...arguments)
+//     }
 
-    test() {
+//     test() {
 
-        this.func(...arguments);
-    }
-}
+//         this.func(...arguments);
+//     }
+// }
 
-class B extends A {
+// class B extends A {
 
-    func() {}
-}
+//     func() {}
+// }
 
-class C extends B {
-
-
-}
-
-class D extends C {
-
-    
-    @allowNull
-    @paramsType(Boolean, Boolean)
-    @returnType(Boolean)
-    func(param1, param2) {
-
-        console.log('B.func()', arguments)
-    }
-}
-
-class E extends D {
-
-    accessor prop 
-
-    func() {
+// class C extends B {
 
 
-    }
-}
+// }
 
-
-class F extends E {
+// class D extends C {
 
     
-    @type(String)
-    accessor prop
+//     @allowNull
+//     @paramsType(Boolean, Boolean)
+//     @returnType(Boolean)
+//     func(param1, param2) {
+
+//         console.log('B.func()', arguments)
+//     }
+// }
+
+// class E extends D {
+
+//     accessor prop 
+
+//     func() {
+
+
+//     }
+// }
+
+
+// class F extends E {
+
     
-    @allowNull
-    @paramsType(String, String)
-    @returnType(String)
-    func(param1, param2) {
+//     @type(String)
+//     accessor prop
+    
+//     @allowNull
+//     @paramsType(String, String)
+//     @returnType(String)
+//     func(param1, param2) {
 
-        console.log('B.func()', arguments)
-    }
+//         console.log('B.func()', arguments)
+//     }
 
-    // func() {
+//     // func() {
 
-    //     console.log('override without type');
-    // }
-}
+//     //     console.log('override without type');
+//     // }
+// }
 
-class G extends F  {
+// class G extends F  {
 
-    func() {
+//     func() {
 
-        console.log('func D');
-    }
-}
+//         console.log('func D');
+//     }
+// }
 
-class H extends C {
+class H {
 
     //@allowNull
     @returnType(Number)
@@ -127,4 +127,4 @@ function dec(_, context) {
 
 //module.exports = {A}
 
-module.exports = {A, B, C, D, E, F, G, H};
+module.exports = {H} // {A, B, C, D, E, F, G, H};

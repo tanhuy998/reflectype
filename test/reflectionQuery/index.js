@@ -30,6 +30,7 @@ const { extractFunctionInformations, extractClassConstructorInformations } = req
 const { FOOTPRINT, TYPE } = require('../../src/libs/constant.js');
 const { isTypeOf } = require('../../src/metadata/aspect/criteriaOperator.js');
 const { searchForMethodVariant } = require('../../src/libs/methodVariant.lib.js');
+const { getAllParametersMeta } = require('../../src/libs/functionParam.lib.js');
 // const {A} = require('./compiled.js');
 
 
@@ -87,14 +88,11 @@ const { searchForMethodVariant } = require('../../src/libs/methodVariant.lib.js'
 
 console.time(2)
 //console.log(A)
-const obj = new D();
 const ref = new ReflectionPrototypeMethod(H, 'func');
-new ReflectionPrototypeMethod(obj, 'func');
 
-
-console.log(ref.metadata.functionMeta)
 const funcMeta = ref.metadata.functionMeta;
-console.log(searchForMethodVariant(funcMeta, [Function, Number]))
+console.log(getAllParametersMeta(funcMeta))
+//console.log(searchForMethodVariant(funcMeta, [Function, Number]))
 console.timeEnd(2)
 
 
