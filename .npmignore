@@ -2,6 +2,10 @@ node_modules
 
 test/
 
+src/**/*.md
+src/**/doc 
+doc/
+
 **/test/
 
 src/test

@@ -6,7 +6,7 @@ const { getMetadataFootPrintByKey, setMetadataFootPrint, metadataHasFootPrint } 
 const { getParamMetaByIndex, getAllParametersMeta } = require("./functionParam.lib");
 const { currentPropMeta } = require("./metadata/metadataTrace");
 const { LAST_TRIE_NODE, OVERLOAD_APPLIED, OVERLOAD_TARGET } = require("./methodOverloading/constant");
-const { isValuable } = require("./type");
+const { isValuable, isObjectLike } = require("./type");
 
 module.exports = {
     locateNewFuncVariantTrieNode,
@@ -15,76 +15,8 @@ module.exports = {
     mergeFuncVariant,
     manipulateMethodVariant,
     manipulateIfOveloading,
+    manipulateMethodVariantBehavior,
 }
-
-// /**
-//  * Init if the target method function_metadata_t has not been 
-//  * applied any param meta. 
-//  * 
-//  * @param {function_metadata_t} targetPropMeta 
-//  */
-// function initOverloadedMethodPropeMeta(targetFuncMeta) {
-    
-//     if (
-//         //!metadataHasFootPrint(targetFuncMeta, LAST_TRIE_NODE) ||
-//         typeof targetFuncMeta.variantTrie === 'object'
-//     ) {
-
-//         return;
-//     }
-
-//     const rootTrieNode = new function_variant_param_node_metadata_t();
-//     rootTrieNode.depth = 0;
-//     targetFuncMeta.variantTrie = rootTrieNode;
-//     setMetadataFootPrint(targetFuncMeta, LAST_TRIE_NODE, rootTrieNode);
-// }
-
-
-// /**
-//  * Locate the host function meta (of the oveloaded method) 
-//  * last manipulated trie node
-//  * 
-//  * @param {parameter_metadata_t} paramMeta 
-//  * @param {function_metadata_t} hostFuncMeta
-//  * 
-//  * @returns {function_variant_param_node_metadata_t}
-//  */
-// function locateBaseHostTrieNodeForParamMeta(paramMeta, hostFuncMeta) {
-
-//     if (!hostFuncMeta) {
-
-//         return undefined;
-//     }
-
-//     const paramPropMeta = paramMeta.owner.owner;
-//     initOverloadedMethodPropeMeta(hostFuncMeta)
-
-//     // return currentPropMeta() === paramPropMeta ? 
-//     //         getMetadataFootPrintByKey(hostFuncMeta, LAST_TRIE_NODE) 
-//     //         : hostFuncMeta.variantTrie;
-
-//     let currentTrieNode = hostFuncMeta.variantTrie;
-
-//     while (true) {
-
-//         if (
-//             currentTrieNode.depth === paramMeta.index
-//         ) {
-
-//             return currentTrieNode;
-//         }
-
-//         if (
-//             currentTrieNode.depth < paramMeta.index &&
-//             (currentTrieNode.current.size === 0 || !currentTrieNode.current.has(paramMeta.type))
-//         ) {
-
-//             return currentTrieNode;            
-//         }
-
-//         currentTrieNode = currentTrieNode.current.get(paramMeta.type);
-//     }
-// }
 
 /**
  * @this Function|Object class or class's prototype that is resolved resolution
@@ -125,14 +57,14 @@ function manipulateMethodVariant(propName, propMeta) {
  * @param {string|symbol} propName 
  * @param {property_metadata_t} propMeta 
  */
-function manipulateIfOveloading(propName, propMeta) {
+function manipulateInternalOveloading(propName, propMeta) {
 
     if (!propMeta.isMethod) {
 
         return;
     }
 
-    if (!isOverloadingMethod(propMeta)) {
+    if (!isInternalOverloadingMethod(this, propMeta)) {
 
         return;
     }
@@ -152,12 +84,96 @@ function manipulateIfOveloading(propName, propMeta) {
 }
 
 /**
+ * This function will be register as a metadata properties resoulution plugin,
+ * 
+ * @this Function|Object class or class's prototype that is resolved resolution
+ * 
+ * @param {string|symbol} propName 
+ * @param {property_metadata_t} propMeta 
+ */
+function manipulateMethodVariantBehavior(propName, propMeta) {
+
+    if (isInternalOverloadingMethod.call(this, propMeta)) {
+
+        manipulateInternalOveloading(propName, propMeta);
+        return;
+    }
+    
+    if (isDerivedOverloadingMethod.call(this, propMeta)) {
+
+        return;
+    }
+
+    //if ()
+}
+
+/**
+ * 
+ * @param {string|symbol} propName 
+ * @param {property_metadata_t} propMeta 
+ */
+function manipulateDerivedOverloading(propName, propMeta) {
+
+
+}
+
+function isDerivedOverrideMethod() {
+
+
+}
+
+/**
+ * @this 
  * 
  * @param {property_metadata_t} propMeta 
  */
-function isOverloadingMethod(propMeta) {
+function isDerivedOverloadingMethod(propMeta) {
 
-    return getMetadataFootPrintByKey(propMeta, OVERLOAD_APPLIED);
+    const methodName = propMeta.name;
+
+    if (
+        !isOwnerOfPropMeta(this, propMeta) &&
+        typeof this[methodName] === 'function' &&
+        !getMetadataFootPrintByKey(propMeta, OVERLOAD_APPLIED)
+    ) {
+
+        return true;
+    }
+
+    if (
+        isOwnerOfPropMeta(this, propMeta)
+    ) {
+
+        const variantMaps = propMeta.owner.typeMeta.methodVariantMaps;
+        const targetVariantMap = propMeta.static ? variantMaps.static : variantMaps._prototype;
+
+
+    }
+}
+
+/**
+ * @this
+ * 
+ * @param {property_metadata_t} propMeta 
+ */
+function isInternalOverloadingMethod(propMeta) {
+
+    return  isOwnerOfPropMeta(this, propMeta) &&
+            getMetadataFootPrintByKey(propMeta, OVERLOAD_APPLIED);
+}
+
+/**
+ * 
+ * @param {object|Function} targetOfResolution 
+ * @param {property_metadata_t} propMeta 
+ */
+function isOwnerOfPropMeta(targetOfResolution, propMeta) {
+
+    const propMetaOwnerClass = propMeta.owner.typeMeta.abstract;
+
+    return  !isObjectLike(targetOfResolution) &&
+            (propMetaOwnerClass === _unknown ||
+            propMetaOwnerClass === _unknown.prototype);
 }
 
 /**
@@ -185,7 +201,7 @@ function locateNewFuncVariantTrieNode(paramMeta, rootTrieNode) {
 
     const paramIndex = paramMeta.index;
     const hostFuncMeta = paramMeta.owner; 
-    let currentHostTrieNode = rootTrieNode; // locateBaseHostTrieNodeForParamMeta(paramMeta, hostFuncMeta);
+    let currentHostTrieNode = rootTrieNode;
     console.log('-----------------' , hostFuncMeta.name, paramMeta.index, paramMeta.type ,'---------------------')
     while (true) {
         console.log(['depth'], currentHostTrieNode.depth)
@@ -298,7 +314,7 @@ function searchForMethodVariant(rootTrieNode, list, transform) {
 
     const iterator = (list || [])[Symbol.iterator]();
     let iteration = iterator.next();
-    let currentNode = rootTrieNode; // funcMeta.variantTrie;
+    let currentNode = rootTrieNode;
     console.log('======================================')
     while (
         !iteration.done
@@ -310,9 +326,6 @@ function searchForMethodVariant(rootTrieNode, list, transform) {
 
             return undefined;
         }
-
-        const paramIndex = currentNode.depth;
-        //const paramMeta = getParamMetaByIndex(funcMeta, paramIndex);
 
         currentNode = currentNode.current.get(_type);
         iteration = iterator.next();
