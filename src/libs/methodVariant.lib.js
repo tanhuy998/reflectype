@@ -1,21 +1,17 @@
 const { property_metadata_t, function_metadata_t, function_variant_param_node_metadata_t, parameter_metadata_t, function_variant_origin_map_metadata_t } = require("../reflection/metadata");
 const Any = require("../type/any");
-const { pseudo_parameter_decorator_context_t } = require("../utils/pseudoDecorator");
 const { DECORATED_VALUE } = require("./constant");
-const { getMetadataFootPrintByKey, setMetadataFootPrint, metadataHasFootPrint } = require("./footPrint");
-const { getParamMetaByIndex, getAllParametersMeta } = require("./functionParam.lib");
-const { currentPropMeta } = require("./metadata/metadataTrace");
-const { LAST_TRIE_NODE, OVERLOAD_APPLIED, OVERLOAD_TARGET } = require("./methodOverloading/constant");
-const { isValuable, isObjectLike } = require("./type");
+const { getMetadataFootPrintByKey } = require("./footPrint");
+const { OVERLOAD_APPLIED, OVERLOAD_TARGET } = require("./methodOverloading/constant");
+const { isObjectLike } = require("./type");
 
 module.exports = {
     locateNewFuncVariantTrieNode,
     //initOverloadedMethodPropeMeta,
     searchForMethodVariant,
     mergeFuncVariant,
-    manipulateMethodVariant,
-    manipulateIfOveloading,
     manipulateMethodVariantBehavior,
+    isOwnerOfPropMeta,
 }
 
 /**
@@ -57,14 +53,9 @@ function manipulateMethodVariant(propName, propMeta) {
  * @param {string|symbol} propName 
  * @param {property_metadata_t} propMeta 
  */
-function manipulateInternalOveloading(propName, propMeta) {
+function manipulatePseudoOveloading(propName, propMeta) {
 
     if (!propMeta.isMethod) {
-
-        return;
-    }
-
-    if (!isInternalOverloadingMethod(this, propMeta)) {
 
         return;
     }
@@ -91,33 +82,69 @@ function manipulateInternalOveloading(propName, propMeta) {
  * @param {string|symbol} propName 
  * @param {property_metadata_t} propMeta 
  */
+function manipulateDerivedOverloading(propName, propMeta) {
+
+
+}
+
+/**
+ * This function will be register as a metadata properties resoulution plugin,
+ * 
+ * @this Function|Object class or class's prototype that is resolved resolution
+ * 
+ * @param {string|symbol} propName 
+ * @param {property_metadata_t} propMeta 
+ */
 function manipulateMethodVariantBehavior(propName, propMeta) {
 
-    if (isInternalOverloadingMethod.call(this, propMeta)) {
+    if (!propMeta.isMethod) {
 
-        manipulateInternalOveloading(propName, propMeta);
+        return;
+    }
+
+    if (isOverrideWithoutDecoration.call(this, propName, propMeta)) {
+        const currentClass = typeof this === 'function' ? this : this.constructor;
+        const overridedClass = propMeta.owner.typeMeta.abstract;
+        throw new ReferenceError(`could not define undecorated method [${currentClass?.name}].${propName}() to override base class's decorated method [${overridedClass?.name}].${propName}()`);
+    }
+
+    if (isPseudoOverloadingMethod.call(this, propName, propMeta)) {
+
+        manipulatePseudoOveloading(propName, propMeta);
         return;
     }
     
-    if (isDerivedOverloadingMethod.call(this, propMeta)) {
+    if (isDerivedOverloadingMethod.call(this, propName, propMeta)) {
 
+        manipulateDerivedOverloading.call(this, propName, propMeta);
         return;
     }
 
     //if ()
 }
 
+
 /**
+ * @this
  * 
  * @param {string|symbol} propName 
  * @param {property_metadata_t} propMeta 
  */
-function manipulateDerivedOverloading(propName, propMeta) {
+function isPseudoOverloadingMethod(propName, propMeta) {
 
-
+    return isOwnerOfPropMeta(this, propMeta) &&
+            getMetadataFootPrintByKey(propMeta, OVERLOAD_APPLIED) &&
+            getMetadataFootPrintByKey(propMeta.functionMeta, OVERLOAD_TARGET).name !== propMeta.name;
 }
 
-function isDerivedOverrideMethod() {
+
+/**
+ * @this
+ * 
+ * @param {string|symbol} propName 
+ * @param {property_metadata_t} propMeta 
+ */
+function isDerivedOverrideMethod(propName, propMeta) {
 
 
 }
@@ -127,54 +154,38 @@ function isDerivedOverrideMethod() {
  * 
  * @param {property_metadata_t} propMeta 
  */
-function isDerivedOverloadingMethod(propMeta) {
+function isDerivedOverloadingMethod(propName, propMeta) {
 
-    const methodName = propMeta.name;
-
-    if (
-        !isOwnerOfPropMeta(this, propMeta) &&
-        typeof this[methodName] === 'function' &&
-        !getMetadataFootPrintByKey(propMeta, OVERLOAD_APPLIED)
-    ) {
-
-        return true;
-    }
-
-    if (
-        isOwnerOfPropMeta(this, propMeta)
-    ) {
-
-        const variantMaps = propMeta.owner.typeMeta.methodVariantMaps;
-        const targetVariantMap = propMeta.static ? variantMaps.static : variantMaps._prototype;
-
-
-    }
+    
 }
 
 /**
  * @this
  * 
+ * @param {object|Function} targetOfResolution 
  * @param {property_metadata_t} propMeta 
  */
-function isInternalOverloadingMethod(propMeta) {
+function isOverrideWithoutDecoration(propName, propMeta) {
 
-    return  isOwnerOfPropMeta(this, propMeta) &&
-            getMetadataFootPrintByKey(propMeta, OVERLOAD_APPLIED);
+    return !isOwnerOfPropMeta.call(this, propName, propMeta) &&
+            this[propName] !== getMetadataFootPrintByKey(propMeta, DECORATED_VALUE);
 }
 
 /**
+ * @this
  * 
  * @param {object|Function} targetOfResolution 
  * @param {property_metadata_t} propMeta 
  */
-function isOwnerOfPropMeta(targetOfResolution, propMeta) {
+function isOwnerOfPropMeta(propName, propMeta) {
 
     const propMetaOwnerClass = propMeta.owner.typeMeta.abstract;
 
-    return  !isObjectLike(targetOfResolution) &&
-            (propMetaOwnerClass === _unknown ||
-            propMetaOwnerClass === _unknown.prototype);
+    return  isObjectLike(this) &&
+            (propMetaOwnerClass === this ||
+            propMetaOwnerClass === this.prototype);
 }
+
 
 /**
  * 
@@ -273,7 +284,7 @@ function manipulateNewTrieNode(paramMeta, hostTrieNode) {
  */
 function mergeFuncVariant(paramMetaList, rootTrieNode) {
 
-    if (hasVariant(rootTrieNode, paramTypeList)) {
+    if (hasVariant(rootTrieNode, paramMetaList)) {
 
         throw new Error(); // will be a custom error
     }
