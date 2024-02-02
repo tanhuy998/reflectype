@@ -34,7 +34,8 @@ module.exports = {
     prototype_metadata_t,
     parameter_metadata_t,
     function_variant_param_node_metadata_t,
-    function_variant_origin_map_metadata_t,
+    function_variant_param_node_endpoint_metadata_t
+    //function_variant_origin_map_metadata_t,
 };
 
 /**
@@ -224,6 +225,14 @@ function function_metadata_t(_owner) {
     this.allowOverride = false;
 }
 
+function function_variant_param_node_endpoint_metadata_t() {
+
+    /**
+     * @type {Map<metadata_t, function_metadata_t>}
+     */
+    this.map = new Map();
+}
+
 /**
  * 
  * @param {function_variant_param_node_metadata_t} ref 
@@ -266,18 +275,15 @@ function function_variant_param_node_metadata_t (ref) {
      * To indicate the end of parameter list of a varient of the 
      * overloaded method.
      * 
-     * @type {function_variant_origin_map_metadata_t}
+     * @type {function_variant_param_node_endpoint_metadata_t}
      */
-    this.functionVariant;
+    this.endpoint;
 }
 
-function function_variant_origin_map_metadata_t() {
+// function function_variant_origin_map_metadata_t() {
 
-    /**
-     * @type {Map<metadata_t, function_metadata_t>}
-     */
-    this.map = new Map();
-}
+    
+// }
 
 function parameter_metadata_t(_owner) {
 

@@ -1,5 +1,5 @@
-const { manipulateMethodVariant } = require("../../methodVariant.lib");
+const {manipulateMethodVariantBehavior} = require("../../methodVariant.lib");
 
 module.exports = [
-    manipulateMethodVariant
+    manipulateMethodVariantBehavior
 ];

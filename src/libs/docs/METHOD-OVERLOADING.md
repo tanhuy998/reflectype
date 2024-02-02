@@ -1,5 +1,3 @@
-### METHOD OVERLOADING
-
 Apply @overload(nameOfMethodToOverload) decorator for another method.
 
 **DRAFT**
@@ -12,13 +10,11 @@ on the other hand, if no param types defined, @overload will mark the method who
 On this case, if there are any @type decorators applied, the overloading state will be decide by the metadata resolution progress.
 
 -----------------------------------------------------------
+#### METHOD RESOLUTION STRATEGIES CONSIDERATION
 
-**FINAL THOUGH**
 The method variants trie just only been built by the metadata resolution progress.
 When undecorated classes inherit decorated classes, every override method without decoration on derived class will be marked as overload version of  it base class's origin method. If that override has exactly the same signature as it's base method, it would be a truely overriden behavior and the evaluation based on the allowance of the base class's method for overriden. 
 
-
-**ANALYZE**
 situations
 
 1. A class define a method that have never been defined on it's base class inheritance chain. [override]
@@ -37,7 +33,7 @@ situations
 	2. base class method was decorated.
 		1.  the two method have similar signatures.
 			1. base class method allows overriden.
-				-> search for the trie endpoint and define CVfootprint on this node.
+				-> search for the trie endpoint and define footprint on this node.
 			2. base class method not allow overriden.
 				-> throw error.
 		2.  the two method have different signatures.
@@ -47,3 +43,10 @@ situations
 	1. the overloaded method is owned by it's owner base class. (not effective)
 	2. the overloaded method is owned by it's owner class. (not effective)
 -> pseudo function just lookup on the variant trie to find which method it oveloads so just be sure the target method was decorated before the pseudo method is define no matter whose owner of the target of overload method is.
+
+------------------------------------------------------------
+#### METHOD DECISION INVOCATION
+
+All decorated class's methods have an entry point that.
+
+Entry point invoked -> get the current class of the object that bound the method -> lookup method signature in variant trie to find matched endpoint -> lookup again on the endpoint object by using the current class as key to get the exact method variant. 

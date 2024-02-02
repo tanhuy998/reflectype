@@ -76,7 +76,7 @@ function overload(nameOfMethodToOverload) {
         const funcMeta = propMeta.functionMeta;
 
         final(_, context); // decorator that mark the current method is final
-        setMetadataFootPrint(funcMeta, OVERLOAD_TARGET, propMeta);
+        setMetadataFootPrint(funcMeta, OVERLOAD_TARGET, targetPropMeta);
         setMetadataFootPrint(funcMeta, OVERLOAD_PENDING);
         setMetadataFootPrint(propMeta, OVERLOAD_APPLIED);
 

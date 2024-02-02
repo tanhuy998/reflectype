@@ -203,24 +203,31 @@ function scanAndResolvePrototypeProperties(_class) {
 function manipulateProperties(_target, meta) {
 
     const properties = meta.properties;
+    const propertyResolutionPlugins = require('./resolutionPlugins/propertyResolutionPlugins');
 
     for (const [propName, propMeta] of Object.entries(properties) || []) {
 
         if (
-            !isMethodOverridedWithoutDecorattion.call(_target, propName, propMeta) &&
-            !isAttributeOverridedWithoutDecoration.call(
+            //!isMethodOverridedWithoutDecorattion.call(_target, propName, propMeta) &&
+            //!isAttributeOverridedWithoutDecoration.call(
+            isAttributeOverridedWithoutDecoration.call(
                 _target, 
                 propName, 
                 propMeta,
                 meta.constructor === metadata_t ? meta : meta.owner.typeMeta
             )
         ) {
-            
-            continue;
+            delete properties[propName];
+            //continue;
         }
 
         // unlink the propMeta
-        delete properties[propName];
+        // delete properties[propName];
+
+        for (const plugin of propertyResolutionPlugins || []) {
+            
+            plugin.call(_target, propName, propMeta);
+        }
     }
 }
 

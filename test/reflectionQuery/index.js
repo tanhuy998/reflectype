@@ -88,10 +88,10 @@ const { getAllParametersMeta } = require('../../src/libs/functionParam.lib.js');
 
 console.time(2)
 //console.log(A)
-const ref = new ReflectionPrototypeMethod(H, 'func');
+const ref = new ReflectionClassPrototype(H);
 
 const funcMeta = ref.metadata.functionMeta;
-console.log(getAllParametersMeta(funcMeta))
+console.log(ref.metadata.owner.typeMeta);
 //console.log(searchForMethodVariant(funcMeta, [Function, Number]))
 console.timeEnd(2)
 
