@@ -31,6 +31,7 @@ const { FOOTPRINT, TYPE } = require('../../src/libs/constant.js');
 const { isTypeOf } = require('../../src/metadata/aspect/criteriaOperator.js');
 const { searchForMethodVariant } = require('../../src/libs/methodVariant.lib.js');
 const { getAllParametersMeta } = require('../../src/libs/functionParam.lib.js');
+const { retrieveAllSignatures } = require('../../src/libs/methodVariantTrieOperation.lib.js');
 // const {A} = require('./compiled.js');
 
 
@@ -86,19 +87,38 @@ const { getAllParametersMeta } = require('../../src/libs/functionParam.lib.js');
 // console.log(N[METADATA] === wrapperM)
 // console.log(N[METADATA] === wrapperA)
 
+
 console.time(2)
 //console.log(A)
 const ref = new ReflectionClassPrototype(H);
 
 const funcMeta = ref.metadata.functionMeta;
-console.log(ref.metadata.owner.typeMeta);
+const typeMeta = ref.metadata.owner.typeMeta;
+const trieMaps = typeMeta.methodVariantMaps;
+const prototypeMap = trieMaps._prototype;
+const trie = prototypeMap.get('func');
+
+console.log(['000000000000000000000000000000000000000000000000000000'])
+console.log(trie)
+console.log(retrieveAllSignatures(trie));
 //console.log(searchForMethodVariant(funcMeta, [Function, Number]))
 console.timeEnd(2)
 
 
+
+
 // for (let i = 0; i < 1000; ++i) {
+// // console.time(2)
+// // const ref = new ReflectionPrototypeAttribute(obj, 'prop');
+// // console.timeEnd(2)
+
 // console.time(2)
-// const ref = new ReflectionPrototypeAttribute(obj, 'prop');
+// //console.log(A)
+// const ref = new ReflectionClassPrototype(H);
+
+// const funcMeta = ref.metadata.functionMeta;
+// //console.log(ref.metadata.owner.typeMeta);
+// //console.log(searchForMethodVariant(funcMeta, [Function, Number]))
 // console.timeEnd(2)
 // }
 

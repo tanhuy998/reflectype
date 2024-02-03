@@ -57,7 +57,7 @@ function hasVariant(rootTrieNode, paramTypeList) {
     return typeof searchForMethodVariant(
         rootTrieNode, paramTypeList, 
         (paramMeta) => {
-            return paramMeta.type;
+            return paramMeta?.type || Any;
         }
     ) === function_variant_param_node_endpoint_metadata_t;
 }
@@ -76,14 +76,29 @@ function mergeFuncVariant(paramMetaList, rootTrieNode) {
         throw new Error(); // will be a custom error
     }
 
-    let ret;
+    /**@type {function_variant_param_node_metadata_t} */
+    let ret = rootTrieNode;
 
     for (const paramMeta of paramMetaList || []) {
 
-        ret = locateNewFuncVariantTrieNode(paramMeta, rootTrieNode);
+        ret = insertTrieNode(ret, paramMeta); //locateNewFuncVariantTrieNode(paramMeta, rootTrieNode);
     }
 
     return ret;
+}
+
+/**
+ * 
+ * @param {function_variant_param_node_metadata_t} currentNode 
+ * @param {parameter_metadata_t?} paraMeta 
+ */
+function insertTrieNode(currentNode, paraMeta) {
+
+    const nextNode = new function_variant_param_node_metadata_t(currentNode);
+
+    currentNode.current.set(paraMeta?.type || Any, nextNode);
+
+    return nextNode;
 }
 
 /**
@@ -191,13 +206,23 @@ function traverse(trieNode, stack = [], globalList = []) {
      */
     if (trieNode.endpoint) {
 
-        globalList.push(...stack);
+        globalList.push([...stack]);
     }
+
+    const recoverPoint = stack.length;
 
     for (const [_type, nextDepth] of trieNode.current.entries() || []) {
 
         stack.push(_type);
 
         traverse(nextDepth, stack, globalList);
+
+        while (
+            stack.length !== recoverPoint &&
+            stack.length !== 0
+        ) {
+
+            stack.pop();
+        }
     }
 }

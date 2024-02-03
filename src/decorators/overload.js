@@ -57,11 +57,6 @@ function overload(nameOfMethodToOverload) {
             throw new ReferenceError();
         }
 
-        if (retrieveDecoratorFootPrintByKey(_, context, OVERLOAD_APPLIED)) {
-
-            throw new Error('apply @overload on a method multiple times is not allowed');
-        }
-
         if (
             getMetadataFootPrintByKey(targetPropMeta.functionMeta, IS_FINAL) === true
         ) {
@@ -69,9 +64,13 @@ function overload(nameOfMethodToOverload) {
             throw new Error('could not declare a final method as overloading method of another');
         }
 
-
-
         const propMeta = propertyDecorator.initMetadata(...arguments);
+
+        if (retrieveDecoratorFootPrintByKey(_, context, OVERLOAD_APPLIED)) {
+
+            throw new Error('apply @overload on a method multiple times is not allowed');
+        }
+
         //registerOverloadParams(propMeta, targetPropMeta);
         const funcMeta = propMeta.functionMeta;
 

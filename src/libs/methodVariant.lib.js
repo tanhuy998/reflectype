@@ -136,9 +136,9 @@ function registerOverloadVariant(hostPropMeta) {
 
     const variantTrie = variantMap.get(overloadedMethodName) || initIfNoVariantMap(hostPropMeta.name, variantMap);
     const hostParamMetaList = getAllParametersMeta(hostFuncMeta);
-
+    console.log(['host param meta list'], hostParamMetaList)
     //const remoteAllowOverride = remotePropMeta.functionMeta.allowOverride;
-    const searchedNodeEndpoint = searchForMethodVariant(variantTrie, hostParamMetaList, paramMeta => paramMeta.type);
+    const searchedNodeEndpoint = searchForMethodVariant(variantTrie, hostParamMetaList, paramMeta => paramMeta?.type || Any);
 
     const hasSignature = searchedNodeEndpoint?.map.has(typeMeta);  //hasVariant(variantTrie, hostParamMetaList);
     const overloadedFuncMeta = searchedNodeEndpoint?.map.get(typeMeta);
@@ -184,7 +184,8 @@ function registerOverloadVariant(hostPropMeta) {
      */
 
     const endPointNode = mergeFuncVariant(hostParamMetaList, variantTrie);
-
+    
+    endPointNode.endpoint ??= new function_variant_param_node_endpoint_metadata_t();
     endPointNode.endpoint.map.set(typeMeta, getMetadataFootPrintByKey(hostPropMeta, DECORATED_VALUE));
 }
 

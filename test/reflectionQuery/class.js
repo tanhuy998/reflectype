@@ -3,7 +3,9 @@ const {METADATA, TYPE_JS} = require('../../src/constants.js');
 const allowNull = require('../../src/decorators/allowNull.js');
 const defaultArguments = require('../../src/decorators/defaultArguments.js');
 const parameters = require('../../src/decorators/parameters.js');
+const overload = require('../../src/decorators/overload.js');
 const { ORIGIN } = require('../../src/libs/metadata/constant.js');
+const { METHOD } = require('../../src/libs/methodOverloading/constant.js');
 
 const stack = [];
 const entries = new Set();
@@ -111,11 +113,20 @@ class H {
     @returnType(Number)
     @parameters({
         a: [Function, allowNull],
-        b: Number
+        b: Number,
     })
-    func(a, b) {
+    func(a, e, b) {
 
         console.log('C', ...arguments)
+    }
+
+    @overload('func')
+    @parameters({
+        param2: Boolean
+    })
+    another(param1, param2) {
+
+
     }
 }
 
