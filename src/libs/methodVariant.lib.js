@@ -125,22 +125,23 @@ function initIfNoVariantMap(methodName, variantMap) {
 function registerOverloadVariant(hostPropMeta) {
 
     // const variantTrie = getVariantTrieOf(remotePropMeta);
-
-    const overloadedMethodName = getMetadataFootPrintByKey(hostPropMeta, OVERLOAD_TARGET)?.name || hostPropMeta.name;
+    //console.log(getMetadataFootPrintByKey(hostPropMeta, OVERLOAD_TARGET))
+    const hostFuncMeta = hostPropMeta.functionMeta;
+    const overloadedMethodName = getMetadataFootPrintByKey(hostFuncMeta, OVERLOAD_TARGET)?.name || hostPropMeta.name;
     const isPseudoMethod = overloadedMethodName === hostPropMeta.name;
 
-    const hostFuncMeta = hostPropMeta.functionMeta;
     const typeMeta = hostPropMeta.owner.typeMeta;
     const maps = typeMeta.methodVariantMaps;
     const variantMap = hostPropMeta.static ? maps.static : maps._prototype;
-
+    
     const variantTrie = variantMap.get(overloadedMethodName) || initIfNoVariantMap(hostPropMeta.name, variantMap);
     const hostParamMetaList = getAllParametersMeta(hostFuncMeta);
-    console.log(['host param meta list'], hostParamMetaList)
+    //console.log(['host param meta list'], overloadedMethodName, hostParamMetaList)
     //const remoteAllowOverride = remotePropMeta.functionMeta.allowOverride;
     const searchedNodeEndpoint = searchForMethodVariant(variantTrie, hostParamMetaList, paramMeta => paramMeta?.type || Any);
 
     const hasSignature = searchedNodeEndpoint?.map.has(typeMeta);  //hasVariant(variantTrie, hostParamMetaList);
+    console.log(['signature existence check'], hasSignature)
     const overloadedFuncMeta = searchedNodeEndpoint?.map.get(typeMeta);
 
     if (

@@ -8,7 +8,7 @@ const { isObjectLike } = require("./type");
 const {getAllParametersMeta} = require('./functionParam.lib');
 
 module.exports = {
-    locateNewFuncVariantTrieNode,
+    //locateNewFuncVariantTrieNode,
     //initOverloadedMethodPropeMeta,
     searchForMethodVariant,
     hasVariant,
@@ -27,13 +27,13 @@ function searchForMethodVariant(rootTrieNode, list, transform) {
     const iterator = (list || [])[Symbol.iterator]();
     let iteration = iterator.next();
     let currentNode = rootTrieNode;
-    console.log('======================================')
+    //console.log('======================================')
     while (
         !iteration.done
     ) {
 
         const _type = typeof transform === 'function' ? transform(iteration.value) : iteration.value;
-        console.log(_type, currentNode)
+        //console.log(_type, currentNode)
         if (!currentNode.current.has(_type)) {
 
             return undefined;
@@ -94,85 +94,98 @@ function mergeFuncVariant(paramMetaList, rootTrieNode) {
  */
 function insertTrieNode(currentNode, paraMeta) {
 
-    const nextNode = new function_variant_param_node_metadata_t(currentNode);
+    // const _type = paraMeta?.type || Any;
 
-    currentNode.current.set(paraMeta?.type || Any, nextNode);
+    // if (currentNode.current.has(_type)) {
 
-    return nextNode;
+    //     return currentNode.current.get(_type);
+    // }
+
+    // const nextNode = new function_variant_param_node_metadata_t(currentNode);
+    // currentNode.current.set(_type, nextNode);
+
+    // return nextNode;
+
+    const _type = paraMeta?.type || Any;
+    const current = currentNode.current;
+
+    return current.has(_type) ? current.get(_type) 
+            : current.set(_type, new function_variant_param_node_metadata_t(currentNode))
+                    .get(_type);
 }
 
-/**
- * 
- * @param {parameter_metadata_t?} paramMeta 
- * @param {function_variant_param_node_metadata_t} hostTrieNode 
- * 
- * @returns {function_variant_param_node_metadata_t}
- */
-function manipulateNewTrieNode(paramMeta, hostTrieNode) {
+// /**
+//  * 
+//  * @param {parameter_metadata_t?} paramMeta 
+//  * @param {function_variant_param_node_metadata_t} hostTrieNode 
+//  * 
+//  * @returns {function_variant_param_node_metadata_t}
+//  */
+// function manipulateNewTrieNode(paramMeta, hostTrieNode) {
 
-    const paramType = paramMeta?.type ?? Any;
+//     const paramType = paramMeta?.type ?? Any;
 
-    if (
-        hostTrieNode.current.has(paramType) &&
-        paramType !== Any
-    ) {
+//     if (
+//         hostTrieNode.current.has(paramType) &&
+//         paramType !== Any
+//     ) {
 
-        throw new ReferenceError();
-    }
-    else if (
-        hostTrieNode.current.has(paramType) &&
-        paramType === Any
-    ) { 
-        /**
-         * when there is no type and the current depth also
-         * 
-         */
-        return hostTrieNode.current.get(paramType);
-    }
+//         throw new ReferenceError();
+//     }
+//     else if (
+//         hostTrieNode.current.has(paramType) &&
+//         paramType === Any
+//     ) { 
+//         /**
+//          * when there is no type and the current depth also
+//          * 
+//          */
+//         return hostTrieNode.current.get(paramType);
+//     }
 
-    const newHostTrieNode = new function_variant_param_node_metadata_t(hostTrieNode);
-    hostTrieNode.current.set(paramType, newHostTrieNode);
-    console.log([3], hostTrieNode)
-    return newHostTrieNode;
-}
+//     const newHostTrieNode = new function_variant_param_node_metadata_t(hostTrieNode);
+//     hostTrieNode.current.set(paramType, newHostTrieNode);
+//     console.log([3], hostTrieNode)
+//     return newHostTrieNode;
+// }
 
-/**
- * Is called when a parameter is type hinted
- * 
- * @param {parameter_metadata_t} paramMeta 
- * @param {function_variant_param_node_metadata_t} rootTrieNode
- */
-function locateNewFuncVariantTrieNode(paramMeta, rootTrieNode) {
+// /**
+//  * Is called when a parameter is type hinted
+//  * 
+//  * @param {parameter_metadata_t} paramMeta 
+//  * @param {function_variant_param_node_metadata_t} rootTrieNode
+//  */
+// function locateNewFuncVariantTrieNode(paramMeta, rootTrieNode) {
 
-    const paramIndex = paramMeta.index;
-    const hostFuncMeta = paramMeta.owner; 
-    let currentHostTrieNode = rootTrieNode;
-    console.log('-----------------' , hostFuncMeta.name, paramMeta.index, paramMeta.type ,'---------------------')
-    while (true) {
-        console.log(['depth'], currentHostTrieNode.depth)
-        console.log(1)
-        if (currentHostTrieNode.depth === paramIndex) {
+//     const paramIndex = paramMeta.index;
+//     const hostFuncMeta = paramMeta.owner; 
+//     let currentHostTrieNode = rootTrieNode;
+//     console.log('-----------------' , hostFuncMeta.name, paramMeta.index, paramMeta.type ,'---------------------')
+//     while (true) {
+//         console.log(['depth'], currentHostTrieNode.depth)
+//         console.log(1)
+//         if (currentHostTrieNode.depth === paramIndex) {
 
-            manipulateNewTrieNode(paramMeta, currentHostTrieNode);
-            break;
-        }
-        console.log(2)
-        if (currentHostTrieNode.depth < paramIndex) {
+//             manipulateNewTrieNode(paramMeta, currentHostTrieNode);
+//             break;
+//         }
+//         console.log(2)
+//         if (currentHostTrieNode.depth < paramIndex) {
 
-            currentHostTrieNode = manipulateNewTrieNode(null, currentHostTrieNode);
-            continue;
-        }
-        console.log(3)
-        if (currentHostTrieNode.depth >= paramIndex) {
+//             currentHostTrieNode = manipulateNewTrieNode(null, currentHostTrieNode);
+//             continue;
+//         }
+//         console.log(3)
+//         if (currentHostTrieNode.depth >= paramIndex) {
 
-            currentHostTrieNode = manipulateNewTrieNode(paramMeta, currentHostTrieNode);
-            continue;
-        }
-    }
+//             currentHostTrieNode = manipulateNewTrieNode(paramMeta, currentHostTrieNode);
+//             continue;
+//         }
+//     }
 
-    return currentHostTrieNode;
-    //console.log(hostFuncMeta.variantTrie)
-}
+//     return currentHostTrieNode;
+//     //console.log(hostFuncMeta.variantTrie)
+// }
 
 /**
  * 
@@ -183,9 +196,9 @@ function locateNewFuncVariantTrieNode(paramMeta, rootTrieNode) {
 function retrieveAllSignatures(rootTrieNode) {
 
     let ret = [];
-
+    
     for (const [_type, nextDepth] of rootTrieNode.current.entries() || []) {
-
+        console.log(['==========================================='])
         traverse(nextDepth, [_type], ret);
     }
     
@@ -205,10 +218,10 @@ function traverse(trieNode, stack = [], globalList = []) {
      * if catch endpoint on a node, the entire stack is a variant signature.
      */
     if (trieNode.endpoint) {
-
+        console.log(stack)
         globalList.push([...stack]);
     }
-
+    console.log(stack.length)
     const recoverPoint = stack.length;
 
     for (const [_type, nextDepth] of trieNode.current.entries() || []) {

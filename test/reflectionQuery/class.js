@@ -6,6 +6,7 @@ const parameters = require('../../src/decorators/parameters.js');
 const overload = require('../../src/decorators/overload.js');
 const { ORIGIN } = require('../../src/libs/metadata/constant.js');
 const { METHOD } = require('../../src/libs/methodOverloading/constant.js');
+const Any = require('../../src/type/any.js');
 
 const stack = [];
 const entries = new Set();
@@ -122,9 +123,11 @@ class H {
 
     @overload('func')
     @parameters({
-        param2: Boolean
+        param1: Function,
+        param2: Any,
+        param3: Number
     })
-    another(param1, param2) {
+    another(param1, param2, param3) {
 
 
     }
