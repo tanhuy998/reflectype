@@ -13,6 +13,7 @@ module.exports = {
     searchForMethodVariant,
     hasVariant,
     mergeFuncVariant,
+    retrieveAllSignatures
 }
 
 /**
@@ -156,4 +157,47 @@ function locateNewFuncVariantTrieNode(paramMeta, rootTrieNode) {
 
     return currentHostTrieNode;
     //console.log(hostFuncMeta.variantTrie)
+}
+
+/**
+ * 
+ * @param {function_variant_param_node_metadata_t} rootTrieNode 
+ * 
+ * @returns {Array<Array<Function>>}
+ */
+function retrieveAllSignatures(rootTrieNode) {
+
+    let ret = [];
+
+    for (const [_type, nextDepth] of rootTrieNode.current.entries() || []) {
+
+        traverse(nextDepth, [_type], ret);
+    }
+    
+    return ret;
+}
+
+/**
+ * 
+ * @param {function_variant_param_node_metadata_t} trieNode 
+ * @param {Array<Function>} stack
+ * 
+ * @returns {Array<Array<Function>>}
+ */
+function traverse(trieNode, stack = [], globalList = []) {
+    /**
+     * traverse from low to hight depth.
+     * if catch endpoint on a node, the entire stack is a variant signature.
+     */
+    if (trieNode.endpoint) {
+
+        globalList.push(...stack);
+    }
+
+    for (const [_type, nextDepth] of trieNode.current.entries() || []) {
+
+        stack.push(_type);
+
+        traverse(nextDepth, stack, globalList);
+    }
 }
