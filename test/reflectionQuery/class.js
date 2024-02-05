@@ -108,7 +108,18 @@ class Z {}
 //     }
 // }
 
-class H {
+class T {
+
+    @parameters({
+        a: Number
+    })
+    func(a) {
+
+        
+    }
+}
+
+class H extends T {
 
     //@allowNull
     @returnType(Number)

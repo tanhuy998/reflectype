@@ -13,6 +13,7 @@ module.exports = {
     manipulateOverloading,
     ensureOverloadingTakesRightPlace,
     ensureTargetOfOverloadingExists,
+    ensureTargetOfOverloadingExistsOnTypeMeta,
 }
 
 /**
@@ -55,14 +56,19 @@ function ensureTargetOfOverloadingExists(_, context, nameOfMethodToOverload) {
         throw new ReferenceError('');
     }
 
+    return ensureTargetOfOverloadingExistsOnTypeMeta(typeMeta, nameOfMethodToOverload, context)
+}
+
+function ensureTargetOfOverloadingExistsOnTypeMeta(typeMeta, nameOfMethodToOverload, context) {
+
     /**@type {property_metadata_t} */
     const targetPropMeta = new MetadataAspect(typeMeta)
         .query()
         .select(nameOfMethodToOverload)
-        .from(isStatic ? ReflectionQuerySubject.STATIC : ReflectionQuerySubject.PROTOTYPE)
+        .from(context.static ? ReflectionQuerySubject.STATIC : ReflectionQuerySubject.PROTOTYPE)
         .where({
             isMethod: true,
-            static: isStatic,
+            static: context.static,
             private: context.private,
         })
         .retrieve();
@@ -86,8 +92,10 @@ function ensureTargetOfOverloadingExists(_, context, nameOfMethodToOverload) {
 
 function manipulateOverloading(_, decoratorContext, nameOfMethodToOverload) {
 
-    const targetPropMeta = ensureOverloadingTakesRightPlace(_, decoratorContext, nameOfMethodToOverload);
+    ensureOverloadingTakesRightPlace(_, decoratorContext, nameOfMethodToOverload);
+    const targetPropMeta = ensureTargetOfOverloadingExists(_, decoratorContext, nameOfMethodToOverload);
     const propMeta = propertyDecorator.initMetadata(_, decoratorContext);
+
 
     setFootPrint(_, decoratorContext, propMeta, targetPropMeta);
 
