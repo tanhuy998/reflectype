@@ -268,6 +268,7 @@ function isInstantiable(_type) {
 
     return typeof _type === 'function' && 
     typeof _type.prototype === 'object' &&
+    _type.prototype?.constructor === _type &&
     (
         !INSTANTIABLE_BLACK_LIST.includes(_type) ||
         !(_type.prototype instanceof Interface)

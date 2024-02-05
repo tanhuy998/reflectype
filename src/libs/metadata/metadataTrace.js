@@ -35,7 +35,8 @@
 
 
 const { property_metadata_t, metadata_t, TYPE_JS, metaOf, wrapperOf } = require('../../reflection/metadata.js');
-const { ORIGIN } = require('./constant.js');
+const { FOOTPRINT } = require('../constant.js');
+const { ORIGIN, LEGACY_PROP_META } = require('./constant.js');
 const {classStack, propStack, globalStack} = require('./initialStack.js');
 
 module.exports = {
@@ -98,8 +99,12 @@ function resolvePropMeta(_, decoratorContext) {
 
     if (noPropMetaOrSubClassOverride(_, decoratorContext)) {
         
+        const legacy = propMeta;
+
         propMeta = properties[name] = new property_metadata_t(undefined, typeMeta);
         propMeta.owner = typeMeta.loopback;
+        
+        placeLegacyPropMeta(propMeta, legacy);
         registerPropMeta(propMeta);
     }
     
@@ -194,6 +199,25 @@ function noPropMetaOrSubClassOverride(_, decoratorContext) {
     }
     
     return false;
+}
+
+/**
+ * 
+ * @param {property_metadata_t} propMeta 
+ * @param {property_metadata_t} legacyPropMeta
+ */
+function placeLegacyPropMeta(propMeta, legacyPropMeta) {
+
+    if (
+        !(legacyPropMeta instanceof property_metadata_t) ||
+        legacyPropMeta === propMeta
+    ) {
+
+        return;
+    }
+
+    propMeta[FOOTPRINT] ||= {};
+    propMeta[FOOTPRINT][LEGACY_PROP_META] = legacyPropMeta;
 }
 
 /**

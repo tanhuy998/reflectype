@@ -100,7 +100,7 @@ const prototypeMap = trieMaps._prototype;
 const trie = prototypeMap.get('func');
 
 console.log(['000000000000000000000000000000000000000000000000000000'])
-console.log(ref.metadata.properties.func.functionMeta)
+console.log(ref.metadata.properties.func)
 console.log(retrieveAllSignatures(trie));
 //console.log(searchForMethodVariant(funcMeta, [Function, Number]))
 console.timeEnd(2)

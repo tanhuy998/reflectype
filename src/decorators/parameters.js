@@ -3,6 +3,7 @@ const { retrieveDecoratorFootPrintByKey } = require("../libs/footPrint");
 const { refreshMeta } = require("../libs/methodDecorator");
 const { isDecorator, isAbstract } = require("../libs/type");
 const { function_metadata_t } = require("../reflection/metadata");
+const { Any } = require("../type");
 const { markAsDecorator } = require("../utils/decorator/general");
 const { postDecoratorInit } = require("../utils/decorator/parameterDecoratorGeneral.util");
 const { prepareParamsDecorator } = require("../utils/decorator/paramsType.util");
@@ -45,13 +46,44 @@ function enumerateDeclaredParams(list, funcMeta, _, context) {
     for (let [paramName, paramOptions] of Object.entries(list)) {
 
         paramOptions = !Array.isArray(paramOptions) ? [paramOptions] : paramOptions;
+        validateAndTransformParamOptions(paramOptions);
 
         const i = funcMeta.paramsName.indexOf(paramName);
 
         defineParam({
             index: i, 
-            decorators: resolveParamOptions(paramOptions)
+            decorators: paramOptions,
         })( _, context);
+    }
+}
+
+/**
+ * 
+ * @param {Array<Function>} options 
+ */
+function validateAndTransformParamOptions(options) {
+
+    const firstElement = options[0];
+
+    /**
+     * First element of the param options must be an abstract
+     * if not, unshift the type as [Any]
+     */
+    if (!isAbstract(firstElement)) {
+
+        options.unshift(type(Any));
+    }
+    else {
+
+        options[0] = type(firstElement);
+    }
+
+    for (let i = 1; i < options.length; ++i) {
+
+        if (typeof options[i] !== 'function') {
+
+            throw new TypeError('invalid param options');
+        }
     }
 }
 
