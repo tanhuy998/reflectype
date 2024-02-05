@@ -1,8 +1,9 @@
 const { METADATA } = require("../../constants");
-const { metadata_t, metaOf, prototype_metadata_t, property_metadata_t, wrapperOf } = require("../../reflection/metadata");
+const { metadata_t, metaOf, prototype_metadata_t, property_metadata_t, wrapperOf, method_variant_map_metadata_t } = require("../../reflection/metadata");
 const { extractClassConstructorInfoBaseOnConfig } = require("../../utils/function.util");
 const { DECORATED_VALUE } = require("../constant");
 const { getMetadataFootPrintByKey } = require("../footPrint");
+const { isFirstClass } = require("../type");
 const { refreshTypeMetaObjectForDecoratorMetadata } = require("./metadataTrace");
 
 const RESOLVED_CLASSES = new Set();
@@ -109,10 +110,38 @@ function manipulateMetaDependentClasses(stack = []) {
         typeMeta._constructor = extractClassConstructorInfoBaseOnConfig(currentClass);
 
         assignAbstractToTypeMeta(currentClass, typeMeta);
+        assignMethodVariantTrie(currentClass);
         unlinkIndependentPropeMeta(currentClass);
-        
+
         RESOLVED_CLASSES.add(currentClass);
     }
+}
+
+function assignMethodVariantTrie(_class) {
+
+    if (isFirstClass(_class)) {
+
+        return;
+    }
+
+    const baseClass = Object.getPrototypeOf(_class);
+    const baseTypeMeta = metaOf(baseClass);
+
+    if (!baseTypeMeta) {
+
+        return;
+    }
+
+    /**@type {method_variant_map_metadata_t} */
+    const baseClassMethodVariantMaps = baseTypeMeta.methodVariantMaps;
+    const currentClassMeta = metaOf(_class);
+    /**@type {method_variant_map_metadata_t} */
+    const currentClassMethodVariantMaps = currentClassMeta.methodVariantMaps;
+    /**
+     * will optimize the following lines
+     */
+    currentClassMethodVariantMaps._prototype = new Map(Array.from(baseClassMethodVariantMaps._prototype.entries()));
+    currentClassMethodVariantMaps.static = new Map(Array.from(baseClassMethodVariantMaps.static.entries()));
 }
 
 function checkAndReAssignMetaWrapper(_class) {

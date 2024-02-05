@@ -34,7 +34,8 @@ module.exports = {
     prototype_metadata_t,
     parameter_metadata_t,
     function_variant_param_node_metadata_t,
-    function_variant_param_node_endpoint_metadata_t
+    function_variant_param_node_endpoint_metadata_t,
+    method_variant_map_metadata_t,
     //function_variant_origin_map_metadata_t,
 };
 

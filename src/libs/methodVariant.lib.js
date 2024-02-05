@@ -10,10 +10,6 @@ const { locateNewFuncVariantTrieNode, searchForMethodVariant, hasVariant, mergeF
 
 
 module.exports = {
-    // locateNewFuncVariantTrieNode,
-    // //initOverloadedMethodPropeMeta,
-    // searchForMethodVariant,
-    // mergeFuncVariant,
     manipulateMethodVariantBehavior,
     isOwnerOfPropMeta,
 }
@@ -27,23 +23,23 @@ module.exports = {
  * @param {property_metadata_t} propMeta 
  */
 function manipulateMethodVariantBehavior(propName, propMeta) {
-    console.log(0)
+    //console.log(0, propMeta.owner.typeMeta.abstract)
     if (!propMeta.isMethod) {
 
         return;
     }
-    console.log(1)
+    //console.log(1)
     if (isOverrideWithoutDecoration.call(this, propName, propMeta)) {
         const currentClass = typeof this === 'function' ? this : this.constructor;
         const overridedClass = propMeta.owner.typeMeta.abstract;
         throw new ReferenceError(`could not define undecorated method [${currentClass?.name}].${propName}() to override base class's decorated method [${overridedClass?.name}].${propName}()`);
     }
-    console.log(2)
+    //console.log(2)
     if (!isOwnerOfPropMeta.call(this, propName, propMeta)) {
 
         return;
     }
-    console.log(3)
+    //console.log(3)
     if (
         isPseudoOverloadingMethod.call(this, propName, propMeta) ||
         isDerivedOverloadingMethod.call(this, propName, propMeta)
@@ -67,20 +63,7 @@ function manipulatePseudoOveloading(propName, propMeta) {
      * pseudo memthod overload just valid when the target of overlooad is setted up,
      * init variant trie for it's target method is not necessary.
      */
-    // const remotePropMeta = getMetadataFootPrintByKey(propMeta.functionMeta, OVERLOAD_TARGET);
-
-    // if (!remotePropMeta) {
-
-    //     throw new ReferenceError('');
-    // }
-
-    /**@type {function_variant_param_node_metadata_t} */
-    // const endPointNode = registerOverloadVariant(propMeta, remotePropMeta); // manipulateMethodVariant.call(this, propName, remotePropMeta);
-    // const typeMeta = propMeta.owner.typeMeta;
-
-    // endPointNode.endpoint.map.set(typeMeta, getMetadataFootPrintByKey(propMeta, DECORATED_VALUE));
-
-    registerOverloadVariant(propMeta); // manipulateMethodVariant.call(this, propName, remotePropMeta);
+    registerOverloadVariant(propMeta);
 }
 
 /**
@@ -124,8 +107,6 @@ function initIfNoVariantMap(methodName, variantMap) {
  */
 function registerOverloadVariant(hostPropMeta) {
 
-    // const variantTrie = getVariantTrieOf(remotePropMeta);
-    //console.log(getMetadataFootPrintByKey(hostPropMeta, OVERLOAD_TARGET))
     const hostFuncMeta = hostPropMeta.functionMeta;
     const overloadedMethodName = getMetadataFootPrintByKey(hostFuncMeta, OVERLOAD_TARGET)?.name || hostPropMeta.name;
     const isPseudoMethod = overloadedMethodName === hostPropMeta.name;
@@ -136,12 +117,11 @@ function registerOverloadVariant(hostPropMeta) {
     
     const variantTrie = variantMap.get(overloadedMethodName) || initIfNoVariantMap(hostPropMeta.name, variantMap);
     const hostParamMetaList = getAllParametersMeta(hostFuncMeta);
-    //console.log(['host param meta list'], overloadedMethodName, hostParamMetaList)
-    //const remoteAllowOverride = remotePropMeta.functionMeta.allowOverride;
+
     const searchedNodeEndpoint = searchForMethodVariant(variantTrie, hostParamMetaList, paramMeta => paramMeta?.type || Any);
 
-    const hasSignature = searchedNodeEndpoint?.map.has(typeMeta);  //hasVariant(variantTrie, hostParamMetaList);
-    console.log(['signature existence check'], hasSignature)
+    const hasSignature = searchedNodeEndpoint?.map.has(typeMeta);
+    //console.log(['signature existence check'], hasSignature)
     const overloadedFuncMeta = searchedNodeEndpoint?.map.get(typeMeta);
 
     if (
@@ -223,18 +203,6 @@ function isPseudoOverloadingMethod(propName, propMeta) {
             getMetadataFootPrintByKey(propMeta.functionMeta, OVERLOAD_TARGET).name !== propMeta.name;
 }
 
-
-// /**
-//  * @this
-//  * 
-//  * @param {string|symbol} propName 
-//  * @param {property_metadata_t} propMeta 
-//  */
-// function isDerivedOverrideMethod(propName, propMeta) {
-
-
-// }
-
 /**
  * Derived overloading is when derived class define decorated methods in order 
  * to overload base class method. Base on the state of the base method, if the
@@ -278,147 +246,3 @@ function isOwnerOfPropMeta(propName, propMeta) {
             (propMetaOwnerClass === this ||
             propMetaOwnerClass === this.constructor);
 }
-
-
-// /**
-//  * Is called when a parameter is type hinted
-//  * 
-//  * @param {parameter_metadata_t} paramMeta 
-//  * @param {function_variant_param_node_metadata_t} rootTrieNode
-//  */
-// function locateNewFuncVariantTrieNode(paramMeta, rootTrieNode) {
-
-//     const paramIndex = paramMeta.index;
-//     const hostFuncMeta = paramMeta.owner; 
-//     let currentHostTrieNode = rootTrieNode;
-//     console.log('-----------------' , hostFuncMeta.name, paramMeta.index, paramMeta.type ,'---------------------')
-//     while (true) {
-//         console.log(['depth'], currentHostTrieNode.depth)
-//         console.log(1)
-//         if (currentHostTrieNode.depth === paramIndex) {
-
-//             manipulateNewTrieNode(paramMeta, currentHostTrieNode);
-//             break;
-//         }
-//         console.log(2)
-//         if (currentHostTrieNode.depth < paramIndex) {
-
-//             currentHostTrieNode = manipulateNewTrieNode(null, currentHostTrieNode);
-//             continue;
-//         }
-//         console.log(3)
-//         if (currentHostTrieNode.depth >= paramIndex) {
-
-//             currentHostTrieNode = manipulateNewTrieNode(paramMeta, currentHostTrieNode);
-//             continue;
-//         }
-//     }
-
-//     return currentHostTrieNode;
-//     //console.log(hostFuncMeta.variantTrie)
-// }
-
-// /**
-//  * 
-//  * @param {parameter_metadata_t?} paramMeta 
-//  * @param {function_variant_param_node_metadata_t} hostTrieNode 
-//  * 
-//  * @returns {function_variant_param_node_metadata_t}
-//  */
-// function manipulateNewTrieNode(paramMeta, hostTrieNode) {
-
-//     const paramType = paramMeta?.type ?? Any;
-
-//     if (
-//         hostTrieNode.current.has(paramType) &&
-//         paramType !== Any
-//     ) {
-
-//         throw new ReferenceError();
-//     }
-//     else if (
-//         hostTrieNode.current.has(paramType) &&
-//         paramType === Any
-//     ) { 
-//         /**
-//          * when there is no type and the current depth also
-//          * 
-//          */
-//         return hostTrieNode.current.get(paramType);
-//     }
-
-//     const newHostTrieNode = new function_variant_param_node_metadata_t(hostTrieNode);
-//     hostTrieNode.current.set(paramType, newHostTrieNode);
-//     console.log([3], hostTrieNode)
-//     return newHostTrieNode;
-// }
-
-// /**
-//  * 
-//  * @param {Array<parameter_metadata_t>} paramMetaList 
-//  * @param {function_metadata_t} rootTrieNode 
-//  * 
-//  * @returns {function_variant_param_node_metadata_t}
-//  */
-// function mergeFuncVariant(paramMetaList, rootTrieNode) {
-
-//     if (hasVariant(rootTrieNode, paramMetaList)) {
-
-//         throw new Error(); // will be a custom error
-//     }
-
-//     let ret;
-
-//     for (const paramMeta of paramMetaList || []) {
-
-//         ret = locateNewFuncVariantTrieNode(paramMeta, rootTrieNode);
-//     }
-
-//     return ret;
-// }
-
-// /**
-//  * 
-//  * @param {function_metadata_t} funcMeta 
-//  * @param {Array<parameter_metadata_t>} paramTypeList 
-//  * @returns 
-//  */
-// function hasVariant(rootTrieNode, paramTypeList) {
-
-//     return typeof searchForMethodVariant(
-//         rootTrieNode, paramTypeList, 
-//         (paramMeta) => {
-//             return paramMeta.type;
-//         }
-//     ) === function_variant_param_node_endpoint_metadata_t;
-// }
-
-// /**
-//  * 
-//  * @param {function_variant_param_node_metadata_t} rootTrieNode
-//  * @param {Array<any>} list 
-//  * @param {Function} transform 
-//  */
-// function searchForMethodVariant(rootTrieNode, list, transform) {
-
-//     const iterator = (list || [])[Symbol.iterator]();
-//     let iteration = iterator.next();
-//     let currentNode = rootTrieNode;
-//     console.log('======================================')
-//     while (
-//         !iteration.done
-//     ) {
-
-//         const _type = typeof transform === 'function' ? transform(iteration.value) : iteration.value;
-//         console.log(_type, currentNode)
-//         if (!currentNode.current.has(_type)) {
-
-//             return undefined;
-//         }
-
-//         currentNode = currentNode.current.get(_type);
-//         iteration = iterator.next();
-//     }
-
-//     return currentNode?.endpoint;
-// }
