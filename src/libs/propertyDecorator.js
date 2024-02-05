@@ -1,11 +1,14 @@
 const {METADATA, property_metadata_t } = require("../reflection/metadata");
 const {decorateMethod, refreshMeta} = require('./methodDecorator.js');
 const {decorateAccessor} = require('./accessorDecorator.js');
-const { decoratorHasFootPrint, setDecoratorFootPrint, setMetadataFootPrint, initMetadataFootPrint, metadataHasFootPrint} = require('./footPrint.js');
+const { decoratorHasFootPrint, setDecoratorFootPrint, setMetadataFootPrint, initMetadataFootPrint, metadataHasFootPrint, getMetadataFootPrintByKey} = require('./footPrint.js');
 const { traceAndInitContextMetadata } = require("./metadata/metadataTrace.js");
 const { DECORATED, FOOTPRINT, DECORATED_VALUE, ORIGIN_VALUE } = require("./constant.js");
 const { initGeneralMetadata } = require("./decoratorGeneral.js");
 const { pseudo_decorator_context_t, pseudo_parameter_decorator_context_t } = require("../utils/pseudoDecorator.js");
+const { ensureIfPseudoMethodTakeRightPlace } = require("./methodOverloading/pseudoMethod.lib.js");
+const { isNonIterableObjectKey, isObjectKey } = require("./type.js");
+const { PSEUDO_OVERLOADED_METHOD_NAME } = require("./methodOverloading/constant.js");
 
 const PSEUDO_DECORATION = '_pseudo_decoration';
 
@@ -44,6 +47,8 @@ function getMetadataOf(_obj) {
  */
 function initMetadata(_, _context) {
     
+    const targetOfOverloadName = ensureIfPseudoMethodTakeRightPlace(_, _context);
+
     if (_context.kind === 'parameter') {
 
         return initPropMetaForParameterDecorator(_, _context);
@@ -53,6 +58,14 @@ function initMetadata(_, _context) {
 
     initGeneralMetadata(_, _context);
     initMetadataFootPrint(propMeta);
+    
+    if (
+        !getMetadataFootPrintByKey(PSEUDO_OVERLOADED_METHOD_NAME) &&
+        isObjectKey(targetOfOverloadName)
+    ) {
+        
+        setMetadataFootPrint(propMeta, PSEUDO_OVERLOADED_METHOD_NAME, targetOfOverloadName);
+    }
 
     if (decoratorHasFootPrint(_, _context, DECORATED)) {
         

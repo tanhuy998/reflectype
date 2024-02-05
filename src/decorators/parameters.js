@@ -2,9 +2,10 @@ const { DECORATED_VALUE } = require("../libs/constant");
 const { retrieveDecoratorFootPrintByKey } = require("../libs/footPrint");
 const { refreshMeta } = require("../libs/methodDecorator");
 const { isDecorator, isAbstract } = require("../libs/type");
-const { property_metadata_t, function_metadata_t } = require("../reflection/metadata");
+const { function_metadata_t } = require("../reflection/metadata");
 const { markAsDecorator } = require("../utils/decorator/general");
-const { prepareParamsDecorator, mapParamsByNames } = require("../utils/decorator/paramsType.util");
+const { postDecoratorInit } = require("../utils/decorator/parameterDecoratorGeneral.util");
+const { prepareParamsDecorator } = require("../utils/decorator/paramsType.util");
 const defineParam = require("./defineParam");
 const type = require("./type");
 
@@ -21,9 +22,9 @@ function parameters(paramsList) {
 
         const propMeta = prepareParamsDecorator(_, context);
 
-        //mapParamsByNames(paramsList, propMeta);
         refreshMeta(propMeta);
         enumerateDeclaredParams(paramsList, propMeta.functionMeta, _, context);
+        postDecoratorInit(_, context, propMeta);
 
         return retrieveDecoratorFootPrintByKey(_, context, DECORATED_VALUE);
     }

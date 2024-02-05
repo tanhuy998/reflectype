@@ -32,9 +32,10 @@ const { isTypeOf } = require('../../src/metadata/aspect/criteriaOperator.js');
 const { searchForMethodVariant } = require('../../src/libs/methodVariant.lib.js');
 const { getAllParametersMeta } = require('../../src/libs/functionParam.lib.js');
 const { retrieveAllSignatures } = require('../../src/libs/methodVariantTrieOperation.lib.js');
+
+const {METHOD} = require('../../src/libs/methodOverloading/constant.js')
 // const {A} = require('./compiled.js');
-
-
+//console.log(METHOD)
 // const refl = new Reflector(A);
 // const reflAspect = new ReflectionAspect(refl);
 
@@ -99,7 +100,7 @@ const prototypeMap = trieMaps._prototype;
 const trie = prototypeMap.get('func');
 
 console.log(['000000000000000000000000000000000000000000000000000000'])
-console.log(prototypeMap)
+console.log(ref.metadata.properties.func.functionMeta)
 console.log(retrieveAllSignatures(trie));
 //console.log(searchForMethodVariant(funcMeta, [Function, Number]))
 console.timeEnd(2)

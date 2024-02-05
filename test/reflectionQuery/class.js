@@ -121,13 +121,13 @@ class H {
         console.log('C', ...arguments)
     }
 
-    @overload('func')
+    //@overload('func')
     @parameters({
         param1: Function,
-        param2: Any,
+        param2: Boolean,
         param3: Number
     })
-    another(param1, param2, param3) {
+    [METHOD('func')](param1, param2, param3) {
 
 
     }

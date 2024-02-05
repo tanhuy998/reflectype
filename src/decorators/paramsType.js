@@ -2,6 +2,7 @@ const { DECORATED_VALUE } = require('../libs/constant.js');
 const footprint = require('../libs/footPrint.js');
 const { refreshPropMeta } = require('../libs/propertyDecorator.js');
 const { markAsDecorator } = require('../utils/decorator/general.js');
+const { postDecoratorInit } = require('../utils/decorator/parameterDecoratorGeneral.util.js');
 const { mapParamsByList, prepareParamsDecorator, mapList_validateInput } = require('../utils/decorator/paramsType.util.js');
 const defineParam = require('./defineParam.js');
 const type = require('./type.js');
@@ -15,9 +16,10 @@ function paramsType(..._types) {
     function paramsTypeDecorator(_, _context) {
 
         const propMeta = prepareParamsDecorator(_, _context);
-        // mapParamsByList(_types, propMeta);
+        
         refreshPropMeta(propMeta);
         iterateTypeList(_types, ...arguments);
+        postDecoratorInit(_, _context, propMeta);
 
         return footprint.retrieveDecoratorFootPrintByKey(_, _context, DECORATED_VALUE);
     }
