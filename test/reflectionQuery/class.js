@@ -152,4 +152,4 @@ function dec(_, context) {
 
 //module.exports = {A}
 
-module.exports = {H} // {A, B, C, D, E, F, G, H};
+module.exports = {H, T} // {A, B, C, D, E, F, G, H};

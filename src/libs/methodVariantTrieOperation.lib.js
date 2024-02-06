@@ -1,10 +1,10 @@
 const MetadataAspect = require("../metadata/aspect/metadataAspect");
-const { property_metadata_t, function_metadata_t, function_variant_param_node_metadata_t, parameter_metadata_t, function_variant_param_node_endpoint_metadata_t } = require("../reflection/metadata");
+const { property_metadata_t, function_metadata_t, function_variant_param_node_metadata_t, parameter_metadata_t, function_variant_param_node_endpoint_metadata_t, metaOf } = require("../reflection/metadata");
 const Any = require("../type/any");
 const { DECORATED_VALUE } = require("./constant");
 const { getMetadataFootPrintByKey } = require("./footPrint");
 const { OVERLOAD_APPLIED, OVERLOAD_TARGET, OVERRIDE_APPLIED } = require("./methodOverloading/constant");
-const { isObjectLike } = require("./type");
+const { isObjectLike, isValuable, isObject } = require("./type");
 const {getAllParametersMeta} = require('./functionParam.lib');
 
 module.exports = {
@@ -13,7 +13,8 @@ module.exports = {
     searchForMethodVariant,
     hasVariant,
     mergeFuncVariant,
-    retrieveAllSignatures
+    retrieveAllSignatures,
+    findMethodVariantOf,
 }
 
 /**
@@ -114,78 +115,73 @@ function insertTrieNode(currentNode, paraMeta) {
                     .get(_type);
 }
 
-// /**
-//  * 
-//  * @param {parameter_metadata_t?} paramMeta 
-//  * @param {function_variant_param_node_metadata_t} hostTrieNode 
-//  * 
-//  * @returns {function_variant_param_node_metadata_t}
-//  */
-// function manipulateNewTrieNode(paramMeta, hostTrieNode) {
+/**
+ * @param {Function} _class
+ * @param {property_metadata_t} propMeta 
+ * @param {Array<Function>} paramTypeList
+ */
+function findMethodVariantOf(_class, propMeta, paramTypeList) {
 
-//     const paramType = paramMeta?.type ?? Any;
+    if (!propMeta.isMethod) {
 
-//     if (
-//         hostTrieNode.current.has(paramType) &&
-//         paramType !== Any
-//     ) {
+        return undefined;
+    }
 
-//         throw new ReferenceError();
-//     }
-//     else if (
-//         hostTrieNode.current.has(paramType) &&
-//         paramType === Any
-//     ) { 
-//         /**
-//          * when there is no type and the current depth also
-//          * 
-//          */
-//         return hostTrieNode.current.get(paramType);
-//     }
+    const typeMeta = propMeta.owner.typeMeta;
+    
+    if (
+        _class !== typeMeta.abstract &&
+        !(_class.prototype instanceof typeMeta.abstract)
+    ) {
 
-//     const newHostTrieNode = new function_variant_param_node_metadata_t(hostTrieNode);
-//     hostTrieNode.current.set(paramType, newHostTrieNode);
-//     console.log([3], hostTrieNode)
-//     return newHostTrieNode;
-// }
+        throw new ReferenceError(`could find method variant of a class [${_class.name}] that is not derived class of the target propMeta's origin that is [${typeMeta.abstract.name}]`);
+    }
 
-// /**
-//  * Is called when a parameter is type hinted
-//  * 
-//  * @param {parameter_metadata_t} paramMeta 
-//  * @param {function_variant_param_node_metadata_t} rootTrieNode
-//  */
-// function locateNewFuncVariantTrieNode(paramMeta, rootTrieNode) {
+    const methodVariantMaps = typeMeta.methodVariantMaps;
+    const methodName = propMeta.name;
+    const variantMap = propMeta.static ? methodVariantMaps.static : methodVariantMaps._prototype;
+    console.log(['map'], variantMap)
+    const trieEndpoint = searchForMethodVariant(variantMap.get(methodName), paramTypeList);
 
-//     const paramIndex = paramMeta.index;
-//     const hostFuncMeta = paramMeta.owner; 
-//     let currentHostTrieNode = rootTrieNode;
-//     console.log('-----------------' , hostFuncMeta.name, paramMeta.index, paramMeta.type ,'---------------------')
-//     while (true) {
-//         console.log(['depth'], currentHostTrieNode.depth)
-//         console.log(1)
-//         if (currentHostTrieNode.depth === paramIndex) {
+    if (!(trieEndpoint instanceof function_variant_param_node_endpoint_metadata_t)) {
 
-//             manipulateNewTrieNode(paramMeta, currentHostTrieNode);
-//             break;
-//         }
-//         console.log(2)
-//         if (currentHostTrieNode.depth < paramIndex) {
+        return undefined;
+    }
 
-//             currentHostTrieNode = manipulateNewTrieNode(null, currentHostTrieNode);
-//             continue;
-//         }
-//         console.log(3)
-//         if (currentHostTrieNode.depth >= paramIndex) {
+    switch(trieEndpoint.map.size) {
+        case 0:
+            return undefined;
+        case 1:
+            /**
+             * When size of trieEndpoint's map is 1,
+             * this means there are no conflict between base class 
+             * and derived classes (overriding behavior).
+             */
+            return trieEndpoint.map.values().next().value;
+        default:
+            break;
+    }
 
-//             currentHostTrieNode = manipulateNewTrieNode(paramMeta, currentHostTrieNode);
-//             continue;
-//         }
-//     }
+    let tempTargetClass = _class;
 
-//     return currentHostTrieNode;
-//     //console.log(hostFuncMeta.variantTrie)
-// }
+    while (
+        Object.getPrototypeOf(tempTargetClass) !== Object.getPrototypeOf(Function)
+    ) {
+
+        const tempClassTypeMeta = metaOf(_class);
+
+        if (
+            isObject(tempClassTypeMeta) &&
+            trieEndpoint.map.has(tempClassTypeMeta)
+        ) {
+
+            return trieEndpoint.map.get(tempClassTypeMeta);
+        }
+
+        tempTargetClass = Object.getPrototypeOf(tempTargetClass);
+        continue;
+    }
+}
 
 /**
  * 
@@ -218,16 +214,18 @@ function traverse(trieNode, stack = [], globalList = []) {
      * if catch endpoint on a node, the entire stack is a variant signature.
      */
     if (trieNode.endpoint) {
-        console.log(stack)
-        globalList.push([...stack]);
+        //console.log(stack)
+        globalList.push({
+            endpoint: trieNode.endpoint, 
+            paramTypes: [...stack]
+        });
     }
-    console.log(stack.length)
+    //console.log(stack.length)
     const recoverPoint = stack.length;
 
     for (const [_type, nextDepth] of trieNode.current.entries() || []) {
 
         stack.push(_type);
-
         traverse(nextDepth, stack, globalList);
 
         while (

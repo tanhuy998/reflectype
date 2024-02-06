@@ -112,36 +112,60 @@ function manipulateMetaDependentClasses(stack = []) {
         assignAbstractToTypeMeta(currentClass, typeMeta);
         assignMethodVariantTrie(currentClass);
         unlinkIndependentPropeMeta(currentClass);
-
+        //show(currentClass)
         RESOLVED_CLASSES.add(currentClass);
     }
 }
 
 function assignMethodVariantTrie(_class) {
 
-    if (isFirstClass(_class)) {
+    // if (isFirstClass(_class)) {
 
-        return;
-    }
+    //     return;
+    // }
 
     const baseClass = Object.getPrototypeOf(_class);
     const baseTypeMeta = metaOf(baseClass);
 
-    if (!baseTypeMeta) {
+    // if (!baseTypeMeta) {
+
+    //     return;
+    // }
+
+    /**@type {method_variant_map_metadata_t} */
+    const baseClassMethodVariantMaps = baseTypeMeta?.methodVariantMaps;
+    const currentClassMeta = metaOf(_class);
+    /**@type {method_variant_map_metadata_t} */
+    const currentClassMethodVariantMaps = currentClassMeta.methodVariantMaps = new method_variant_map_metadata_t();
+
+    if (isFirstClass(_class)) {
+
+        currentClassMethodVariantMaps._prototype = new Map();
+        currentClassMethodVariantMaps.static = new Map();
 
         return;
     }
-
-    /**@type {method_variant_map_metadata_t} */
-    const baseClassMethodVariantMaps = baseTypeMeta.methodVariantMaps;
-    const currentClassMeta = metaOf(_class);
-    /**@type {method_variant_map_metadata_t} */
-    const currentClassMethodVariantMaps = currentClassMeta.methodVariantMaps;
     /**
      * will optimize the following lines
      */
+
+    console.log(currentClassMethodVariantMaps._prototype === baseClassMethodVariantMaps._prototype)
     currentClassMethodVariantMaps._prototype = new Map(Array.from(baseClassMethodVariantMaps._prototype.entries()));
     currentClassMethodVariantMaps.static = new Map(Array.from(baseClassMethodVariantMaps.static.entries()));
+}
+
+function show(_class) {
+
+    const baseClass = Object.getPrototypeOf(_class);
+    const baseTypeMeta = metaOf(baseClass);
+
+    /**@type {method_variant_map_metadata_t} */
+    const baseClassMethodVariantMaps = baseTypeMeta?.methodVariantMaps;
+    const currentClassMeta = metaOf(_class);
+    const currentClassMethodVariantMaps = currentClassMeta?.methodVariantMaps;
+
+    console.log(['---'], baseClass?.name, baseClassMethodVariantMaps?._prototype)
+    console.log(['---'], _class.name, currentClassMethodVariantMaps?._prototype)
 }
 
 function checkAndReAssignMetaWrapper(_class) {

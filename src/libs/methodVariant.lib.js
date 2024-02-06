@@ -23,23 +23,23 @@ module.exports = {
  * @param {property_metadata_t} propMeta 
  */
 function manipulateMethodVariantBehavior(propName, propMeta) {
-    //console.log(0, propMeta.owner.typeMeta.abstract)
+
     if (!propMeta.isMethod) {
 
         return;
     }
-    //console.log(1)
+
     if (isOverrideWithoutDecoration.call(this, propName, propMeta)) {
         const currentClass = typeof this === 'function' ? this : this.constructor;
         const overridedClass = propMeta.owner.typeMeta.abstract;
         throw new ReferenceError(`could not define undecorated method [${currentClass?.name}].${propName}() to override base class's decorated method [${overridedClass?.name}].${propName}()`);
     }
-    //console.log(2)
+
     if (!isOwnerOfPropMeta.call(this, propName, propMeta)) {
 
         return;
     }
-    //console.log(3)
+
     if (
         isPseudoOverloadingMethod.call(this, propName, propMeta) ||
         isDerivedOverloadingMethod.call(this, propName, propMeta)

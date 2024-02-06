@@ -4,7 +4,7 @@
 //     ]
 // })
 
-const {A, B, C, D, E, F, G, H} = require('./compiled.js');
+const {A, B, C, D, E, F, G, H, T} = require('./compiled.js');
 const {METADATA} = require('../../src/constants.js');
 const { TYPE_JS, property_metadata_t, metaOf } = require('../../src/reflection/metadata.js');
 
@@ -31,9 +31,10 @@ const { FOOTPRINT, TYPE } = require('../../src/libs/constant.js');
 const { isTypeOf } = require('../../src/metadata/aspect/criteriaOperator.js');
 const { searchForMethodVariant } = require('../../src/libs/methodVariant.lib.js');
 const { getAllParametersMeta } = require('../../src/libs/functionParam.lib.js');
-const { retrieveAllSignatures } = require('../../src/libs/methodVariantTrieOperation.lib.js');
+const { retrieveAllSignatures, findMethodVariantOf } = require('../../src/libs/methodVariantTrieOperation.lib.js');
 
-const {METHOD} = require('../../src/libs/methodOverloading/constant.js')
+const {METHOD} = require('../../src/libs/methodOverloading/constant.js');
+const { Any } = require('../../src/index.js');
 // const {A} = require('./compiled.js');
 //console.log(METHOD)
 // const refl = new Reflector(A);
@@ -91,7 +92,7 @@ const {METHOD} = require('../../src/libs/methodOverloading/constant.js')
 
 console.time(2)
 //console.log(A)
-const ref = new ReflectionClassPrototype(H);
+const ref = new ReflectionClassPrototype(T);
 
 const funcMeta = ref.metadata.functionMeta;
 const typeMeta = ref.metadata.owner.typeMeta;
@@ -100,8 +101,14 @@ const prototypeMap = trieMaps._prototype;
 const trie = prototypeMap.get('func');
 
 console.log(['000000000000000000000000000000000000000000000000000000'])
-console.log(ref.metadata.properties.func)
+//console.log(ref.metadata.properties.func)
 console.log(retrieveAllSignatures(trie));
+
+const mRef = new ReflectionPrototypeMethod(T, 'func');
+console.log(findMethodVariantOf(T, mRef.metadata, [Function, Any, Number]))
+// console.log(mRef.metadata.owner.typeMeta.abstract)
+// console.log(mRef.metadata.owner.typeMeta.methodVariantMaps._prototype.get('func').current)
+
 //console.log(searchForMethodVariant(funcMeta, [Function, Number]))
 console.timeEnd(2)
 

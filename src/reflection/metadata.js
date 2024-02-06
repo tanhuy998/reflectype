@@ -86,7 +86,7 @@ function metadata_t(_abstract, _ref) {
     /**
      * @type {method_variant_map_metadata_t}
      */
-    this.methodVariantMaps = _ref?.methodVariantMap || new method_variant_map_metadata_t();
+    this.methodVariantMaps; //= new method_variant_map_metadata_t();
 
     /**@type {InterfacePrototype} */
     this.interfaces = _ref?.interfaces?.clone();
