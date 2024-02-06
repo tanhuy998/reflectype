@@ -15,7 +15,7 @@ module.exports = {
  * @param {property_metadata_t} propMeta 
  */
 function postDecoratorInit(_, decoratorContext, propMeta) {
-    console.log(propMeta)
+    
     const targetOfPseudoOverloadingName = retrieveOverloadedNameIfPseudoMethodExists(_, decoratorContext) 
                                             || retrieveNameIfHasLegacyPropMeta(propMeta);
     const legacyPropMeta = getMetadataFootPrintByKey(propMeta, LEGACY_PROP_META)
