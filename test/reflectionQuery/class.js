@@ -117,6 +117,13 @@ class T {
 
         
     }
+
+    @parameters({
+        a: Function
+    })
+    [METHOD('func')](a) {
+        
+    }
 }
 
 class H extends T {
@@ -142,6 +149,11 @@ class H extends T {
 
 
     }
+
+    // [METHOD('func')]() {
+
+
+    // }
 }
 
 function dec(_, context) {

@@ -36,6 +36,7 @@ module.exports = {
     function_variant_param_node_metadata_t,
     function_variant_param_node_endpoint_metadata_t,
     method_variant_map_metadata_t,
+    method_variant_mapping_table_metadata_t
     //function_variant_origin_map_metadata_t,
 };
 
@@ -56,14 +57,27 @@ function owner_metadata_t() {
 function method_variant_map_metadata_t() {
    
     /**
-     * @type {Map<string|symbol, function_variant_param_node_metadata_t>}
+     * @type {method_variant_mapping_table_metadata_t}
      */
-    this.static = new Map();
+    this.static = new method_variant_mapping_table_metadata_t(); //= new Map();
+
+    /**
+     * @type {method_variant_mapping_table_metadata_t}
+     */
+    this._prototype = new method_variant_mapping_table_metadata_t(); //= new Map();
+}
+
+function method_variant_mapping_table_metadata_t() {
+
+    /**
+     * @type {Map<Function, number>}
+     */
+    this.statisticTable = new Map();
 
     /**
      * @type {Map<string|symbol, function_variant_param_node_metadata_t>}
      */
-    this._prototype = new Map();
+    this.mappingTable;
 }
 
 /**

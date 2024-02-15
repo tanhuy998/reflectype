@@ -29,9 +29,11 @@ const Void = require('../../src/type/void.js');
 const { extractFunctionInformations, extractClassConstructorInformations } = require('../../src/utils/function.util.js');
 const { FOOTPRINT, TYPE } = require('../../src/libs/constant.js');
 const { isTypeOf } = require('../../src/metadata/aspect/criteriaOperator.js');
-const { searchForMethodVariant } = require('../../src/libs/methodVariant.lib.js');
+const { searchForMethodVariant } = require('../../src/libs/methodOverloading/methodVariantResolution.lib.js');
 const { getAllParametersMeta } = require('../../src/libs/functionParam.lib.js');
-const { retrieveAllSignatures, findMethodVariantOf } = require('../../src/libs/methodVariantTrieOperation.lib.js');
+const { retrieveAllSignatures, findMethodVariantOf } = require('../../src/libs/methodOverloading/methodVariantTrieOperation.lib.js');
+
+const {diveTrieByArguments} = require('../../src/libs/methodOverloading/methodVariant.lib.js')
 
 const {METHOD} = require('../../src/libs/methodOverloading/constant.js');
 const { Any } = require('../../src/index.js');
@@ -92,20 +94,26 @@ const { Any } = require('../../src/index.js');
 
 console.time(2)
 //console.log(A)
-const ref = new ReflectionClassPrototype(T);
+const ref = new ReflectionClassPrototype(H);
+const mRef = new ReflectionPrototypeMethod(H, 'func');
 
 const funcMeta = ref.metadata.functionMeta;
 const typeMeta = ref.metadata.owner.typeMeta;
 const trieMaps = typeMeta.methodVariantMaps;
 const prototypeMap = trieMaps._prototype;
-const trie = prototypeMap.get('func');
+const trie = prototypeMap.mappingTable.get('func');
 
 console.log(['000000000000000000000000000000000000000000000000000000'])
 //console.log(ref.metadata.properties.func)
 console.log(retrieveAllSignatures(trie));
+console.log(prototypeMap.statisticTable)
 
-const mRef = new ReflectionPrototypeMethod(T, 'func');
-console.log(findMethodVariantOf(T, mRef.metadata, [Function, Any, Number]))
+console.log(
+    diveTrieByArguments(H, mRef.metadata, [1])
+)
+
+//const mRef = new ReflectionPrototypeMethod(T, 'func');
+//console.log(findMethodVariantOf(T, mRef.metadata, [Number]))
 // console.log(mRef.metadata.owner.typeMeta.abstract)
 // console.log(mRef.metadata.owner.typeMeta.methodVariantMaps._prototype.get('func').current)
 
@@ -115,20 +123,20 @@ console.timeEnd(2)
 
 
 
-// for (let i = 0; i < 1000; ++i) {
-// // console.time(2)
-// // const ref = new ReflectionPrototypeAttribute(obj, 'prop');
-// // console.timeEnd(2)
-
+for (let i = 0; i < 1000; ++i) {
 // console.time(2)
-// //console.log(A)
-// const ref = new ReflectionClassPrototype(H);
-
-// const funcMeta = ref.metadata.functionMeta;
-// //console.log(ref.metadata.owner.typeMeta);
-// //console.log(searchForMethodVariant(funcMeta, [Function, Number]))
+// const ref = new ReflectionPrototypeAttribute(obj, 'prop');
 // console.timeEnd(2)
-// }
+
+console.time(2)
+//console.log(A)
+const ref = new ReflectionClassPrototype(T);
+
+const funcMeta = ref.metadata.functionMeta;
+//console.log(ref.metadata.owner.typeMeta);
+//console.log(searchForMethodVariant(funcMeta, [Function, Number]))
+console.timeEnd(2)
+}
 
 
 //obj.prop = 1;

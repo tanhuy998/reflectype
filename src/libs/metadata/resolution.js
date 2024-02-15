@@ -138,10 +138,16 @@ function assignMethodVariantTrie(_class) {
     /**@type {method_variant_map_metadata_t} */
     const currentClassMethodVariantMaps = currentClassMeta.methodVariantMaps = new method_variant_map_metadata_t();
 
+    /**
+     * initialize parameter types statistical table 
+     */
+    currentClassMethodVariantMaps._prototype.statisticTable = baseClassMethodVariantMaps?._prototype?.statisticTable || new Map();
+    currentClassMethodVariantMaps.static.statisticTable = baseClassMethodVariantMaps?.static?.statisticTable || new Map();
+
     if (isFirstClass(_class)) {
 
-        currentClassMethodVariantMaps._prototype = new Map();
-        currentClassMethodVariantMaps.static = new Map();
+        currentClassMethodVariantMaps._prototype.mappingTable = new Map();
+        currentClassMethodVariantMaps.static.mappingTable = new Map();
 
         return;
     }
@@ -149,9 +155,9 @@ function assignMethodVariantTrie(_class) {
      * will optimize the following lines
      */
 
-    console.log(currentClassMethodVariantMaps._prototype === baseClassMethodVariantMaps._prototype)
-    currentClassMethodVariantMaps._prototype = new Map(Array.from(baseClassMethodVariantMaps._prototype.entries()));
-    currentClassMethodVariantMaps.static = new Map(Array.from(baseClassMethodVariantMaps.static.entries()));
+    // console.log(currentClassMethodVariantMaps._prototype === baseClassMethodVariantMaps._prototype)
+    currentClassMethodVariantMaps._prototype.mappingTable = new Map(Array.from(baseClassMethodVariantMaps._prototype.mappingTable.entries()));
+    currentClassMethodVariantMaps.static.mappingTable = new Map(Array.from(baseClassMethodVariantMaps.static.mappingTable.entries()));
 }
 
 function show(_class) {

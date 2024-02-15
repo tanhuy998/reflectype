@@ -5,15 +5,16 @@ const Interface = require('../interface/interface');
 const { IS_DECORATOR } = require('../utils/decorator/constant.js');
 const { markAsCriteriaOperator } = require('../utils/criteriaOperator.util.js');
 
+
 const OBJECT_KEY_TYPES = ['number', 'string', 'symbol'];
 const INSTANTIABLE_BLACK_LIST = [Interface, Void, Function];
 const PRIMITIVES_CLASS_NAMES = ['Boolean', 'String', 'Number', 'BigInt', Void.name];
 const PRIMITIVE_CLASS_NAMES_MAP = {
-    'string': 'String',
-    'boolean': 'Boolean',
-    'number': 'Number',
-    'bigint': 'BigInt',
-    'undefined': Void.name,
+    'string': String,
+    'boolean': Boolean,
+    'number': Number,
+    'bigint': BigInt,
+    'undefined': Void,
 }
 
 markAsCriteriaOperator(isAbstract);
@@ -26,6 +27,8 @@ markAsCriteriaOperator(isAbstract);
 markAsCriteriaOperator(isObjectLike);
 markAsCriteriaOperator(isNonIterableObjectKey);
 markAsCriteriaOperator(isObjectKey);
+markAsCriteriaOperator(isFirstClass);
+markAsCriteriaOperator(isDecorator);
 
 module.exports = {
     isParent,
@@ -57,6 +60,39 @@ module.exports = {
     isDecorator,
     isFirstClass,
     isFirstClassOrFalse,
+    getTypeOf,
+    getAllInterfacesOf,
+}
+
+function getTypeOf(value) {
+
+    if (typeof value === 'object') {
+
+        return value.constructor;
+    }
+
+    if (!isValuable(value)) {
+
+        return value;
+    }
+
+    if (isPrimitive(value)) {
+
+        return PRIMITIVE_CLASS_NAMES_MAP[typeof value]; 
+    }
+}
+
+/**
+ * 
+ * @param {Object|Function} _unknown 
+ * @returns {Array<Interface>}
+ */
+function getAllInterfacesOf(_unknown) {
+
+    const _type = getTypeOf(_unknown);
+    const { metaOf } = require('../reflection/metadata.js');
+
+    return metaOf(_type).interfaces?.properties?.values();
 }
 
 function isFirstClass(_unknown) {
@@ -166,7 +202,7 @@ function matchType(_type, value) {
         
         const strictType = value === null ? 
                             Void.name 
-                            : PRIMITIVE_CLASS_NAMES_MAP[typeof value];
+                            : PRIMITIVE_CLASS_NAMES_MAP[typeof value]?.name;
 
         return strictType === _type.name;
     }

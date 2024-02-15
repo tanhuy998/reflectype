@@ -1,11 +1,11 @@
-const MetadataAspect = require("../metadata/aspect/metadataAspect");
-const { property_metadata_t, function_metadata_t, function_variant_param_node_metadata_t, parameter_metadata_t, function_variant_param_node_endpoint_metadata_t } = require("../reflection/metadata");
-const Any = require("../type/any");
-const { DECORATED_VALUE } = require("./constant");
-const { getMetadataFootPrintByKey } = require("./footPrint");
-const { OVERLOAD_APPLIED, OVERLOAD_TARGET, OVERRIDE_APPLIED } = require("./methodOverloading/constant");
-const { isObjectLike } = require("./type");
-const {getAllParametersMeta} = require('./functionParam.lib');
+const MetadataAspect = require("../../metadata/aspect/metadataAspect");
+const { property_metadata_t, function_metadata_t, function_variant_param_node_metadata_t, parameter_metadata_t, function_variant_param_node_endpoint_metadata_t } = require("../../reflection/metadata");
+const Any = require("../../type/any");
+const { DECORATED_VALUE } = require("../constant");
+const { getMetadataFootPrintByKey } = require("../footPrint");
+const { OVERLOAD_APPLIED, OVERLOAD_TARGET, OVERRIDE_APPLIED } = require("./constant");
+const { isObjectLike } = require("../type");
+const {getAllParametersMeta} = require('../functionParam.lib');
 const { locateNewFuncVariantTrieNode, searchForMethodVariant, hasVariant, mergeFuncVariant } = require("./methodVariantTrieOperation.lib");
 
 
@@ -113,7 +113,8 @@ function registerOverloadVariant(hostPropMeta) {
 
     const typeMeta = hostPropMeta.owner.typeMeta;
     const maps = typeMeta.methodVariantMaps;
-    const variantMap = hostPropMeta.static ? maps.static : maps._prototype;
+    const variantMappingTable = hostPropMeta.static ? maps.static : maps._prototype;
+    const variantMap = variantMappingTable.mappingTable;
     
     const variantTrie = variantMap.get(overloadedMethodName) || initIfNoVariantMap(hostPropMeta.name, variantMap);
     const hostParamMetaList = getAllParametersMeta(hostFuncMeta);
@@ -164,7 +165,7 @@ function registerOverloadVariant(hostPropMeta) {
      * last case: the current signature is not mapped to any funcMeta
      */
 
-    const endPointNode = mergeFuncVariant(hostParamMetaList, variantTrie);
+    const endPointNode = mergeFuncVariant(hostParamMetaList, variantTrie, variantMappingTable.statisticTable);
     
     endPointNode.endpoint ??= new function_variant_param_node_endpoint_metadata_t();
     endPointNode.endpoint.map.set(typeMeta, getMetadataFootPrintByKey(hostPropMeta, DECORATED_VALUE));
