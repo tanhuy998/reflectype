@@ -1,4 +1,11 @@
 const config = require('../../../config.json');
+/**
+ * The counter is just a padding value for Date.now(),
+ * Date.now() returns current time in ms therefore a sequence 
+ * of multiple pseudo method would be assign the same Date.now() value.
+ * Padding value is neccessary.
+ */
+let counter = 0;
 
 module.exports = {
     METHOD,
@@ -13,7 +20,7 @@ module.exports = {
 
 function METHOD(overloadMethodName) {
 
-    const description = `pseudoMethod$${overloadMethodName}-${Date.now()}`;
+    const description = `pseudoMethod$${overloadMethodName}-${Date.now() + counter++}`;
 
     return config.reflectypeOfficialDecorator ? Symbol(description) : description;
 }
