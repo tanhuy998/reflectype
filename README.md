@@ -334,5 +334,60 @@ class A {
 }
 ```
 
-## Reflection API
+## METHOD OVERLOADING 
+
+### ORIGIN AND PSEUDO METHOD
+
+```js
+class A {
+
+    @returnType(Number)
+    func() {
+        /**
+         * this is origin method
+         */
+    }
+
+    @parameters({
+        param1: String
+    })
+    [METHOD('func')](param1) {
+
+        /**
+         * this is pseudo method that is an overloaded version 
+         * of the A.func() method that has 1 parameter accepts 
+         * string type.
+         */
+    }
+}
+```
+
+### OVERLOADING WITHOUT DECLARING PSEUDO METHOD
+
+```js
+class A {
+
+    @returnType(Number)
+    func() {
+        /**
+         * this is origin method
+         */
+    }
+
+    @overload('func')
+    @parameters({
+        param1: String
+    })
+    anotherMethod(param1) {
+
+        /**
+         * this is pseudo method that is an overloaded version 
+         * of the A.func() method that has 1 parameter accepts 
+         * string type.
+         */
+    }
+}
+```
+
+### METHOD SIGNATURE
 
