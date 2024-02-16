@@ -2,7 +2,7 @@ const config = require('../../../config.json');
 /**
  * The counter is just a padding value for Date.now(),
  * Date.now() returns current time in ms therefore a sequence 
- * of multiple pseudo method would be assign the same Date.now() value.
+ * of multiple pseudo methods would be assigned the same Date.now() value.
  * Padding value is neccessary.
  */
 let counter = 0;

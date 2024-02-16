@@ -92,7 +92,7 @@ const { Any } = require('../../src/index.js');
 // console.log(N[METADATA] === wrapperA)
 
 
-console.time(2)
+
 //console.log(A)
 const ref = new ReflectionClassPrototype(H);
 const mRef = new ReflectionPrototypeMethod(H, 'func');
@@ -107,11 +107,14 @@ console.log(['000000000000000000000000000000000000000000000000000000'])
 //console.log(ref.metadata.properties.func)
 console.log(retrieveAllSignatures(trie));
 console.log(prototypeMap.statisticTable)
+console.time(2)
+// console.log(
+//     diveTrieByArguments(H, mRef.metadata, ['1'])?.map.get(ref.metadata)
+// )
+for (const [key, value] of diveTrieByArguments(H, mRef.metadata, [new B()])?.map.entries() || [[]]) {
 
-console.log(
-    diveTrieByArguments(H, mRef.metadata, [1])
-)
-
+    console.log(value.call(new H(), new B()))
+}
 //const mRef = new ReflectionPrototypeMethod(T, 'func');
 //console.log(findMethodVariantOf(T, mRef.metadata, [Number]))
 // console.log(mRef.metadata.owner.typeMeta.abstract)
@@ -123,20 +126,26 @@ console.timeEnd(2)
 
 
 
-for (let i = 0; i < 1000; ++i) {
+// for (let i = 0; i < 1000; ++i) {
+// // // console.time(2)
+// // // const ref = new ReflectionPrototypeAttribute(obj, 'prop');
+// // // console.timeEnd(2)
+
+// // console.time(2)
+// // //console.log(A)
+// // const ref = new ReflectionClassPrototype(T);
+
+// // const funcMeta = ref.metadata.functionMeta;
+// // //console.log(ref.metadata.owner.typeMeta);
+// // //console.log(searchForMethodVariant(funcMeta, [Function, Number]))
+// // console.timeEnd(2)
+
 // console.time(2)
-// const ref = new ReflectionPrototypeAttribute(obj, 'prop');
+
+// diveTrieByArguments(H, mRef.metadata, ['1'])?.map.get(ref.metadata)
+
 // console.timeEnd(2)
-
-console.time(2)
-//console.log(A)
-const ref = new ReflectionClassPrototype(T);
-
-const funcMeta = ref.metadata.functionMeta;
-//console.log(ref.metadata.owner.typeMeta);
-//console.log(searchForMethodVariant(funcMeta, [Function, Number]))
-console.timeEnd(2)
-}
+// }
 
 
 //obj.prop = 1;

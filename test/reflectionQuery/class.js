@@ -108,21 +108,54 @@ class Z {}
 //     }
 // }
 
+class A {
+
+}
+
+class B extends A {
+
+
+}
+
 class T {
 
     @parameters({
         a: Number
     })
     func(a) {
-
-        
+        console.log('number')
     }
 
     @parameters({
-        a: Function
+        a: String
     })
     [METHOD('func')](a) {
-        
+        console.log('string')
+    }
+
+    @parameters({
+        a: String,
+        b: Number
+    })
+    [METHOD('func')](a, b) {
+
+
+    }
+
+    @parameters({
+        a: A
+    })
+    [METHOD('func')](a) {
+
+        console.log('A')
+    }
+
+    @parameters({
+        a: B
+    })
+    [METHOD('func')](a) {
+
+        console.log('B')
     }
 }
 
@@ -164,4 +197,4 @@ function dec(_, context) {
 
 //module.exports = {A}
 
-module.exports = {H, T} // {A, B, C, D, E, F, G, H};
+module.exports = {H, T, A, B} // {A, B, C, D, E, F, G, H};

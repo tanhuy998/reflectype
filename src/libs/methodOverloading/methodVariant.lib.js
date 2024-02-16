@@ -15,7 +15,7 @@ module.exports = {
  * @param {Array} args 
  */
 function diveTrieByArguments(_class, propMeta, args) {
-
+    console.time('estimation time');
     const variantMaps = propMeta.owner.typeMeta.methodVariantMaps;
     const targetMap = propMeta.static ? variantMaps?.static : variantMaps._prototype;
     const statisticTable = targetMap.statisticTable;
@@ -26,7 +26,7 @@ function diveTrieByArguments(_class, propMeta, args) {
     }
 
     const estimation = estimateArgs(propMeta, args);
-
+    console.timeEnd('estimation time');
     if (
         !Array.isArray(estimation) ||
         estimation.length === 0
@@ -34,61 +34,18 @@ function diveTrieByArguments(_class, propMeta, args) {
 
         return false;
     }
-
+    console.log('estimation list', estimation)
+    console.time('calc')
     const targetTrie = retrieveTrie(propMeta);
     // const iterator = args[Symbol.iterator]();
     // let iteration = iterator.next();
     // let index = 0;
     let iterationNode = targetTrie;
+    
+    const ret = calculate(targetTrie, estimation)?.endpoint;
+    console.timeEnd('calc')
 
-    return calculate(targetTrie, estimation)?.endpoint;
-
-    const map = [];
-    //const stack = [];
-
-    // while (estimation.length) {
-    //     /**
-    //      * currentEstimation is always evaluated
-    //      */
-    //     const currentEstimation = estimation.shift();
-
-    //     for (const _type of currentEstimation) {
-
-
-    //     }
-    // }
-
-    // while(
-    //     iterationNode?.current.size > 0 ||
-    //     //!iterationNode?.endpoint ||
-    //     !iteration.done
-    // ) {
-
-    //     const currArgType = getTypeOf(iteration.value);
-    //     const argTypeEstimattions = estimateArgType(currArgType, index, statisticTable);
-
-    //     if (
-    //         !iterationNode.endpoint &&
-    //         (
-    //             !Array.isArray(argTypeEstimattions) ||
-    //             argTypeEstimattions.length === 0
-    //         )
-    //     ) {
-    //         /**
-    //          * when there are no type estimations of the current argument index
-    //          * and the there are no enpoint of the current node, it means that 
-    //          * arguments list not match any variant signatures.
-    //          */
-    //         throw new ReferenceError();
-    //     }
-
-    //     diver
-
-    //     ++index;
-    //     iteration = iterator.next();
-
-
-    // }
+    return ret;
 } 
 
 /**
@@ -97,30 +54,35 @@ function diveTrieByArguments(_class, propMeta, args) {
  * @param {Array<Object>} estimations 
  */
 function calculate(trieNode, estimations, distance = 0) {
-
+    //console.log(['depth'], trieNode.depth, estimations);
+    //console.log(trieNode.current)
     const estimationPiece = estimations[trieNode.depth];
 
     let nearest = {
         delta: Infinity,
-        endpoint: undefined
+        endpoint: trieNode.endpoint || undefined
     };
 
     for (const {type, delta} of estimationPiece || [{}]) {
-
+        
         if (!trieNode.current.has(type)) {
-
+            //console.log(1)
             continue;
         }
 
-        if (trieNode.endpoint) {
+        const nextNode = trieNode.current.get(type);
 
+        if (nextNode.endpoint) {
+            //console.log(2)
             nearest = min(nearest, {
                 delta: distance,
-                endpoint: trieNode.endpoint
+                endpoint: nextNode.endpoint
             });
         }
 
-        nearest = min(nearest, calculate(trieNode.current.get(type), estimations, distance + delta));
+        nearest = min(nearest, calculate(nextNode, estimations, distance + delta));
+
+        //console.log(nearest)
     }
 
     return nearest;
