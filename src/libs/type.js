@@ -61,7 +61,6 @@ module.exports = {
     isFirstClass,
     isFirstClassOrFalse,
     getTypeOf,
-    getAllInterfacesOf,
 }
 
 function getTypeOf(value) {
@@ -80,19 +79,6 @@ function getTypeOf(value) {
 
         return PRIMITIVE_CLASS_NAMES_MAP[typeof value]; 
     }
-}
-
-/**
- * 
- * @param {Object|Function} _unknown 
- * @returns {Array<Interface>}
- */
-function getAllInterfacesOf(_unknown) {
-
-    const _type = getTypeOf(_unknown);
-    const { metaOf } = require('../reflection/metadata.js');
-
-    return metaOf(_type).interfaces?.properties?.values();
 }
 
 function isFirstClass(_unknown) {

@@ -1,10 +1,7 @@
-const { parameter_metadata_t, function_variant_param_node_metadata_t, property_metadata_t } = require("../../reflection/metadata");
+const { parameter_metadata_t, function_variant_param_node_metadata_t, property_metadata_t, metaOf } = require("../../reflection/metadata");
 const Any = require("../../type/any");
-const { getTypeOf, getAllInterfacesOf } = require("../type");
+const { getTypeOf } = require("../type");
 const MethodVariantMismatchError = require("./error/methodVariantMismatchError");
-
-const INTERFACES = 1;
-const CLASSES = 0;
 
 /**
  * 
@@ -49,7 +46,6 @@ function typeStatisticallyExistsOn(statisticTable, _type, index = 0) {
 
         ensureStatisticTableExists(statisticTable);
 
-        //const _type = paramMeta.type;
         const targetPiece = statisticTable.get(_type) || 0;
         const targetBit = (1 << index);
 
@@ -155,7 +151,7 @@ function diveInheritanceChain(_type, index, statisticTable) {
         if (
             typeStatisticallyExistsOn(statisticTable, currentType, index)
         ) {
-            //console.log([3])
+
             (ret ||= []).push({
                 type: currentType,
                 delta
@@ -208,8 +204,20 @@ function estimateArgType(argVal, index = 0, statisticTable) {
                 delta: Infinity,
             });
         }
-
+        console.log(getAllInterfacesOf(argVal), ret)
         return ret;
     }
+}
+
+/**
+ * 
+ * @param {Object|Function} _unknown 
+ * @returns {Array<Interface>}
+ */
+function getAllInterfacesOf(_unknown) {
+
+    const _type = getTypeOf(_unknown);
+
+    return Object.values(metaOf(_type).interfaces?.properties);
 }
 

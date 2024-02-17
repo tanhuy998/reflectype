@@ -1,4 +1,4 @@
-const {paramsType, returnType, type} = require('../../src/');
+const {paramsType, returnType, type, Interface} = require('../../src/');
 const {METADATA, TYPE_JS} = require('../../src/constants.js');
 const allowNull = require('../../src/decorators/allowNull.js');
 const defaultArguments = require('../../src/decorators/defaultArguments.js');
@@ -7,6 +7,7 @@ const overload = require('../../src/decorators/overload.js');
 const { ORIGIN } = require('../../src/libs/metadata/constant.js');
 const { METHOD } = require('../../src/libs/methodOverloading/constant.js');
 const Any = require('../../src/type/any.js');
+const implement = require('../../src/decorators/implement.js');
 
 const stack = [];
 const entries = new Set();
@@ -108,8 +109,15 @@ class Z {}
 //     }
 // }
 
+class IDisposable extends Interface {
+
+    func() {}
+}
+
+@implement(IDisposable)
 class A {
 
+    func() {}
 }
 
 class B extends A {
@@ -153,14 +161,14 @@ class T {
         console.log('boolean')
     }
 
-    @parameters({
-        a: A
+    // @parameters({
+    //     a: A
         
-    })
-    [METHOD('func')](a) {
+    // })
+    // [METHOD('func')](a) {
 
-        console.log('A')
-    }
+    //     console.log('A')
+    // }
 
     @parameters({
         a: B
@@ -186,19 +194,30 @@ class H extends T {
 
     //@overload('func')
     @parameters({
-        param1: Function,
+        param1: String,
         param2: Boolean,
         param3: Number
     })
     [METHOD('func')](param1, param2, param3) {
 
-
+        console.log('func bool num')
     }
 
-    // [METHOD('func')]() {
+    @parameters({
+        param1: IDisposable,
+    })
+    [METHOD('func')](param1) {
 
+        console.log('dispose')
+    }
 
-    // }
+    @parameters({
+        param1: A,
+    })
+    [METHOD('func')](param1) {
+
+        console.log('A');
+    }
 }
 
 function dec(_, context) {

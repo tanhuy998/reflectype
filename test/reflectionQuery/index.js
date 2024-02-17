@@ -109,16 +109,15 @@ console.log(['000000000000000000000000000000000000000000000000000000'])
 console.log(retrieveAllSignatures(trie));
 console.log(prototypeMap.statisticTable)
 
+const o = new T();
 const obj = new H();
 
-for (let i = 0; i < 1000; ++i) {
-
-    console.time(2)
+console.time(2)
 // console.log(
 //     diveTrieByArguments(H, mRef.metadata, ['1'])?.map.get(ref.metadata)
 // )
 
-const args = ['1', 1, true];
+const args = [new B()];
 obj.func(...args);
 // for (const [key, value] of diveTrieByArguments(H, mRef.metadata, args)?.map.entries() || [[]]) {
 
@@ -131,7 +130,16 @@ obj.func(...args);
 
 //console.log(searchForMethodVariant(funcMeta, [Function, Number]))
 console.timeEnd(2)
-}
+
+// for (let i = 0; i < 1000; ++i) {
+
+//     console.time(2)
+
+//     const args = [function () { }, true, 1];
+//     obj.func(...args);
+
+//     console.timeEnd(2)
+// }
 
 
 

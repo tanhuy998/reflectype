@@ -9,13 +9,10 @@ const {getAllParametersMeta} = require('../functionParam.lib');
 const { addStatisticalPieace } = require("./methodArgsEstimation.lib");
 
 module.exports = {
-    //locateNewFuncVariantTrieNode,
-    //initOverloadedMethodPropeMeta,
     searchForMethodVariant,
     hasVariant,
     mergeFuncVariant,
     retrieveAllSignatures,
-    //findMethodVariantOf,
     hasTrie,
     retrieveTrie,
     retrieveSignatureMatrix
@@ -67,13 +64,13 @@ function searchForMatchTrieNode(rootTrieNode, list, transform) {
     const iterator = (list || [])[Symbol.iterator]();
     let iteration = iterator.next();
     let currentNode = rootTrieNode;
-    //console.log('======================================')
+
     while (
         !iteration.done
     ) {
 
         const _type = typeof transform === 'function' ? transform(iteration.value) : iteration.value;
-        //console.log(_type, currentNode)
+
         if (!currentNode.current.has(_type)) {
 
             return undefined;
@@ -194,72 +191,72 @@ function insertTrieNode(currentNode, paraMeta, statisticTable) {
 }
 
 
-/**
- * @param {Function} _class
- * @param {property_metadata_t} propMeta 
- * @param {Array<Function>} paramTypeList
- */
-function findMethodVariantOf(_class, propMeta, paramTypeList) {
+// /**
+//  * @param {Function} _class
+//  * @param {property_metadata_t} propMeta 
+//  * @param {Array<Function>} paramTypeList
+//  */
+// function findMethodVariantOf(_class, propMeta, paramTypeList) {
 
-    if (!propMeta.isMethod) {
+//     if (!propMeta.isMethod) {
 
-        return undefined;
-    }
+//         return undefined;
+//     }
 
-    const typeMeta = propMeta.owner.typeMeta;
+//     const typeMeta = propMeta.owner.typeMeta;
     
-    if (
-        _class !== typeMeta.abstract &&
-        !(_class.prototype instanceof typeMeta.abstract)
-    ) {
+//     if (
+//         _class !== typeMeta.abstract &&
+//         !(_class.prototype instanceof typeMeta.abstract)
+//     ) {
 
-        throw new ReferenceError(`could find method variant of a class [${_class.name}] that is not derived class of the target propMeta's origin that is [${typeMeta.abstract.name}]`);
-    }
+//         throw new ReferenceError(`could find method variant of a class [${_class.name}] that is not derived class of the target propMeta's origin that is [${typeMeta.abstract.name}]`);
+//     }
 
-    const methodVariantMaps = typeMeta.methodVariantMaps;
-    const methodName = propMeta.name;
-    const variantMap = propMeta.static ? methodVariantMaps.static : methodVariantMaps._prototype;
-    const trieEndpoint = searchForMethodVariant(variantMap.mappingTable.get(methodName), paramTypeList);
+//     const methodVariantMaps = typeMeta.methodVariantMaps;
+//     const methodName = propMeta.name;
+//     const variantMap = propMeta.static ? methodVariantMaps.static : methodVariantMaps._prototype;
+//     const trieEndpoint = searchForMethodVariant(variantMap.mappingTable.get(methodName), paramTypeList);
 
-    if (!(trieEndpoint instanceof function_variant_param_node_endpoint_metadata_t)) {
+//     if (!(trieEndpoint instanceof function_variant_param_node_endpoint_metadata_t)) {
 
-        return undefined;
-    }
+//         return undefined;
+//     }
 
-    switch(trieEndpoint.vTable.size) {
-        case 0:
-            return undefined;
-        case 1:
-            /**
-             * When size of trieEndpoint's map is 1,
-             * this means there are no conflict between base class 
-             * and derived classes (overriding behavior).
-             */
-            return trieEndpoint.vTable.values().next().value;
-        default:
-            break;
-    }
+//     switch(trieEndpoint.vTable.size) {
+//         case 0:
+//             return undefined;
+//         case 1:
+//             /**
+//              * When size of trieEndpoint's map is 1,
+//              * this means there are no conflict between base class 
+//              * and derived classes (overriding behavior).
+//              */
+//             return trieEndpoint.vTable.values().next().value;
+//         default:
+//             break;
+//     }
 
-    let tempTargetClass = _class;
+//     let tempTargetClass = _class;
 
-    while (
-        Object.getPrototypeOf(tempTargetClass) !== Object.getPrototypeOf(Function)
-    ) {
+//     while (
+//         Object.getPrototypeOf(tempTargetClass) !== Object.getPrototypeOf(Function)
+//     ) {
 
-        const tempClassTypeMeta = metaOf(_class);
+//         const tempClassTypeMeta = metaOf(_class);
 
-        if (
-            isObject(tempClassTypeMeta) &&
-            trieEndpoint.vTable.has(tempClassTypeMeta)
-        ) {
+//         if (
+//             isObject(tempClassTypeMeta) &&
+//             trieEndpoint.vTable.has(tempClassTypeMeta)
+//         ) {
 
-            return trieEndpoint.vTable.get(tempClassTypeMeta);
-        }
+//             return trieEndpoint.vTable.get(tempClassTypeMeta);
+//         }
 
-        tempTargetClass = Object.getPrototypeOf(tempTargetClass);
-        continue;
-    }
-}
+//         tempTargetClass = Object.getPrototypeOf(tempTargetClass);
+//         continue;
+//     }
+// }
 
 /**
  * 
@@ -304,7 +301,6 @@ function traverse(trieNode, stack = [], globalList = [], options = {}) {
      * if catch endpoint on a node, the entire stack is a variant signature.
      */
     if (trieNode.endpoint) {
-        //console.log(stack)
 
         const dataToPush = options.toObject ? {
             endpoint: trieNode.endpoint, 
@@ -313,7 +309,7 @@ function traverse(trieNode, stack = [], globalList = [], options = {}) {
 
         globalList.push(dataToPush);
     }
-    //console.log(stack.length)
+
     const recoverPoint = stack.length;
 
     for (const [_type, nextDepth] of trieNode.current.entries() || []) {

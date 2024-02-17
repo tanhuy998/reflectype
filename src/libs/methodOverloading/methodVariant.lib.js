@@ -6,6 +6,39 @@ const { estimateArgs } = require("./methodArgsEstimation.lib");
 const { Interface } = require("../../interface");
 const MethodVariantMismatchError = require("./error/methodVariantMismatchError");
 
+/**
+ * because of using a number (which is 4 bytes floating point) as 
+ * statistic rows of statistic table therefore the maximum parameters 
+ * for the estimation is 32, so bias for interface delta will
+ * be 1 divided to 32 in order to not only mark method variants with interface has 
+ * less priority than traditional classes but also not affect much in the calculated
+ * distance between arguments and the method variant's signature. The less distances betwwen
+ * arguments and signature, the more priority the signature is and when parameters reach 
+ * 32 Interfaces, the distance just increased by 1 (this case is hard to happen in real application).
+ * 
+ * eg. the following pseudo code represent the issue.
+ * 
+ * class Foo implements IDisposable
+ * 
+ * given 2 signatures
+ * a = (Number, Foo, String)
+ * b = (Number, IDisposable, String)
+ * 
+ * given an arguments list determined args = [1, new Foo(), 'foo']
+ * 
+ * distance(args, a) = delta(args[0], a[0]) + delta(args[1], a[1]) + delta(args[2], a[2]) 
+ *    = 0 + 0 + 0 
+ *    = 0
+ * 
+ * distance(args, b) = delta(args[0], b[0]) + delta(args[1], b[1]) + delta(args[2], b[2])
+ *    = 0 + (0+1/32) + 0 
+ *    = 1/32
+ * 
+ * as we can see, the two signatures a and b are relavant to each other, but a has more
+ * priority than b because types of signature a is more explicit than b's types.
+ */
+const INTERFACE_BIAS = 1/32;
+
 module.exports = {
     dispatchMethodVariant,
     diveTrieByArguments,
@@ -18,13 +51,10 @@ module.exports = {
  * @param {Array<any>} args 
  */
 function dispatchMethodVariant(binder, propMeta, args) {
-
-    //console.log(propMeta)
-
+    
     try {
 
-        const _class = getTypeOf(binder);
-        const trieEndpoint = diveTrieByArguments(_class, propMeta, args);        
+        const trieEndpoint = diveTrieByArguments(getTypeOf(binder), propMeta, args);        
         return dispatchVtable(binder, trieEndpoint, args);
     }
     catch (e) {
@@ -55,12 +85,14 @@ function dispatchVtable(binder, trieEndpoint, args) {
         const typeMeta = metaOf(_class);
 
         if (trieEndpoint.vTable.has(typeMeta)) {
-
-            return trieEndpoint.vTable.get(typeMeta)?.call(binder, ...args);
+            
+            return trieEndpoint.vTable.get(typeMeta).call(binder, ...args);
         }
 
         _class = Object.getPrototypeOf(_class);
     }
+
+    throw new MethodVariantMismatchError();
 }
 
 /**
@@ -69,7 +101,7 @@ function dispatchVtable(binder, trieEndpoint, args) {
  */
 function traceAndHandleMismatchVariant(e) {
 
-    console.log(e.estimatedTypes)
+    throw e;
 }
 
 /**
@@ -92,6 +124,7 @@ function diveTrieByArguments(_class, propMeta, args) {
     }
 
     const estimation = estimateArgs(propMeta, args);
+    console.log(estimation)
     console.timeEnd('estimation time');
     if (
         !Array.isArray(estimation) ||
@@ -100,15 +133,10 @@ function diveTrieByArguments(_class, propMeta, args) {
 
         return false;
     }
-    console.log('estimation list', estimation)
+
     console.time('calc')
     const targetTrie = retrieveTrie(propMeta);
-    // const iterator = args[Symbol.iterator]();
-    // let iteration = iterator.next();
-    // let index = 0;
-    let iterationNode = targetTrie;
-    
-    const ret = calculate(targetTrie, estimation)?.endpoint;
+    const ret = retrieveEndpointByEstimation(targetTrie, estimation)?.endpoint;
     console.timeEnd('calc')
 
     return ret;
@@ -119,9 +147,8 @@ function diveTrieByArguments(_class, propMeta, args) {
  * @param {function_variant_param_node_metadata_t} trieNode 
  * @param {Array<Object>} estimations 
  */
-function calculate(trieNode, estimations, distance = 0) {
-    //console.log(['depth'], trieNode.depth, estimations);
-    //console.log(trieNode.current)
+function retrieveEndpointByEstimation(trieNode, estimations, distance = 0) {
+
     const estimationPiece = estimations[trieNode.depth];
 
     /**
@@ -138,71 +165,35 @@ function calculate(trieNode, estimations, distance = 0) {
     for (const {type, delta} of estimationPiece || [{}]) {
         
         if (!trieNode.current.has(type)) {
-            //console.log(1)
+
             continue;
         }
 
         const nextNode = trieNode.current.get(type);
-        const d = distance + delta + (type instanceof Interface) ? 0.5 : 0;
+        const d = calculateDistance(distance, delta, (type instanceof Interface));
 
         if (nextNode.endpoint) {
-            //console.log(2)
+
             nearest = min(nearest, {
                 delta: d,
                 endpoint: nextNode.endpoint
             });
         }
 
-        nearest = min(nearest, calculate(
+        nearest = min(nearest, retrieveEndpointByEstimation(
             nextNode, estimations, d
         ));
-
-        //console.log(nearest)
     }
 
     return nearest;
 }
 
-function min(left, right) {
+function calculateDistance(ref, delta, isInterface = false) {
 
-    return left.delta < right.delta ? left : right;
+    return ref + delta + isInterface ? INTERFACE_BIAS : 0;
 }
 
-// /**
-//  * 
-//  * @param {Function} _type 
-//  * @param {function_variant_param_node_metadata_t} currentNode 
-//  * @param {Array<Function>} stack
-//  * @param {Array<Array>} map 
-//  */
-// function diveInheritanceChain(_type, currentNode, stack, map) {
+function min(left, right) {
 
-//     const recoverPoint = stack.length;
-//     let currentType = _type;
-
-//     while (
-//         currentType !== Object.getPrototypeOf(Function)
-//     ) {
-
-//         if (currentNode.current.has(currentType)) {
-
-//             const nextNode = currentNode.current.get(currentType);
-
-//             stack.push(currentType);
-//             diveInheritanceChain();
-//         }
-
-//         currentType = Object.getPrototypeOf(currentType);
-//     }
-
-//     /**
-//      * recover to the initial state of the stack
-//      */
-//     while (
-//         stack.length !== recoverPoint &&
-//         stack.length !== 0
-//     ) {
-
-//         stack.pop();
-//     }
-// }
+    return (left?.delta || Infinity) < (right?.delta || Infinity) ? left : right;
+}
