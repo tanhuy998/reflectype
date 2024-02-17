@@ -37,6 +37,7 @@ const {diveTrieByArguments} = require('../../src/libs/methodOverloading/methodVa
 
 const {METHOD} = require('../../src/libs/methodOverloading/constant.js');
 const { Any } = require('../../src/index.js');
+const { isPrimitive, getTypeOf } = require('../../src/libs/type.js');
 // const {A} = require('./compiled.js');
 //console.log(METHOD)
 // const refl = new Reflector(A);
@@ -91,7 +92,7 @@ const { Any } = require('../../src/index.js');
 // console.log(N[METADATA] === wrapperM)
 // console.log(N[METADATA] === wrapperA)
 
-
+console.log(getTypeOf(true))
 
 //console.log(A)
 const ref = new ReflectionClassPrototype(H);
@@ -111,9 +112,12 @@ console.time(2)
 // console.log(
 //     diveTrieByArguments(H, mRef.metadata, ['1'])?.map.get(ref.metadata)
 // )
-for (const [key, value] of diveTrieByArguments(H, mRef.metadata, [new B()])?.map.entries() || [[]]) {
 
-    console.log(value.call(new H(), new B()))
+const args = ['2', 1, true];
+
+for (const [key, value] of diveTrieByArguments(H, mRef.metadata, args)?.map.entries() || [[]]) {
+
+    console.log(value.call(new H(), ...args));
 }
 //const mRef = new ReflectionPrototypeMethod(T, 'func');
 //console.log(findMethodVariantOf(T, mRef.metadata, [Number]))

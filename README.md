@@ -260,7 +260,7 @@ class A {
     // valid 
     @parameters({b: Component})
     bar(a, b, c) {
-        /**
+        /** 
          * a's type is any
          * b's type is [Component]
          * c's type is any
@@ -388,6 +388,8 @@ class A {
     }
 }
 ```
+
+### METHOD OVERLOADING RESOLUTION
 
 ### METHOD SIGNATURE
 

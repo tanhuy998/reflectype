@@ -3,6 +3,7 @@ const { property_metadata_t, function_variant_param_node_metadata_t } = require(
 const { retrieveTrie } = require("./methodVariantTrieOperation.lib");
 const { getTypeOf } = require("../type");
 const { estimateArgs } = require("./methodArgsEstimation.lib");
+const { Interface } = require("../../interface");
 
 module.exports = {
     diveTrieByArguments,
@@ -58,6 +59,12 @@ function calculate(trieNode, estimations, distance = 0) {
     //console.log(trieNode.current)
     const estimationPiece = estimations[trieNode.depth];
 
+    /**
+     * Initial nearest variant,
+     * endpoint for the initial nearest is 
+     * the method variant whose signature is null
+     * if exists.
+     */
     let nearest = {
         delta: Infinity,
         endpoint: trieNode.endpoint || undefined
@@ -71,16 +78,19 @@ function calculate(trieNode, estimations, distance = 0) {
         }
 
         const nextNode = trieNode.current.get(type);
+        const d = distance + delta + (type instanceof Interface) ? 0.5 : 0;
 
         if (nextNode.endpoint) {
             //console.log(2)
             nearest = min(nearest, {
-                delta: distance,
+                delta: d,
                 endpoint: nextNode.endpoint
             });
         }
 
-        nearest = min(nearest, calculate(nextNode, estimations, distance + delta));
+        nearest = min(nearest, calculate(
+            nextNode, estimations, d
+        ));
 
         //console.log(nearest)
     }

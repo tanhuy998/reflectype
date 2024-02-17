@@ -127,9 +127,10 @@ class T {
     }
 
     @parameters({
-        a: String
+        a: String,
+        b: B
     })
-    [METHOD('func')](a) {
+    [METHOD('func')](a, b) {
         console.log('string')
     }
 
@@ -139,11 +140,22 @@ class T {
     })
     [METHOD('func')](a, b) {
 
+        console.log('number')
+    }
 
+    @parameters({
+        a: String,
+        b: Number,
+        c: Boolean
+    })
+    [METHOD('func')](a, b, c) {
+
+        console.log('boolean')
     }
 
     @parameters({
         a: A
+        
     })
     [METHOD('func')](a) {
 

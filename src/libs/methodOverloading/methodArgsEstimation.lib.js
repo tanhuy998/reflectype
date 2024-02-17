@@ -112,7 +112,7 @@ function estimateArgs(propMeta, args = []) {
     for (const argVal of args || []) {
 
         const estimatedTypes = estimateArgType(argVal, index, statisticTable);
-
+        
         if (
             !Array.isArray(estimatedTypes) ||
             estimatedTypes.length === 0
@@ -124,6 +124,8 @@ function estimateArgs(propMeta, args = []) {
         }
 
         (ret ||= []).push(estimatedTypes);
+
+        ++index;
     }
 
     return ret;
@@ -149,11 +151,11 @@ function diveInheritanceChain(_type, index, statisticTable) {
     while (
         currentType !== Object.getPrototypeOf(Function)
     ) {
-
+        
         if (
             typeStatisticallyExistsOn(statisticTable, currentType, index)
         ) {
-
+            //console.log([3])
             (ret ||= []).push({
                 type: currentType,
                 delta
@@ -181,7 +183,7 @@ function estimateArgType(argVal, index = 0, statisticTable) {
 
     try {
         ensureStatisticTableExists(statisticTable);
-    
+        
         ret = diveInheritanceChain(getTypeOf(argVal), index, statisticTable);
 
         for (const intf of getAllInterfacesOf(argVal) || []) {
@@ -203,7 +205,7 @@ function estimateArgType(argVal, index = 0, statisticTable) {
              */
             (ret ??= []).push({
                 type: Any,
-                delta: -1,
+                delta: Infinity,
             });
         }
 
