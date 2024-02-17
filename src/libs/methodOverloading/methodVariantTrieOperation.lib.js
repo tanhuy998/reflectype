@@ -15,7 +15,7 @@ module.exports = {
     hasVariant,
     mergeFuncVariant,
     retrieveAllSignatures,
-    findMethodVariantOf,
+    //findMethodVariantOf,
     hasTrie,
     retrieveTrie,
     retrieveSignatureMatrix
@@ -226,7 +226,7 @@ function findMethodVariantOf(_class, propMeta, paramTypeList) {
         return undefined;
     }
 
-    switch(trieEndpoint.map.size) {
+    switch(trieEndpoint.vTable.size) {
         case 0:
             return undefined;
         case 1:
@@ -235,7 +235,7 @@ function findMethodVariantOf(_class, propMeta, paramTypeList) {
              * this means there are no conflict between base class 
              * and derived classes (overriding behavior).
              */
-            return trieEndpoint.map.values().next().value;
+            return trieEndpoint.vTable.values().next().value;
         default:
             break;
     }
@@ -250,10 +250,10 @@ function findMethodVariantOf(_class, propMeta, paramTypeList) {
 
         if (
             isObject(tempClassTypeMeta) &&
-            trieEndpoint.map.has(tempClassTypeMeta)
+            trieEndpoint.vTable.has(tempClassTypeMeta)
         ) {
 
-            return trieEndpoint.map.get(tempClassTypeMeta);
+            return trieEndpoint.vTable.get(tempClassTypeMeta);
         }
 
         tempTargetClass = Object.getPrototypeOf(tempTargetClass);

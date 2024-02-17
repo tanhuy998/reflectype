@@ -123,7 +123,7 @@ class T {
         a: Number
     })
     func(a) {
-        console.log('number')
+        console.log('origin')
     }
 
     @parameters({

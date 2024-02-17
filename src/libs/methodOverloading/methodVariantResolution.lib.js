@@ -7,7 +7,9 @@ const { OVERLOAD_APPLIED, OVERLOAD_TARGET, OVERRIDE_APPLIED } = require("./const
 const { isObjectLike } = require("../type");
 const {getAllParametersMeta} = require('../functionParam.lib');
 const { locateNewFuncVariantTrieNode, searchForMethodVariant, hasVariant, mergeFuncVariant } = require("./methodVariantTrieOperation.lib");
+const { dispatchMethodVariant } = require("./methodVariant.lib");
 
+const IS_ENTRY_POINT = '_is_entry_point';
 
 module.exports = {
     manipulateMethodVariantBehavior,
@@ -45,9 +47,76 @@ function manipulateMethodVariantBehavior(propName, propMeta) {
         isDerivedOverloadingMethod.call(this, propName, propMeta)
     ) {
 
+        createEntryPoint.call(this, propName, propMeta);
         manipulatePseudoOveloading.call(this, propName, propMeta);
         return;
     }
+}
+
+/**
+ * 
+ * @this Function|Object class or class's prototype that is resolved resolution
+ * 
+ * @param {string|symbol} propName 
+ * @param {property_metadata_t} hostPropMeta 
+ */
+function createEntryPoint(propName, hostPropMeta) {
+
+    if (!hostPropMeta.isMethod) {
+
+        return;
+    }
+
+    /**@type {property_metadata_t} */
+    const remotePropMeta = getMetadataFootPrintByKey(hostPropMeta.functionMeta, OVERLOAD_TARGET);
+
+    if (!remotePropMeta) {
+
+        return;
+    }
+
+    if (
+        isVariantEntryPointFunction(this[propName])
+    ) {
+
+        return;
+    }
+
+    this[remotePropMeta.name] = generateEntryPointForMethodVariants(remotePropMeta);
+}
+
+/**
+ * 
+ * @param {property_metadata_t} originPropMeta 
+ */
+function generateEntryPointForMethodVariants(originPropMeta) {
+
+    const ENTRY_POINT = function () {
+
+        return dispatchMethodVariant(this, originPropMeta, arguments);
+    }
+
+    markAsVariantEntryPoint(ENTRY_POINT)
+
+    return ENTRY_POINT;
+}
+
+/**
+ * 
+ * @param {Function} func 
+ */
+function isVariantEntryPointFunction(func) {
+
+    return func?.[IS_ENTRY_POINT];
+}
+
+/**
+ * 
+ * @param {Function} func 
+ */
+function markAsVariantEntryPoint(func) {
+
+    func[IS_ENTRY_POINT] = true;
 }
 
 /**
@@ -121,9 +190,9 @@ function registerOverloadVariant(hostPropMeta) {
 
     const searchedNodeEndpoint = searchForMethodVariant(variantTrie, hostParamMetaList, paramMeta => paramMeta?.type || Any);
 
-    const hasSignature = searchedNodeEndpoint?.map.has(typeMeta);
+    const hasSignature = searchedNodeEndpoint?.vTable.has(typeMeta);
     //console.log(['signature existence check'], hasSignature)
-    const overloadedFuncMeta = searchedNodeEndpoint?.map.get(typeMeta);
+    const overloadedFuncMeta = searchedNodeEndpoint?.vTable.get(typeMeta);
 
     if (
         hasSignature && 
@@ -157,7 +226,7 @@ function registerOverloadVariant(hostPropMeta) {
         /**
          * when derived class override base class with allowance.
          */
-        searchedNodeEndpoint.map.set(typeMeta, hostPropMeta.functionMeta);
+        searchedNodeEndpoint.vTable.set(typeMeta, hostPropMeta.functionMeta);
         return;
     }
 
@@ -168,7 +237,7 @@ function registerOverloadVariant(hostPropMeta) {
     const endPointNode = mergeFuncVariant(hostParamMetaList, variantTrie, variantMappingTable.statisticTable);
     
     endPointNode.endpoint ??= new function_variant_param_node_endpoint_metadata_t();
-    endPointNode.endpoint.map.set(typeMeta, getMetadataFootPrintByKey(hostPropMeta, DECORATED_VALUE));
+    endPointNode.endpoint.vTable.set(typeMeta, getMetadataFootPrintByKey(hostPropMeta, DECORATED_VALUE));
 }
 
 /**

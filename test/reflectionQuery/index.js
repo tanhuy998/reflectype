@@ -108,17 +108,22 @@ console.log(['000000000000000000000000000000000000000000000000000000'])
 //console.log(ref.metadata.properties.func)
 console.log(retrieveAllSignatures(trie));
 console.log(prototypeMap.statisticTable)
-console.time(2)
+
+const obj = new H();
+
+for (let i = 0; i < 1000; ++i) {
+
+    console.time(2)
 // console.log(
 //     diveTrieByArguments(H, mRef.metadata, ['1'])?.map.get(ref.metadata)
 // )
 
-const args = ['2', 1, true];
+const args = ['1', 1, true];
+obj.func(...args);
+// for (const [key, value] of diveTrieByArguments(H, mRef.metadata, args)?.map.entries() || [[]]) {
 
-for (const [key, value] of diveTrieByArguments(H, mRef.metadata, args)?.map.entries() || [[]]) {
-
-    console.log(value.call(new H(), ...args));
-}
+//     console.log(value.call(new H(), ...args));
+// }
 //const mRef = new ReflectionPrototypeMethod(T, 'func');
 //console.log(findMethodVariantOf(T, mRef.metadata, [Number]))
 // console.log(mRef.metadata.owner.typeMeta.abstract)
@@ -126,6 +131,7 @@ for (const [key, value] of diveTrieByArguments(H, mRef.metadata, args)?.map.entr
 
 //console.log(searchForMethodVariant(funcMeta, [Function, Number]))
 console.timeEnd(2)
+}
 
 
 

@@ -241,11 +241,11 @@ function function_metadata_t(_owner) {
 }
 
 function function_variant_param_node_endpoint_metadata_t() {
-
     /**
+     * 
      * @type {Map<metadata_t, function_metadata_t>}
      */
-    this.map = new Map();
+    this.vTable = new Map();
 }
 
 /**
