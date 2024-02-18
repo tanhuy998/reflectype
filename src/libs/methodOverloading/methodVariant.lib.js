@@ -54,7 +54,13 @@ function dispatchMethodVariant(binder, propMeta, args) {
     
     try {
 
-        const trieEndpoint = diveTrieByArguments(getTypeOf(binder), propMeta, args);        
+        const trieEndpoint = diveTrieByArguments(getTypeOf(binder), propMeta, args);
+        
+        if (!trieEndpoint) {
+
+            throw new MethodVariantMismatchError();
+        }
+
         return dispatchVtable(binder, trieEndpoint, args);
     }
     catch (e) {
@@ -124,7 +130,7 @@ function diveTrieByArguments(_class, propMeta, args) {
     }
 
     const estimation = estimateArgs(propMeta, args);
-    console.log(estimation)
+
     console.timeEnd('estimation time');
     if (
         !Array.isArray(estimation) ||
@@ -136,6 +142,7 @@ function diveTrieByArguments(_class, propMeta, args) {
 
     console.time('calc')
     const targetTrie = retrieveTrie(propMeta);
+    //console.log(['trie'], targetTrie)
     const ret = retrieveEndpointByEstimation(targetTrie, estimation)?.endpoint;
     console.timeEnd('calc')
 
@@ -147,10 +154,10 @@ function diveTrieByArguments(_class, propMeta, args) {
  * @param {function_variant_param_node_metadata_t} trieNode 
  * @param {Array<Object>} estimations 
  */
-function retrieveEndpointByEstimation(trieNode, estimations, distance = 0) {
-
+function retrieveEndpointByEstimation(trieNode, estimations, distance = Infinity) {
+    
     const estimationPiece = estimations[trieNode.depth];
-
+    console.log(['estimation'], 'depth', trieNode.depth, 'current distance', distance,'---------------------------')
     /**
      * Initial nearest variant,
      * endpoint for the initial nearest is 
@@ -158,42 +165,59 @@ function retrieveEndpointByEstimation(trieNode, estimations, distance = 0) {
      * if exists.
      */
     let nearest = {
-        delta: Infinity,
+        delta: distance,
         endpoint: trieNode.endpoint || undefined
     };
 
-    for (const {type, delta} of estimationPiece || [{}]) {
-        
-        if (!trieNode.current.has(type)) {
+    if (
+        trieNode.depth === estimations.length 
+    ) {
+        /**
+         * anchor condition when we reach the trie node whose depth is equal 
+         * to the last estimation piece (also known as last argument)
+         */
+        return nearest;
+    }
 
+    for (const {type, delta} of estimationPiece || [{}]) {
+        console.log('type', type?.name, 'delta', delta)
+        if (!trieNode.current.has(type)) {
+            console.log(1, type)
             continue;
         }
 
         const nextNode = trieNode.current.get(type);
         const d = calculateDistance(distance, delta, (type instanceof Interface));
 
-        if (nextNode.endpoint) {
+        // if (nextNode.endpoint) {
 
-            nearest = min(nearest, {
-                delta: d,
-                endpoint: nextNode.endpoint
-            });
-        }
+        //     nearest = min(nearest, {
+        //         delta: d,
+        //         endpoint: nextNode.endpoint
+        //     });
+        // }
 
         nearest = min(nearest, retrieveEndpointByEstimation(
             nextNode, estimations, d
         ));
+        console.log(['temp'], nearest.delta)
     }
-
+    console.log(['nearest'], trieNode.depth, nearest.delta)
     return nearest;
 }
 
 function calculateDistance(ref, delta, isInterface = false) {
 
-    return ref + delta + isInterface ? INTERFACE_BIAS : 0;
+    return (ref === Infinity ? 0 : ref) + delta + isInterface ? INTERFACE_BIAS : 0;
 }
 
 function min(left, right) {
+    //console.log(['min'], 'left', left.delta, 'right', right.delta);
 
-    return (left?.delta || Infinity) < (right?.delta || Infinity) ? left : right;
+    const ld = isNaN(left.delta) ? Infinity : left.delta;
+    const rd = isNaN(right.delta) ? Infinity : right.delta;
+    console.log(['min'], 'left', ld, 'right', rd);
+    const ret = (ld) < (rd) ? left : right;
+    console.log([''], ret)
+    return ret;
 }

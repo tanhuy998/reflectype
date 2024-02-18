@@ -1,6 +1,6 @@
 const { parameter_metadata_t, function_variant_param_node_metadata_t, property_metadata_t, metaOf } = require("../../reflection/metadata");
 const Any = require("../../type/any");
-const { getTypeOf } = require("../type");
+const { getTypeOf, isValuable } = require("../type");
 const MethodVariantMismatchError = require("./error/methodVariantMismatchError");
 
 /**
@@ -140,6 +140,11 @@ function calculateDelta() {
  */
 function diveInheritanceChain(_type, index, statisticTable) {
 
+    if (!isValuable(_type)) {
+
+        return undefined;
+    }
+
     let ret;
     let currentType = _type;
     let delta = 0;
@@ -151,7 +156,7 @@ function diveInheritanceChain(_type, index, statisticTable) {
         if (
             typeStatisticallyExistsOn(statisticTable, currentType, index)
         ) {
-
+            //console.log(['choose'], currentType)
             (ret ||= []).push({
                 type: currentType,
                 delta
@@ -217,7 +222,8 @@ function estimateArgType(argVal, index = 0, statisticTable) {
 function getAllInterfacesOf(_unknown) {
 
     const _type = getTypeOf(_unknown);
+    const meta = metaOf(_type)?.interfaces?.properties;
 
-    return Object.values(metaOf(_type).interfaces?.properties);
+    return typeof meta === 'object' ? Object.values(meta) : undefined;
 }
 

@@ -114,6 +114,11 @@ class IDisposable extends Interface {
     func() {}
 }
 
+class IFoo extends IDisposable {
+
+    foo() {}
+}
+
 @implement(IDisposable)
 class A {
 
@@ -123,6 +128,13 @@ class A {
 class B extends A {
 
 
+}
+
+@implement(IFoo)
+class Y {
+
+    func() {}
+    foo() {}
 }
 
 class T {
@@ -228,4 +240,4 @@ function dec(_, context) {
 
 //module.exports = {A}
 
-module.exports = {H, T, A, B} // {A, B, C, D, E, F, G, H};
+module.exports = {H, T, A, B, Z, Y} // {A, B, C, D, E, F, G, H};

@@ -4,7 +4,7 @@
 //     ]
 // })
 
-const {A, B, C, D, E, F, G, H, T} = require('./compiled.js');
+const {A, B, C, D, E, F, G, H, T, Z, Y} = require('./compiled.js');
 const {METADATA} = require('../../src/constants.js');
 const { TYPE_JS, property_metadata_t, metaOf } = require('../../src/reflection/metadata.js');
 
