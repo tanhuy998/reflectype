@@ -336,6 +336,11 @@ class A {
 
 ## \[EXPERIMENTAL\] METHOD OVERLOADING (MULTIPLE DISPATCH) 
 
+*Current development state:
+- [x] Explicit type matched arguments
+- [x] Interface type matched arguments
+- [ ] Polymorphism type matched arguments
+
 ### MULTIPLE DISPATCH CONCEPT
 
 ### ORIGIN AND PSEUDO METHOD
