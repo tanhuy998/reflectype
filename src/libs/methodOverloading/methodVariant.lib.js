@@ -202,13 +202,18 @@ function retrieveEndpointByEstimation(trieNode, estimations, distance = Infinity
         ));
         console.log(['temp'], nearest.delta)
     }
-    console.log(['nearest'], trieNode.depth, nearest.delta)
+    console.log(['nearest'], trieNode.depth,)
     return nearest;
+}
+
+function debugNearest(nearest) {
+
+    return nearest.endpoint?.vTable.keys()
 }
 
 function calculateDistance(ref, delta, isInterface = false) {
 
-    return (ref === Infinity ? 0 : ref) + delta + isInterface ? INTERFACE_BIAS : 0;
+    return (ref === Infinity ? 0 : ref) + delta; //+ isInterface ? INTERFACE_BIAS : 0;
 }
 
 function min(left, right) {
@@ -217,7 +222,7 @@ function min(left, right) {
     const ld = isNaN(left.delta) ? Infinity : left.delta;
     const rd = isNaN(right.delta) ? Infinity : right.delta;
     console.log(['min'], 'left', ld, 'right', rd);
-    const ret = (ld) < (rd) ? left : right;
-    console.log([''], ret)
+    const ret = (ld) <= (rd) ? left : right;
+    console.log([''], ret.delta, debugNearest(ret));
     return ret;
 }

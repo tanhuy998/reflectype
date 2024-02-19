@@ -117,7 +117,7 @@ console.time(2)
 //     diveTrieByArguments(H, mRef.metadata, ['1'])?.map.get(ref.metadata)
 // )
 
-const args = [new B()];
+const args = [new Y()];
 obj.func(...args);
 // for (const [key, value] of diveTrieByArguments(H, mRef.metadata, args)?.map.entries() || [[]]) {
 
