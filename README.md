@@ -339,7 +339,12 @@ class A {
 *Current development state:
 - [x] Explicit type matched arguments
 - [x] Interface type matched arguments
-- [ ] Polymorphism type matched arguments
+- [ ] Single dispatch (virtual method behavior across inheritance chain)
+- [x] Polymorphism type matched arguments
+
+New approaches:
+- [ ] arguments caching
+- [ ] static type corersion (pure method overloading)
 
 ### MULTIPLE DISPATCH CONCEPT
 
@@ -397,6 +402,8 @@ class A {
 ```
 
 ### METHOD OVERLOADING RESOLUTION
+
+### PURE METHOD OVERLOADING (STATIC TYPE COERSION)
 
 ### METHOD SIGNATURE
 
