@@ -12,6 +12,7 @@ const {
 } = require('./constant.js');
 //const { resolveTypeMetaResolution } = require('./metadata/resolution.js');
 const { extractFunctionInformations } = require('../utils/function.util.js');
+const { MULTIPLE_DISPATCH } = require('./methodOverloading/constant.js');
 
 module.exports = {
     decorateMethod, 
@@ -33,12 +34,20 @@ function generateDecorateMethod(_method, propMeta) {
     
     return function() {
 
+        const [state, ...rest] = arguments;
+        const actualInput = state === MULTIPLE_DISPATCH ? rest : arguments;
+        
         //const functionMeta = propMeta.functionMeta;
         const injectedArgs = getInjectedArguments(this, propMeta.name ?? _method.name);
         const defaultArguments = propMeta.functionMeta.defaultArguments;
-        const args = arguments.length !== 0 ? arguments : injectedArgs ?? (isIterable(defaultArguments) ? defaultArguments : [defaultArguments]);
-        
-        compareArgsWithType(propMeta, args);
+        //const args = arguments.length !== 0 ? arguments : injectedArgs ?? (isIterable(defaultArguments) ? defaultArguments : [defaultArguments]);
+        const args = actualInput.length !== 0 ? actualInput : injectedArgs ?? (isIterable(defaultArguments) ? defaultArguments : [defaultArguments]);
+
+
+        if (state !== MULTIPLE_DISPATCH) {
+
+            compareArgsWithType(propMeta, args);
+        }
 
         const returnValue = _method.call(this, ...args);
         const {type} = propMeta;

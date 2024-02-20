@@ -239,7 +239,7 @@ function estimateArgType(argVal, index = 0, statisticTable) {
                 delta: Infinity,
             });
         }
-        console.log(getAllInterfacesOf(argVal), ret)
+        
         return ret;
     }
 }

@@ -5,6 +5,7 @@ const { getTypeOf } = require("../type");
 const { estimateArgs } = require("./methodArgsEstimation.lib");
 const { Interface } = require("../../interface");
 const MethodVariantMismatchError = require("./error/methodVariantMismatchError");
+const { MULTIPLE_DISPATCH } = require("./constant");
 
 /**
  * because of using a number (which is 4 bytes floating point) as 
@@ -92,7 +93,7 @@ function dispatchVtable(binder, trieEndpoint, args) {
 
         if (trieEndpoint.vTable.has(typeMeta)) {
             
-            return trieEndpoint.vTable.get(typeMeta).call(binder, ...args);
+            return trieEndpoint.vTable.get(typeMeta).call(binder, MULTIPLE_DISPATCH, ...args);
         }
 
         _class = Object.getPrototypeOf(_class);
@@ -157,7 +158,6 @@ function diveTrieByArguments(_class, propMeta, args) {
 function retrieveEndpointByEstimation(trieNode, estimations, distance = Infinity) {
     
     const estimationPiece = estimations[trieNode.depth];
-    console.log(['estimation'], 'depth', trieNode.depth, 'current distance', distance,'---------------------------')
     /**
      * Initial nearest variant,
      * endpoint for the initial nearest is 
@@ -180,7 +180,7 @@ function retrieveEndpointByEstimation(trieNode, estimations, distance = Infinity
     }
 
     for (const {type, delta} of estimationPiece || [{}]) {
-        console.log('type', type?.name, 'delta', delta)
+        
         if (!trieNode.current.has(type)) {
             console.log(1, type)
             continue;
@@ -200,9 +200,8 @@ function retrieveEndpointByEstimation(trieNode, estimations, distance = Infinity
         nearest = min(nearest, retrieveEndpointByEstimation(
             nextNode, estimations, d
         ));
-        console.log(['temp'], nearest.delta)
     }
-    console.log(['nearest'], trieNode.depth,)
+
     return nearest;
 }
 
@@ -217,12 +216,8 @@ function calculateDistance(ref, delta, isInterface = false) {
 }
 
 function min(left, right) {
-    //console.log(['min'], 'left', left.delta, 'right', right.delta);
 
     const ld = isNaN(left.delta) ? Infinity : left.delta;
     const rd = isNaN(right.delta) ? Infinity : right.delta;
-    console.log(['min'], 'left', ld, 'right', rd);
-    const ret = (ld) <= (rd) ? left : right;
-    console.log([''], ret.delta, debugNearest(ret));
-    return ret;
+    return ld <= rd ? left : right;
 }
