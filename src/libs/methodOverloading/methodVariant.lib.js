@@ -6,6 +6,7 @@ const { estimateArgs } = require("./methodArgsEstimation.lib");
 const { Interface } = require("../../interface");
 const MethodVariantMismatchError = require("./error/methodVariantMismatchError");
 const { MULTIPLE_DISPATCH } = require("./constant");
+const globalConfig = require('../../../config.json');
 
 /**
  * because of using a number (which is 4 bytes floating point) as 
@@ -61,8 +62,10 @@ function dispatchMethodVariant(binder, propMeta, args) {
 
             throw new MethodVariantMismatchError();
         }
-
-        return dispatchVtable(binder, trieEndpoint, args);
+        //console.time('endpoint eval')
+        const ret = dispatchVtable(binder, trieEndpoint, args);
+        //console.timeEnd('endpoint eval')
+        return ret;
     }
     catch (e) {
 
@@ -85,10 +88,14 @@ function dispatchVtable(binder, trieEndpoint, args) {
 
     let _class = getTypeOf(binder);
 
+    /**
+     * Iterate throught inheritance chain,
+     * catch first matched class exist the endpoint's vtable
+     */
     while (
         _class !== Object.getPrototypeOf(Function)
     ) {
-
+        
         const typeMeta = metaOf(_class);
 
         if (trieEndpoint.vTable.has(typeMeta)) {
@@ -120,7 +127,7 @@ function traceAndHandleMismatchVariant(e) {
  * @returns {function_variant_param_node_endpoint_metadata_t}
  */
 function diveTrieByArguments(_class, propMeta, args) {
-    console.time('estimation time');
+    //console.time('estimation time');
     const variantMaps = propMeta.owner.typeMeta.methodVariantMaps;
     const targetMap = propMeta.static ? variantMaps?.static : variantMaps._prototype;
     const statisticTable = targetMap.statisticTable;
@@ -131,8 +138,9 @@ function diveTrieByArguments(_class, propMeta, args) {
     }
 
     const estimation = estimateArgs(propMeta, args);
+    //console.log(['e'], estimation)
 
-    console.timeEnd('estimation time');
+    //console.timeEnd('estimation time');
     if (
         !Array.isArray(estimation) ||
         estimation.length === 0
@@ -141,23 +149,26 @@ function diveTrieByArguments(_class, propMeta, args) {
         return false;
     }
 
-    console.time('calc')
+    //console.time('calc')
     const targetTrie = retrieveTrie(propMeta);
     //console.log(['trie'], targetTrie)
     const ret = retrieveEndpointByEstimation(targetTrie, estimation)?.endpoint;
-    console.timeEnd('calc')
-
+    //console.timeEnd('calc')
+    
     return ret;
 } 
+
 
 /**
  * 
  * @param {function_variant_param_node_metadata_t} trieNode 
  * @param {Array<Object>} estimations 
  */
-function retrieveEndpointByEstimation(trieNode, estimations, distance = Infinity) {
+function retrieveEndpointByEstimation(trieNode, estimationFactors, distance = Infinity) {
     
+    const [estimations, argMasses] = estimationFactors || [undefined, undefined];
     const estimationPiece = estimations[trieNode.depth];
+    const argslength = estimations.length;
     /**
      * Initial nearest variant,
      * endpoint for the initial nearest is 
@@ -165,30 +176,42 @@ function retrieveEndpointByEstimation(trieNode, estimations, distance = Infinity
      * if exists.
      */
     let nearest = {
-        delta: distance,
-        endpoint: trieNode.endpoint || undefined
+        //delta: trieNode.endpoint ? (estimationPiece?.[undefined] || 0) * (estimations.length - trieNode.depth) + distance : distance,
+        //endpoint: trieNode.endpoint || undefined
+        delta: distance
     };
+    
+    // if (trieNode.endpoint) {
 
+    //     console.log(['init nearest'], 'has endpoint', typeof trieNode.endpoint === 'object', 'at', trieNode.depth)
+    //     console.log((estimationPiece?.[undefined] || 0) * (estimations.length - trieNode.depth) + distance)
+    //     console.log(['init delta'], nearest.delta)
+    // }
+    //console.log(['p'], estimationPiece)
     if (
-        trieNode.depth === estimations.length 
+        trieNode.depth === argslength//estimations.length 
     ) {
         /**
          * anchor condition when we reach the trie node whose depth is equal 
          * to the last estimation piece (also known as last argument)
          */
+        //console.log(['anchor'],trieNode.depth, nearest.delta)
+        nearest.endpoint = trieNode.endpoint;
         return nearest;
     }
 
     for (const {type, delta} of estimationPiece || [{}]) {
         
-        if (!trieNode.current.has(type)) {
-            console.log(1, type)
+        if (
+            !trieNode.current.has(type)
+        ) {
+
             continue;
         }
 
         const nextNode = trieNode.current.get(type);
         const d = calculateDistance(distance, delta, (type instanceof Interface));
-
+ 
         // if (nextNode.endpoint) {
 
         //     nearest = min(nearest, {
@@ -198,11 +221,42 @@ function retrieveEndpointByEstimation(trieNode, estimations, distance = Infinity
         // }
 
         nearest = min(nearest, retrieveEndpointByEstimation(
-            nextNode, estimations, d
+            nextNode, estimationFactors, d
         ));
+
+        if (
+            globalConfig.multipleDispatchStrictLength !== true &&
+            trieNode.endpoint
+        ) {
+    
+            const mass = calculateMass(trieNode.depth + 1, argslength - 1, argMasses);
+    
+            nearest = min(nearest, {
+                delta: d + mass,
+                endpoint: trieNode.endpoint
+            })
+        }
     }
 
     return nearest;
+}
+
+/**
+ * 
+ * @param {number} from 
+ * @param {number} to 
+ * @param {Array<Number>} argMasses 
+ */
+function calculateMass(from, to, argMasses) {
+
+    let sum = 0;
+
+    for (let i = from; i < to; argMasses) {
+
+        sum = argMasses[i];
+    }
+
+    return sum;
 }
 
 function debugNearest(nearest) {
@@ -217,7 +271,16 @@ function calculateDistance(ref, delta, isInterface = false) {
 
 function min(left, right) {
 
-    const ld = isNaN(left.delta) ? Infinity : left.delta;
-    const rd = isNaN(right.delta) ? Infinity : right.delta;
-    return ld <= rd ? left : right;
+    if (
+        !left.endpoint &&
+        right.endpoint
+    ) {
+
+        return right;
+    }
+
+    const ld = typeof left.delta !== 'number' || !left.endpoint ? Infinity : left.delta;
+    const rd = typeof right.delta !== 'number' || !right.endpoint ? Infinity : right.delta;
+
+    return ld < rd ? left : right;
 }

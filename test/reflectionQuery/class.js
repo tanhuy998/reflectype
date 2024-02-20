@@ -156,6 +156,15 @@ class T {
 
     @parameters({
         a: String,
+        b: B,
+        c: IDisposable
+    })
+    [METHOD('func')](a, b, c) {
+        console.log('0')
+    }
+
+    @parameters({
+        a: String,
         b: Number
     })
     [METHOD('func')](a, b) {
@@ -225,10 +234,22 @@ class H extends T {
 
     @parameters({
         param1: A,
+        b: IDisposable,
+        c: Number
     })
-    [METHOD('func')](param1) {
+    [METHOD('func')](param1, b, c) {
 
-        console.log('A');
+        console.log('7');
+    }
+
+    @parameters({
+        param1: IDisposable,
+        b: IDisposable,
+        c: Number
+    })
+    [METHOD('func')](param1, b, c) {
+
+        console.log('8');
     }
 }
 

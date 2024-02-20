@@ -1,4 +1,5 @@
 {
     "reflectypeOfficialDecorator": false,
-    "parameterDecorator": false
+    "parameterDecorator": false,
+    "multipleDispatchStrictLength": true
 }

@@ -38,6 +38,8 @@ const {diveTrieByArguments} = require('../../src/libs/methodOverloading/methodVa
 const {METHOD} = require('../../src/libs/methodOverloading/constant.js');
 const { Any } = require('../../src/index.js');
 const { isPrimitive, getTypeOf } = require('../../src/libs/type.js');
+
+const v8 = require('node:v8');
 // const {A} = require('./compiled.js');
 //console.log(METHOD)
 // const refl = new Reflector(A);
@@ -104,20 +106,22 @@ const trieMaps = typeMeta.methodVariantMaps;
 const prototypeMap = trieMaps._prototype;
 const trie = prototypeMap.mappingTable.get('func');
 
-console.log(['000000000000000000000000000000000000000000000000000000'])
 //console.log(ref.metadata.properties.func)
-console.log(retrieveAllSignatures(trie));
-console.log(prototypeMap.statisticTable)
+console.log(['all method variant'], retrieveAllSignatures(trie));
+console.log(['statistic table'], prototypeMap.statisticTable)
 
 const o = new T();
 const obj = new H();
 
-console.time(2)
+
 // console.log(
 //     diveTrieByArguments(H, mRef.metadata, ['1'])?.map.get(ref.metadata)
 // )
 
-const args = [new Y()];
+console.log(['000000000000000000000000000000000000000000000000000000'])
+
+const args = ['1', true, 1];
+console.time(2)
 obj.func(...args);
 // for (const [key, value] of diveTrieByArguments(H, mRef.metadata, args)?.map.entries() || [[]]) {
 
@@ -131,15 +135,16 @@ obj.func(...args);
 //console.log(searchForMethodVariant(funcMeta, [Function, Number]))
 console.timeEnd(2)
 
-// for (let i = 0; i < 1000; ++i) {
+for (let i = 0; i < 1000; ++i) {
 
-//     console.time(2)
+    console.time(2)
 
-//     const args = [function () { }, true, 1];
-//     obj.func(...args);
+    obj.func(...args);
 
-//     console.timeEnd(2)
-// }
+    console.timeEnd(2)
+}
+
+console.log(v8.getHeapStatistics());
 
 
 

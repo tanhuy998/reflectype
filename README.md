@@ -336,15 +336,34 @@ class A {
 
 ## \[EXPERIMENTAL\] METHOD OVERLOADING (MULTIPLE DISPATCH) 
 
+Test directory {root}/test/reflectionQuery
+
+```basg
+# firstly, install dev packages
+
+npm install --only=dev
+
+# then run 
+
+npm run test-reflect-query
+```
+
+
+Maxium number of type hinted parameter for each method is 32 because part of the overall algorithm for method overloading designed in this package is heuristic approach, the decision for choosing the best match method signature for a particular argument list depends mostly on the statistic table that uses numbers (32 bit) to store indexes of a specific type which is potentially been declared.
+
 *Current development state:
 - [x] Explicit type matched arguments
 - [x] Interface type matched arguments
 - [ ] Single dispatch (virtual method behavior across inheritance chain)
 - [x] Polymorphism type matched arguments
+- [ ] primitive types coercion (base on Javascript coercion rules)
 
 New approaches:
 - [ ] arguments caching
-- [ ] static type corersion (pure method overloading)
+- [ ] static type corercion (pure method overloading)
+- [ ] evaluate Any type parameters
+
+### METHOD SIGNATURE
 
 ### MULTIPLE DISPATCH CONCEPT
 
@@ -403,7 +422,7 @@ class A {
 
 ### METHOD OVERLOADING RESOLUTION
 
-### PURE METHOD OVERLOADING (STATIC TYPE COERSION)
+### PRIMITIVE TYPE COERCION
 
-### METHOD SIGNATURE
+### PURE METHOD OVERLOADING (STATIC TYPE COERSION)
 

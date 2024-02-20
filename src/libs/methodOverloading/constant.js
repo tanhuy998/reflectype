@@ -15,7 +15,8 @@ module.exports = {
     OVERRIDE_APPLIED: '_isOverrideMethod',
     LAST_TRIE_NODE: '_last_trie_node',
     PSEUDO_OVERLOADED_METHOD_NAME: '_pseudo_overloaed_method_name',
-    MULTIPLE_DISPATCH: Symbol('multiple_dispatch')
+    MULTIPLE_DISPATCH: Symbol('multiple_dispatch'),
+    ESTIMATION_MASS: Symbol('_estimation_mass'),
 }
 
 

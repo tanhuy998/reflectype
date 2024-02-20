@@ -2,6 +2,7 @@ const { Interface } = require("../../interface");
 const { parameter_metadata_t, function_variant_param_node_metadata_t, property_metadata_t, metaOf } = require("../../reflection/metadata");
 const Any = require("../../type/any");
 const { getTypeOf, isValuable } = require("../type");
+const { ESTIMATION_MASS } = require("./constant");
 const MethodVariantMismatchError = require("./error/methodVariantMismatchError");
 
 /**
@@ -41,7 +42,8 @@ module.exports = {
     addStatisticalPieace,
     estimateArgType,
     typeStatisticallyExistsOn,
-    estimateArgs
+    estimateArgs,
+    
 }
 
 /**
@@ -133,6 +135,7 @@ function estimateArgs(propMeta, args = []) {
     }
 
     let ret;
+    let argMasses;
     let index = 0;
 
     for (const argVal of args || []) {
@@ -151,10 +154,13 @@ function estimateArgs(propMeta, args = []) {
 
         (ret ||= []).push(estimatedTypes);
 
+        (argMasses ||= []).push(estimatedTypes[0]?.[ESTIMATION_MASS]);
+
         ++index;
     }
 
-    return ret;
+    return [ret, argMasses];
+    //return ret;
 }
 
 function calculateDelta() {
@@ -177,7 +183,7 @@ function diveInheritanceChain(_type, index, statisticTable, bias = false) {
 
     let ret;
     let currentType = _type;
-    let delta = bias ? INTERFACE_BIAS : 0;
+    let delta = bias ? bias + INTERFACE_BIAS : 0;
 
     while (
         currentType !== Object.getPrototypeOf(Function)
@@ -189,12 +195,18 @@ function diveInheritanceChain(_type, index, statisticTable, bias = false) {
             //console.log(['choose'], currentType)
             (ret ||= []).push({
                 type: currentType,
-                delta
+                delta,
+                imaginary: 0
             });
         }
 
         ++delta;
         currentType = Object.getPrototypeOf(currentType);
+    }
+
+    if (Array.isArray(ret)) {
+        
+        ret[ESTIMATION_MASS] = delta;
     }
 
     return ret;
@@ -219,7 +231,7 @@ function estimateArgType(argVal, index = 0, statisticTable) {
 
         for (const intf of getAllInterfacesOf(argVal) || []) {
 
-            ret = [...(ret||[]), ...(diveInheritanceChain(intf, index, statisticTable, true)||[])];
+            ret = [...(ret||[]), ...(diveInheritanceChain(intf, index, statisticTable, ret?.[ESTIMATION_MASS]) || [])];
         }
     }
     catch {}
@@ -237,6 +249,7 @@ function estimateArgType(argVal, index = 0, statisticTable) {
             (ret ??= []).push({
                 type: Any,
                 delta: Infinity,
+                imaginary: 1,
             });
         }
         
