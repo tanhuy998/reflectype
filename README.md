@@ -351,6 +351,10 @@ npm run test-reflect-query
 
 Maxium number of type hinted parameter for each method is 32 because part of the overall algorithm for method overloading designed in this package is heuristic approach, the decision for choosing the best match method signature for a particular argument list depends mostly on the statistic table that uses numbers (32 bit) to store indexes of a specific type which is potentially been declared.
 
+## Current benchmark state
+
+With initial test dimension 10x3 (10 overloaded version with longest method signature is 3). The total time of selecting (method body is empty) best match method variant for 100000 of method ivocations (3 arguments are used) with and without static type casting are 300ms and 4s respectively in average. Perhaps the static type casting for arguments need more time on retrieving the casted type. I'm studying on it and finding new approach for static type casting, if performance is not be able improved, static type casting would be ignored.
+
 *Current development state:
 - [x] Explicit type matched arguments
 - [x] Interface type matched arguments
