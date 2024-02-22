@@ -334,7 +334,7 @@ class A {
 }
 ```
 
-## \[EXPERIMENTAL\] METHOD OVERLOADING (MULTIPLE DISPATCH) 
+## \[Experimental\] Method Overloading (Multiple Dispatch) 
 
 Test directory {root}/test/reflectionQuery
 
@@ -351,27 +351,171 @@ npm run test-reflect-query
 
 Maxium number of type hinted parameter for each method is 32 because part of the overall algorithm for method overloading designed in this package is heuristic approach, the decision for choosing the best match method signature for a particular argument list depends mostly on the statistic table that uses numbers (32 bit) to store indexes of a specific type which is potentially been declared.
 
-## Current benchmark state
+## Current Benchmark State
 
-With initial test dimension 10x3 (10 overloaded version with longest method signature is 3). The total time of selecting (method body is empty) best match method variant for 100000 of method ivocations (3 arguments are used) with and without static type casting are 300ms and 4s respectively in average. Perhaps the static type casting for arguments need more time on retrieving the casted type. I'm studying on it and finding new approach for static type casting, if performance is not be able improved, static type casting would be ignored.
+script tested
+
+```
+npm run test-reflect-query
+```
+
+With initial test dimension 10x3 (10 overloaded method variants with longest method signature is 3). The total time of selecting (method body is empty) best match method variant for 100000 of method ivocations (3 arguments are used) with and without static type casting are 300ms and 4s respectively in average. Perhaps the static type casting for arguments need more time on retrieving the casted type. I'm studying on it and finding new approach for static type casting, if performance is not be able improved, static type casting would be ignored.
 
 *Current development state:
 - [x] Explicit type matched arguments
 - [x] Interface type matched arguments
 - [ ] Single dispatch (virtual method behavior across inheritance chain)
 - [x] Polymorphism type matched arguments
-- [ ] primitive types coercion (base on Javascript coercion rules)
+- [ ] primitive types coercion
 
 New approaches:
-- [ ] arguments caching
-- [ ] static type corercion (pure method overloading)
+- [ ] argument type caching
+- [x] static type binding (pure method overloading)
 - [ ] evaluate Any type parameters
 
-### METHOD SIGNATURE
+### Pure Method Overloading (Static Type Binding)
 
-### MULTIPLE DISPATCH CONCEPT
+Cosider the following example written in C# 
 
-### ORIGIN AND PSEUDO METHOD
+```C#
+using System;
+
+public interface IFoo {
+
+    public void foo();
+}
+
+public class A: IFoo {
+
+    public virtual void foo() {
+
+        Console.WriteLine('A');
+    }
+}
+
+public class B: A {
+
+    public override void foo() {
+
+        Console.WriteLine('B');
+    }
+}
+
+public class Test {
+
+
+    public static void func(A o) {
+
+        Console.WriteLine("overloaded for A");
+    }
+
+    public static void func(B o) {
+
+        Console.WriteLine("overloaded for B");
+    }
+
+    public static void Main() {
+
+        A obj = new B();
+
+        Test.func(obj);
+        Test.func(new B());
+
+    // result in terminal will be
+    //
+    // overloaded for A
+    // overloaded for B
+    }
+}
+```
+The two invocations of static method Test.func() print different result in the terminal because of the first ivocation 
+
+```C#
+A obj = new B();
+
+Test.func(obj);
+```
+The type of variable `obj` is determined at compile time is `A` no matter what the exact object is passed to the variable is an a polymorphic type of `A` and lead to the result that the method variant has signature `func(A o)` is the best candidate to be dispatched. This case is called _**Method Overloading**_.
+
+Look at the second invocation
+
+```C#
+Test.func(new B());
+```
+
+The type of argument is supposedly determined at runtime, compiler couldn't detect arbitrary argument's types at compile without type casting. This case is called _**Multiple Dispacth**_ or either _**Multimethod**_.
+
+### In context of Javascript with Reflectype
+
+script for test 
+
+```
+npm run test-method-overloading-static-type-cast
+```
+
+```JS
+class IFoo extends Interface {
+
+    foo() {}
+}
+
+@Implement(IDisposable)
+class A {
+
+    foo() {}
+}
+
+class B extends A {}
+
+class T {
+
+    @type(A)
+    accessor prop;
+}
+
+class Test {
+
+    @parameters({
+       param: A
+    })
+    func(param) {
+
+        console.log('overloaded for A');
+    }
+
+    @parameters({
+        param1: B,
+    })
+    [METHOD('func')](param1) {
+
+        console.log('overloaded for B');   
+    }
+}
+```
+```JS
+const T_obj = new T();
+T_obj.prop = new B();
+
+const test_method_overload_obj = new Test();
+```
+```JS
+test_method_overload_obj.func(T_obj.prop);
+test_method_overload_obj.func(new B());
+```
+result
+
+```terminal
+overloaded for A
+overloaded for B
+```
+
+The code above is the Javascript conversion of the illustative C# example before. As a result, contents printed to the console is the same as the C#'s version's. Any type hinted properties of object are `static_cast`ed to the type where they are stored. In the JS example, the object that is stored at `T_obj.prop` is type of `B` but T_obj.prop type if determined as `A` so that when passing literally `test_method_overload_obj.func(T_obj.prop);` the type of the object stored at `T_obj.prop` is casted down to `A` and therefore the method with signature `func(param: A)` is dispathed.
+
+### Method Signature
+
+### Multiple Dispatch Concept
+
+### Origin and Pseudo Method
 
 ```js
 class A {
@@ -397,7 +541,7 @@ class A {
 }
 ```
 
-### OVERLOADING WITHOUT DECLARING PSEUDO METHOD
+### Overloading Without Declaring Pseudo Method
 
 ```js
 class A {
@@ -424,9 +568,7 @@ class A {
 }
 ```
 
-### METHOD OVERLOADING RESOLUTION
+### Method Overloading Resolution
 
-### PRIMITIVE TYPE COERCION
-
-### PURE METHOD OVERLOADING (STATIC TYPE COERSION)
+### Primitive Type Coercion
 
