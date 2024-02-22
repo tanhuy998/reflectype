@@ -1,6 +1,7 @@
 const { Interface } = require("../../interface");
 const { parameter_metadata_t, function_variant_param_node_metadata_t, property_metadata_t, metaOf } = require("../../reflection/metadata");
 const Any = require("../../type/any");
+const { getCastedTypeOf } = require("../casting.lib");
 const { getTypeOf, isValuable } = require("../type");
 const { ESTIMATION_MASS } = require("./constant");
 const MethodVariantMismatchError = require("./error/methodVariantMismatchError");
@@ -37,6 +38,8 @@ const MethodVariantMismatchError = require("./error/methodVariantMismatchError")
  * priority than b because types of signature a is more explicit than b's types.
  */
 const INTERFACE_BIAS = 1/32;
+const HANDLE_CAST = 'handle_cast';
+const CASTED = 'casted';
 
 module.exports = {
     addStatisticalPieace,
@@ -222,16 +225,46 @@ function diveInheritanceChain(_type, index, statisticTable, bias = false) {
  */
 function estimateArgType(argVal, index = 0, statisticTable) {
 
+    // let ret = _estimatePotentialType(argVal, index, statisticTable);
+    
+    // if (
+    //     (!Array.isArray(ret) || ret.length === 0)
+    //     &&
+    //     typeStatisticallyExistsOn(statisticTable, Any, index)
+    // ) {
+    //     /**
+    //      * when there no types defined in the index, 
+    //      * check for the existence of Any in the variant trie.
+    //      */
+    //     (ret ??= []).push({
+    //         type: Any,
+    //         delta: Infinity,
+    //         imaginary: 1,
+    //     });
+    // }
+
+    // return ret;
+
     let ret;
 
     try {
         ensureStatisticTableExists(statisticTable);
-        
-        ret = diveInheritanceChain(getTypeOf(argVal), index, statisticTable);
+        //throwIfCastedTypeExist(argVal);        
+        //console.time(1)
+        const _type = getCastedTypeOf(argVal) || getTypeOf(argVal);
+        //const _type = getTypeOf(argVal)
+        //console.timeEnd(1)
+        ret = diveInheritanceChain(_type/*getTypeOf(argVal)*/, index, statisticTable);
+
+        if (_type instanceof Interface) {
+
+            throw undefined;
+        }
 
         for (const intf of getAllInterfacesOf(argVal) || []) {
 
             ret = [...(ret||[]), ...(diveInheritanceChain(intf, index, statisticTable, ret?.[ESTIMATION_MASS]) || [])];
+            //(ret || []).push(...(diveInheritanceChain(intf, index, statisticTable, ret?.[ESTIMATION_MASS]) || []));
         }
     }
     catch {}
@@ -255,6 +288,51 @@ function estimateArgType(argVal, index = 0, statisticTable) {
         
         return ret;
     }
+}
+
+/**
+ * 
+ * @param {any} argVal 
+ * @param {number} index
+ * @param {?Map<Function, number>} statisticTable 
+ * 
+ * @returns {?Array<Function>}
+ */
+function _estimatePotentialType(argVal, index = 0, statisticTable) {
+
+    //throwIfCastedTypeExist(argVal);        
+    //console.time(1)
+    const _type = getCastedTypeOf(argVal) || getTypeOf(argVal);
+    //const _type = getTypeOf(argVal)
+    //console.timeEnd(1)
+    let ret = diveInheritanceChain(_type/*getTypeOf(argVal)*/, index, statisticTable);
+    console.log(ret)
+    if (_type instanceof Interface) {
+
+        return ret;
+    }
+
+    for (const intf of getAllInterfacesOf(argVal) || []) {
+
+        (ret || []).push(...(diveInheritanceChain(intf, index, statisticTable, ret?.[ESTIMATION_MASS]) || []));
+    }
+
+    return ret;
+}
+
+function throwIfInterface(type) {
+
+    const casted_type = getCastedTypeOf(argVal);
+
+    if (!casted_type) {
+
+        return;
+    }
+
+    const e = new TypeError(HANDLE_CAST);
+    e[CASTED] = casted_type;
+
+    throw e;
 }
 
 /**

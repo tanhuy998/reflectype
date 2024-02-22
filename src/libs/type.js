@@ -4,8 +4,6 @@ const Any = require('../type/any.js');
 const Interface = require('../interface/interface');
 const { IS_DECORATOR } = require('../utils/decorator/constant.js');
 const { markAsCriteriaOperator } = require('../utils/criteriaOperator.util.js');
-
-
 const OBJECT_KEY_TYPES = ['number', 'string', 'symbol'];
 const INSTANTIABLE_BLACK_LIST = [Interface, Void, Function];
 const PRIMITIVES_CLASS_NAMES = ['Boolean', 'String', 'Number', 'BigInt', Void.name];
@@ -15,7 +13,9 @@ const PRIMITIVE_CLASS_NAMES_MAP = {
     'number': Number,
     'bigint': BigInt,
     'undefined': Void,
-}
+};
+
+
 
 markAsCriteriaOperator(isAbstract);
 markAsCriteriaOperator(isPrimitive);
@@ -62,6 +62,7 @@ module.exports = {
     isFirstClassOrFalse,
     getTypeOf,
 }
+
 
 function getTypeOf(value) {
 

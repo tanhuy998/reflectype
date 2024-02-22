@@ -4,6 +4,7 @@ const matchType = require('./matchType.js');
 const { DECORATED_VALUE } = require('./constant.js');
 const Void = require('../type/void');
 const AccesorDecoratorSetterNotMatchTypeError = require('../error/accessorDecoratorSetterNotMatchTypeError.js');
+const { static_cast } = require('./casting.lib.js');
 
 module.exports = {
     generateAccessorInitializer, 
@@ -68,6 +69,21 @@ function generateAccessorSetter(_propMeta, _defaultSet) {
     }
 }
 
+/**
+ * 
+ * @param {property_metadata_t} _propMeta 
+ * @param {Function} defaultGet 
+ * @returns 
+ */
+function generateAccessorGetter(_propMeta, defaultGet) {
+
+    return function() {
+
+        const ret = defaultGet.call(this);
+
+        return static_cast(_propMeta.type, ret);
+    }
+}
 
 /**
  * 
@@ -98,6 +114,7 @@ function decorateAccessor(_accessor, context, initPropMeta) {
     setDecoratorFootPrint(_accessor, context, DECORATED_VALUE, {
         init: generateAccessorInitializer(initPropMeta),
         set: generateAccessorSetter(initPropMeta, _accessor.set),
-        get: _accessor.get
+        //get: _accessor.get
+        get: generateAccessorGetter(initPropMeta, _accessor.get)
     });
 }

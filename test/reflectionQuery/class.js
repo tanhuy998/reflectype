@@ -202,6 +202,9 @@ class T {
 
 class H extends T {
 
+    @type(IDisposable)
+    accessor prop;
+
     //@allowNull
     @returnType(Number)
     @parameters({
@@ -221,7 +224,7 @@ class H extends T {
     })
     [METHOD('func')](param1, param2, param3) {
 
-        console.log('func bool num')
+        //console.log('func bool num')
     }
 
     @parameters({
@@ -239,7 +242,7 @@ class H extends T {
     })
     [METHOD('func')](param1, b, c) {
 
-        console.log('7');
+        //console.log('7');
     }
 
     @parameters({
@@ -249,7 +252,7 @@ class H extends T {
     })
     [METHOD('func')](param1, b, c) {
 
-        console.log('8');
+        //console.log('8');
     }
 }
 

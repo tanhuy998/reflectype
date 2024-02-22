@@ -18,6 +18,7 @@
   },
   "scripts": {
     "test": "npx babel ./test/testSuite/classes.js > ./test/testSuite/compiled.js && node --trace-warnings ./test/testSuite",
+    "test-method-overloading-static-type-cast": "npx babel ./test/methodOverloadingStaticTypeCast/index.js > ./test/methodOverloadingStaticTypeCast/compiled.js && node --trace-warnings ./test/methodOverloadingStaticTypeCast/compiled",
     "test-reflect-query": "npx babel ./test/reflectionQuery/class.js > ./test/reflectionQuery/compiled.js && node --trace-warnings ./test/reflectionQuery",
     "test-reflection": "npx babel ./test/reflection/class.js > ./test/reflection/compiled.js && node --trace-warnings ./test/reflection",
     "test-footprint": "npx babel ./test/decoratorfootprint/class.js > ./test/decoratorfootprint/compiled.js && node --trace-warnings ./test/decoratorfootprint",

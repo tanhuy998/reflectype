@@ -40,6 +40,7 @@ const { Any } = require('../../src/index.js');
 const { isPrimitive, getTypeOf } = require('../../src/libs/type.js');
 
 const v8 = require('node:v8');
+const { getCastedTypeOf, dynamic_cast, static_cast } = require('../../src/libs/casting.lib.js');
 // const {A} = require('./compiled.js');
 //console.log(METHOD)
 // const refl = new Reflector(A);
@@ -113,14 +114,17 @@ console.log(['statistic table'], prototypeMap.statisticTable)
 const o = new T();
 const obj = new H();
 
+obj.prop = new A();
 
+console.log(getCastedTypeOf(dynamic_cast(obj.prop)))
+console.log()
 // console.log(
 //     diveTrieByArguments(H, mRef.metadata, ['1'])?.map.get(ref.metadata)
 // )
 
 console.log(['000000000000000000000000000000000000000000000000000000'])
 
-const args = ['1', true, 1];
+const args = [new A(), new A(), 1];
 console.time(2)
 obj.func(...args);
 // for (const [key, value] of diveTrieByArguments(H, mRef.metadata, args)?.map.entries() || [[]]) {
@@ -133,16 +137,40 @@ obj.func(...args);
 // console.log(mRef.metadata.owner.typeMeta.methodVariantMaps._prototype.get('func').current)
 
 //console.log(searchForMethodVariant(funcMeta, [Function, Number]))
+
+class Temp {
+
+    func() {
+
+        //console.log()
+    }
+}
+
+const t = new Temp();
+
 console.timeEnd(2)
 
-for (let i = 0; i < 1000; ++i) {
+console.time('total1')
+for (let i = 0; i < 100000; ++i) {
 
-    console.time(2)
+    //console.time(2)
 
-    obj.func(...args);
+    obj.func(obj.prop, new A(), 1);
 
-    console.timeEnd(2)
+    //console.timeEnd(2)
 }
+console.timeEnd('total1')
+
+console.time('total2')
+for (let i = 0; i < 100000; ++i) {
+
+    //console.time(2)
+
+    t.func(...args);
+
+    //console.timeEnd(2)
+}
+console.timeEnd('total2')
 
 console.log(v8.getHeapStatistics());
 
