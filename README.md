@@ -388,6 +388,7 @@ New approaches:
 - [ ] argument type caching
 - [x] static type binding (pure method overloading)
 - [ ] evaluate Any type parameters
+- [ ] interface method strict parameters
 
 ### Pure Method Overloading (Static Type Binding)
 

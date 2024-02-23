@@ -75,10 +75,27 @@ class InterfacePrototype {
 
         for (const intf of _additionalIntfs) {
 
-            this.#interfaces.add(intf);
+            this.#spliceInterface(intf);
         }
         
         this.#prepareInformations(_additionalIntfs);
+    }
+
+    #spliceInterface(intf) {
+
+        const intfList = this.#interfaces;
+
+        while (intf !== Object.getPrototypeOf(Function)) {
+            
+            if (!intfList.has(intf)) {
+
+                intfList.add(intf);
+            }
+
+            //this.#interfaces.add(intf);
+
+            intf = Object.getPrototypeOf(intf);
+        }
     }
 
     #init() {

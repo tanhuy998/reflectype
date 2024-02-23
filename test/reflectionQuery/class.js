@@ -242,7 +242,7 @@ class H extends T {
     })
     [METHOD('func')](param1, b, c) {
 
-        //console.log('7');
+        console.log('7');
     }
 
     @parameters({
