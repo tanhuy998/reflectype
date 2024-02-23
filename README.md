@@ -359,13 +359,29 @@ script tested
 npm run test-reflect-query
 ```
 
-With initial test dimension 10x3 (10 overloaded method variants with longest method signature is 3). The total time of selecting (method body is empty) best match method variant for 100000 of method ivocations (3 arguments are used) with and without static type casting are 300ms and 4s respectively in average. Perhaps the static type casting for arguments need more time on retrieving the casted type. I'm studying on it and finding new approach for static type casting, if performance is not be able improved, static type casting would be ignored.
+*new benchmark
 
-*Current development state:
+The new benchmark focused on operation's time of each phase of the algorithm. 
+
+Execution time in detail when dispatching a 3 parameters empty body method for one hundred thousand times in 10x3 dimensions method space (when JIT do it's job in optimizing codes).
+
+- estimation phase: 0.004ms (40%)
+- retrieve signature (lookup signature using estimated datas): 0.001ms (10%)
+- down cast arguments: 0.003ms (30%)
+- invoke: 0.002ms (20%)
+
+It seems like the operation time of the argument down casting phase approximately equal to the estimation's time because the two operation is identical. Time complexity of the two operation is O(mm) with m is number of arguments and n is the number of each argument's class inheritance chain.
+
+Time average for invoking such a method is 0.010ms.
+
+time average for iterating a an one hundred thousand times empty for loop is 0.6ms.
+
+*Current development state
 - [x] Explicit type matched arguments
 - [x] Interface type matched arguments
-- [ ] Single dispatch (virtual method behavior across inheritance chain)
-- [x] Polymorphism type matched arguments
+- [ ] Single dispatch
+- [x] Dynamic dispatch
+- [x] Multiple dispatch
 - [ ] primitive types coercion
 
 New approaches:

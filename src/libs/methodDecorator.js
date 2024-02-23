@@ -176,6 +176,7 @@ function decorateMethod(_method, context, propMeta) {
 function refreshMeta(propMeta) {
 
     const functionMeta = propMeta.functionMeta ??= new function_metadata_t(propMeta);
+    functionMeta.owner = propMeta;
     functionMeta.returnType = propMeta.type;
     functionMeta.allowNull = propMeta.allowNull;
 }

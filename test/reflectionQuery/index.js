@@ -102,14 +102,7 @@ const ref = new ReflectionClassPrototype(H);
 const mRef = new ReflectionPrototypeMethod(H, 'func');
 
 const funcMeta = ref.metadata.functionMeta;
-const typeMeta = ref.metadata.owner.typeMeta;
-const trieMaps = typeMeta.methodVariantMaps;
-const prototypeMap = trieMaps._prototype;
-const trie = prototypeMap.mappingTable.get('func');
 
-//console.log(ref.metadata.properties.func)
-console.log(['all method variant'], retrieveAllSignatures(trie));
-console.log(['statistic table'], prototypeMap.statisticTable)
 
 const o = new T();
 const obj = new H();
@@ -124,7 +117,7 @@ console.log()
 
 console.log(['000000000000000000000000000000000000000000000000000000'])
 
-const args = [new A(), new A(), 1];
+const args = [dynamic_cast(obj.prop), new A(), 1];
 console.time(2)
 obj.func(...args);
 // for (const [key, value] of diveTrieByArguments(H, mRef.metadata, args)?.map.entries() || [[]]) {
@@ -155,7 +148,8 @@ for (let i = 0; i < 100000; ++i) {
 
     //console.time(2)
 
-    obj.func(obj.prop, new A(), 1);
+    obj.func(...args);
+    //obj.func(obj.prop, new A(), 1)
 
     //console.timeEnd(2)
 }
@@ -171,6 +165,15 @@ for (let i = 0; i < 100000; ++i) {
     //console.timeEnd(2)
 }
 console.timeEnd('total2')
+
+const typeMeta = ref.metadata.owner.typeMeta;
+const trieMaps = typeMeta.methodVariantMaps;
+const prototypeMap = trieMaps._prototype;
+const trie = prototypeMap.mappingTable.get('func');
+
+//console.log(ref.metadata.properties.func)
+console.log(['all method variant'], retrieveAllSignatures(trie));
+console.log(['statistic table'], prototypeMap.statisticTable)
 
 console.log(v8.getHeapStatistics());
 

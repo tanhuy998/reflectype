@@ -237,7 +237,8 @@ function registerOverloadVariant(hostPropMeta) {
     const endPointNode = mergeFuncVariant(hostParamMetaList, variantTrie, variantMappingTable.statisticTable);
     
     endPointNode.endpoint ??= new function_variant_param_node_endpoint_metadata_t();
-    endPointNode.endpoint.vTable.set(typeMeta, getMetadataFootPrintByKey(hostPropMeta, DECORATED_VALUE));
+    //endPointNode.endpoint.vTable.set(typeMeta, getMetadataFootPrintByKey(hostPropMeta, DECORATED_VALUE));
+    endPointNode.endpoint.vTable.set(typeMeta, hostPropMeta.functionMeta);
 }
 
 /**

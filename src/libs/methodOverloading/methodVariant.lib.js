@@ -1,12 +1,17 @@
-const { property_metadata_t, function_variant_param_node_metadata_t, metaOf, function_variant_param_node_endpoint_metadata_t } = require("../../reflection/metadata");
+const { property_metadata_t, function_variant_param_node_metadata_t, metaOf, function_variant_param_node_endpoint_metadata_t, function_metadata_t, parameter_metadata_t } = require("../../reflection/metadata");
 //const { estimateArgType } = require("./methodArgsEstimation.lib.lib");
 const { retrieveTrie } = require("./methodVariantTrieOperation.lib");
-const { getTypeOf } = require("../type");
+const { getTypeOf, isValuable } = require("../type");
 const { estimateArgs } = require("./methodArgsEstimation.lib");
 const { Interface } = require("../../interface");
 const MethodVariantMismatchError = require("./error/methodVariantMismatchError");
 const { MULTIPLE_DISPATCH } = require("./constant");
 const globalConfig = require('../../../config.json');
+const { getAllParametersMeta } = require("../functionParam.lib");
+const { getMetadataFootPrintByKey } = require("../footPrint");
+const { DECORATED_VALUE } = require("../constant");
+const { Any } = require("../../type");
+const { static_cast } = require("../casting.lib");
 
 /**
  * because of using a number (which is 4 bytes floating point) as 
@@ -63,9 +68,12 @@ function dispatchMethodVariant(binder, propMeta, args) {
             throw new MethodVariantMismatchError();
         }
         //console.time('endpoint eval')
-        const ret = dispatchVtable(binder, trieEndpoint, args);
+        //const ret = retrieveFuncMeta(binder, trieEndpoint, args);
         //console.timeEnd('endpoint eval')
-        return ret;
+        //return ret;
+
+        const funcMeta = extractFuncMeta(binder, trieEndpoint, args);
+        return invoke(funcMeta, binder, args);
     }
     catch (e) {
 
@@ -84,7 +92,7 @@ function dispatchMethodVariant(binder, propMeta, args) {
  * @param {function_variant_param_node_endpoint_metadata_t} trieEndpoint 
  * @param {Array<any>} args 
  */
-function dispatchVtable(binder, trieEndpoint, args) {
+function extractFuncMeta(binder, trieEndpoint, args) {
 
     let _class = getTypeOf(binder);
 
@@ -97,16 +105,67 @@ function dispatchVtable(binder, trieEndpoint, args) {
     ) {
         
         const typeMeta = metaOf(_class);
+        const funcMeta = trieEndpoint.vTable.get(typeMeta);
 
-        if (trieEndpoint.vTable.has(typeMeta)) {
+        // if (trieEndpoint.vTable.has(typeMeta)) {
             
-            return trieEndpoint.vTable.get(typeMeta).call(binder, MULTIPLE_DISPATCH, ...args);
+        //     return trieEndpoint.vTable.get(typeMeta).call(binder, MULTIPLE_DISPATCH, ...args);
+        // }
+
+        if (typeof funcMeta === 'object') {
+
+            return funcMeta;
         }
 
         _class = Object.getPrototypeOf(_class);
     }
 
     throw new MethodVariantMismatchError();
+}
+
+/**
+ * 
+ * @param {function_metadata_t} funcMeta 
+ * @param {any} bindObject
+ * @param {Array<any>} args
+ */
+function invoke(funcMeta, bindObject, args) {
+    console.time('prepare invoke')
+    /**@type {function} */
+    const actualFunc = getMetadataFootPrintByKey(funcMeta.owner, DECORATED_VALUE);
+    const paramMetas = getAllParametersMeta(funcMeta);
+    console.timeEnd('prepare invoke')
+    //console.log(funcMeta.owner)
+    //args = castDownArgs(paramMetas, args);
+    console.time('invoke')
+    const ret = actualFunc.call(bindObject, MULTIPLE_DISPATCH, ...args);
+    console.timeEnd('invoke');
+
+    return ret;
+    //return actualFunc.call(bindObject, ...args);
+}
+
+/**
+ * 
+ * @param {Array<parameter_metadata_t>} paramMetas 
+ * @param {Array<any>} args 
+ */
+function castDownArgs(paramMetas, args) {
+
+    const ret = [];
+    let i = 0;
+    console.time('down cast')
+    for (const argVal of args) {
+        //console.time('e')
+        const meta = paramMetas[i++];
+        const paramType = meta?.type;
+        //console.timeEnd('e')
+        ret.push((paramType === Any || meta.allowNull || !isValuable(meta) ? argVal : static_cast(paramType, argVal)));
+        
+    }
+    console.timeEnd('down cast')
+    return ret;
+    //return args;
 }
 
 /**
@@ -127,7 +186,7 @@ function traceAndHandleMismatchVariant(e) {
  * @returns {function_variant_param_node_endpoint_metadata_t}
  */
 function diveTrieByArguments(_class, propMeta, args) {
-    //console.time('estimation time');
+    console.time('estimation time');
     const variantMaps = propMeta.owner.typeMeta.methodVariantMaps;
     const targetMap = propMeta.static ? variantMaps?.static : variantMaps._prototype;
     const statisticTable = targetMap.statisticTable;
@@ -140,7 +199,7 @@ function diveTrieByArguments(_class, propMeta, args) {
     const estimation = estimateArgs(propMeta, args);
     //console.log(['e'], estimation)
 
-    //console.timeEnd('estimation time');
+    console.timeEnd('estimation time');
     if (
         !Array.isArray(estimation) ||
         estimation.length === 0
@@ -149,11 +208,11 @@ function diveTrieByArguments(_class, propMeta, args) {
         return false;
     }
 
-    //console.time('calc')
+    console.time('calc')
     const targetTrie = retrieveTrie(propMeta);
     //console.log(['trie'], targetTrie)
     const ret = retrieveEndpointByEstimation(targetTrie, estimation)?.endpoint;
-    //console.timeEnd('calc')
+    console.timeEnd('calc')
     
     return ret;
 } 
