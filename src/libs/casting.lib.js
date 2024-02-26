@@ -34,6 +34,36 @@ const traps = {
     }
 }
 
+const const_cast_traps = {
+    get(target, key) {
+
+        if (key === CASTED_TYPE) {
+
+            return this[CASTED_TYPE];
+        }
+
+        const castedType = this[CASTED_TYPE];
+        restrictAbstractUndeclaredMethod(castedType, target, key);
+        
+        const targetProp = target[key];
+        const castedTypeProp = castedType.prototype[key];
+
+        // if () {
+
+
+        // }
+    },
+    set: traps.set,
+    getPrototypeOf() {
+
+        return this[CASTED_TYPE];
+    },
+    setPrototypeOf() {
+
+        throw new Error('could not set prototype of object that is casted as const_cast()');
+    }
+}
+
 module.exports = {
     getCastedTypeOf,
     //releaseTypeCast,
@@ -149,7 +179,7 @@ function dynamic_cast(target) {
     return static_cast(getTypeOf(target), target);
 }
 
-function const_cast() {
+function const_cast(target) {
 
 
 }

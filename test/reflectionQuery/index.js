@@ -141,10 +141,12 @@ class Temp {
 
 const t = new Temp();
 
+obj.func('1', 1, true)
+
 console.timeEnd(2)
 
 console.time('total1')
-for (let i = 0; i < 100000; ++i) {
+for (let i = 0; i < 0; ++i) {
 
     //console.time(2)
 

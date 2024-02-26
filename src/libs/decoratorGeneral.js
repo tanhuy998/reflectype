@@ -35,6 +35,11 @@ function manipulateMetadataResolution(_, decoratorContext) {
 
     decoratorContext.addInitializer(function() {
 
+        if (typeMeta.pendingError) {
+
+            throw typeMeta.pendingError;
+        }
+
         if (typeof typeMeta.loopback !== 'object') {
 
             return;
@@ -42,8 +47,17 @@ function manipulateMetadataResolution(_, decoratorContext) {
 
         const _class = isInstantiable(this) ? this : self(this);
         
-        //assignAbstractToTypeMeta(_class, typeMeta);
-        resolveTypeMetaResolution(_class);
+        try {
+
+            //assignAbstractToTypeMeta(_class, typeMeta);
+            resolveTypeMetaResolution(_class);
+        }
+        catch (e) {
+
+            typeMeta.pendingError = e;
+
+            throw e;
+        }
     });
 }
 

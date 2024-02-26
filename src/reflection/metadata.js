@@ -100,7 +100,7 @@ function metadata_t(_abstract, _ref) {
     /**
      * @type {method_variant_map_metadata_t}
      */
-    this.methodVariantMaps; //= new method_variant_map_metadata_t();
+    this.methodVariantMaps = _ref?.methodVariantMaps || new method_variant_map_metadata_t();
 
     /**@type {InterfacePrototype} */
     this.interfaces = _ref?.interfaces?.clone();
@@ -137,6 +137,11 @@ function metadata_t(_abstract, _ref) {
     this.loopback = new owner_metadata_t();
     this.loopback.typeMeta = this;
     this._prototype.owner = this.loopback;
+
+    /**
+     * @type {Error}
+     */
+    this.pendingError;
 }
 
 /**

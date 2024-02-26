@@ -17,6 +17,7 @@ module.exports = {
     PSEUDO_OVERLOADED_METHOD_NAME: '_pseudo_overloaed_method_name',
     MULTIPLE_DISPATCH: Symbol('multiple_dispatch'),
     ESTIMATION_MASS: Symbol('_estimation_mass'),
+    OVERRIDE: '_is_override_method'
 }
 
 

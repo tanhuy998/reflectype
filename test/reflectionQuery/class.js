@@ -8,6 +8,7 @@ const { ORIGIN } = require('../../src/libs/metadata/constant.js');
 const { METHOD } = require('../../src/libs/methodOverloading/constant.js');
 const Any = require('../../src/type/any.js');
 const implement = require('../../src/decorators/implement.js');
+const virtual = require('../../src/decorators/virtual.js');
 
 const stack = [];
 const entries = new Set();
@@ -172,6 +173,7 @@ class T {
         console.log('number')
     }
 
+    @virtual
     @parameters({
         a: String,
         b: Number,
@@ -179,7 +181,7 @@ class T {
     })
     [METHOD('func')](a, b, c) {
 
-        console.log('boolean')
+        console.log('T base')
     }
 
     // @parameters({
@@ -214,6 +216,16 @@ class H extends T {
     func(a, e, b) {
 
         console.log('C', ...arguments)
+    }
+
+    @parameters({
+        a: String,
+        b: Number,
+        c: Boolean
+    })
+    [METHOD('func')](a, b, c) {
+
+        console.log('H override');
     }
 
     //@overload('func')
