@@ -74,11 +74,14 @@ function ensureTargetOfOverloadingExistsOnTypeMeta(typeMeta, nameOfMethodToOverl
         .retrieve();
 
     if (
-        !targetPropMeta
+        !targetPropMeta ||
+        targetPropMeta.owner.typeMeta !== typeMeta
     ) {
 
         throw new ReferenceError();
     }
+
+    
 
     if (
         getMetadataFootPrintByKey(targetPropMeta.functionMeta, IS_FINAL) === true

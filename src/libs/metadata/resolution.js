@@ -110,55 +110,83 @@ function manipulateMetaDependentClasses(stack = []) {
         typeMeta._constructor = extractClassConstructorInfoBaseOnConfig(currentClass);
 
         assignAbstractToTypeMeta(currentClass, typeMeta);
-        assignMethodVariantTrie(currentClass);
+        manipulateClass(currentClass, typeMeta)
+        //manipulateForMethodVariants(currentClass);
         unlinkIndependentPropeMeta(currentClass);
         //show(currentClass)
         RESOLVED_CLASSES.add(currentClass);
     }
 }
 
-function assignMethodVariantTrie(_class) {
+/**
+ * 
+ * @param {Function|Object} target 
+ * @param {metadata_t} typeMeta 
+ */
+function manipulateClass(target, typeMeta) {
 
-    // if (isFirstClass(_class)) {
-
-    //     return;
-    // }
-
-    const baseClass = Object.getPrototypeOf(_class);
-    const baseTypeMeta = metaOf(baseClass);
-
-    // if (!baseTypeMeta) {
-
-    //     return;
-    // }
-
-    /**@type {method_variant_map_metadata_t} */
-    const baseClassMethodVariantMaps = baseTypeMeta?.methodVariantMaps;
-    const currentClassMeta = metaOf(_class);
-    /**@type {method_variant_map_metadata_t} */
-    const currentClassMethodVariantMaps = currentClassMeta.methodVariantMaps = new method_variant_map_metadata_t();
-
-    /**
-     * initialize parameter types statistical table 
-     */
-    currentClassMethodVariantMaps._prototype.statisticTable = baseClassMethodVariantMaps?._prototype?.statisticTable || new Map();
-    currentClassMethodVariantMaps.static.statisticTable = baseClassMethodVariantMaps?.static?.statisticTable || new Map();
-
-    if (isFirstClass(_class)) {
-
-        currentClassMethodVariantMaps._prototype.mappingTable = new Map();
-        currentClassMethodVariantMaps.static.mappingTable = new Map();
-
-        return;
-    }
-    /**
-     * will optimize the following lines
-     */
-
-    // console.log(currentClassMethodVariantMaps._prototype === baseClassMethodVariantMaps._prototype)
-    currentClassMethodVariantMaps._prototype.mappingTable = new Map(Array.from(baseClassMethodVariantMaps._prototype.mappingTable.entries()));
-    currentClassMethodVariantMaps.static.mappingTable = new Map(Array.from(baseClassMethodVariantMaps.static.mappingTable.entries()));
+    runClassResolutionPlugins(target, typeMeta);
 }
+
+/**
+ * 
+ * @param {Function|Object} target 
+ * @param {metadata_t} typeMeta 
+ */
+function runClassResolutionPlugins(target, typeMeta) {
+
+    const plugins = require("./resolutionPlugins/classResolutionPlugins");
+    
+    for (const plugin of plugins) {
+
+        plugin.call(target, typeMeta);
+    }
+}
+
+// function manipulateForMethodVariants(_class) {
+
+//     // if (isFirstClass(_class)) {
+
+//     //     return;
+//     // }
+
+//     const baseClass = Object.getPrototypeOf(_class);
+//     const baseTypeMeta = metaOf(baseClass);
+
+//     // if (!baseTypeMeta) {
+
+//     //     return;
+//     // }
+
+//     /**@type {method_variant_map_metadata_t} */
+//     const baseClassMethodVariantMaps = baseTypeMeta?.methodVariantMaps;
+//     const currentClassMeta = metaOf(_class);
+//     /**@type {method_variant_map_metadata_t} */
+//     const currentClassMethodVariantMaps = currentClassMeta.methodVariantMaps = new method_variant_map_metadata_t();
+
+//     /**
+//      * initialize parameter types statistical table 
+//      */
+//     // currentClassMethodVariantMaps._prototype.statisticTable = baseClassMethodVariantMaps?._prototype?.statisticTable || new Map();
+//     // currentClassMethodVariantMaps.static.statisticTable = baseClassMethodVariantMaps?.static?.statisticTable || new Map();
+//     currentClassMethodVariantMaps._prototype.statisticTable = new Map(baseClassMethodVariantMaps?._prototype?.statisticTable?.entries());
+//     currentClassMethodVariantMaps.static.statisticTable = new Map(baseClassMethodVariantMaps?.static?.statisticTable?.entries());
+
+//     // if (isFirstClass(_class)) {
+
+//     //     currentClassMethodVariantMaps._prototype.mappingTable = new Map();
+//     //     currentClassMethodVariantMaps.static.mappingTable = new Map();
+
+//     //     return;
+//     // }
+//     // /**
+//     //  * will optimize the following lines
+//     //  */
+
+//     // // console.log(currentClassMethodVariantMaps._prototype === baseClassMethodVariantMaps._prototype)
+//     // currentClassMethodVariantMaps._prototype.mappingTable = new Map(Array.from(baseClassMethodVariantMaps._prototype.mappingTable.entries()));
+//     // currentClassMethodVariantMaps.static.mappingTable = new Map(Array.from(baseClassMethodVariantMaps.static.mappingTable.entries()));
+// }
 
 function show(_class) {
 

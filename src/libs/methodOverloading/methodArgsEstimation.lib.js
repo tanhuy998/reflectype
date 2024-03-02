@@ -2,6 +2,7 @@ const { Interface } = require("../../interface");
 const { parameter_metadata_t, function_variant_param_node_metadata_t, property_metadata_t, metaOf } = require("../../reflection/metadata");
 const Any = require("../../type/any");
 const { getCastedTypeOf } = require("../casting.lib");
+const { STATISTIC_TABLE } = require("../metadata/registry/function.reg");
 const { getTypeOf, isValuable } = require("../type");
 const { ESTIMATION_MASS } = require("./constant");
 const MethodVariantMismatchError = require("./error/methodVariantMismatchError");
@@ -58,11 +59,11 @@ module.exports = {
 function addStatisticalPieace(paramMeta, variantNodeMeta, statisticTable) {
 
     try {
-
+        
         ensureStatisticTableExists(statisticTable);
         acknowledge(paramMeta.type, variantNodeMeta.depth, statisticTable);
     }
-    catch {
+    catch (e) {
 
         return;
     }
@@ -82,6 +83,7 @@ function typeStatisticallyExistsOn(statisticTable, _type, index = 0) {
         ensureStatisticTableExists(statisticTable);
 
         const targetPiece = statisticTable.get(_type) || 0;
+        //console.log(_type, statisticTable.get(_type), statisticTable)
         const targetBit = (1 << index);
 
         return (targetPiece & targetBit) === targetBit;
@@ -98,7 +100,7 @@ function typeStatisticallyExistsOn(statisticTable, _type, index = 0) {
  * @param {Map<Function, number>} statisticTable 
  */
 function acknowledge(_type, index = 0, statisticTable) {
-
+    //console.log(index, _type);    
     const targetPiece = statisticTable.get(_type) || 0;
 
     statisticTable.set(_type, (1 << index) | targetPiece);
@@ -128,10 +130,12 @@ function getVariantMapOf(propMeta) {
 }
 
 
-function estimateArgs(propMeta, args = []) {
+function estimateArgs(funcMeta, args = []) {
 
-    const statisticTable = getVariantMapOf(propMeta)?.statisticTable;
-
+    //const statisticTable = getVariantMapOf(propMeta)?.statisticTable;
+    const statisticTable = getVariantMapOf(funcMeta.owner)?.statisticTable;
+    //const statisticTable = STATISTIC_TABLE;
+    //console.log(['stastitic table'], statisticTable)
     if (!statisticTable) {
         
         throw new ReferenceError();
@@ -140,7 +144,7 @@ function estimateArgs(propMeta, args = []) {
     let ret;
     let argMasses;
     let index = 0;
-
+    console.log(funcMeta.owner.owner.typeMeta.methodVariantMaps.static);
     for (const argVal of args || []) {
 
         const estimatedTypes = estimateArgType(argVal, index, statisticTable);
@@ -152,7 +156,8 @@ function estimateArgs(propMeta, args = []) {
             /**
              * throwing error here in order to 
              */
-            throw new MethodVariantMismatchError(propMeta, ret);
+            console.log(ret)
+            throw new MethodVariantMismatchError(funcMeta, ret);
         }
 
         (ret ||= []).push(estimatedTypes);
@@ -161,7 +166,7 @@ function estimateArgs(propMeta, args = []) {
 
         ++index;
     }
-
+    
     return [ret, argMasses];
     //return ret;
 }
@@ -306,7 +311,7 @@ function _estimatePotentialType(argVal, index = 0, statisticTable) {
     //const _type = getTypeOf(argVal)
     //console.timeEnd(1)
     let ret = diveInheritanceChain(_type/*getTypeOf(argVal)*/, index, statisticTable);
-    console.log(ret)
+    
     if (_type instanceof Interface) {
 
         return ret;

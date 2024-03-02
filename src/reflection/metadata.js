@@ -11,7 +11,7 @@ const { isInstantiable, isObjectLike } = require('../libs/type.js');
  */
 
 /** @type {Symbol} */
-const METADATA = Symbol.metadata || Symbol.for('Symbol.metadata') || Symbol(Date.now());
+const METADATA = Symbol.metadata ??= Symbol.for('Symbol.metadata') || Symbol('Symbol.metadata'); //|| Symbol(Date.now());
 const TYPE_JS = Symbol(Date.now());
 
 const PROP_META_INITIALIZED = {
@@ -75,7 +75,7 @@ function method_variant_mapping_table_metadata_t() {
     this.statisticTable = new Map();
 
     /**
-     * @type {Map<string|symbol, function_variant_param_node_metadata_t>}
+     * @type {Map<string|symbol, property_metadata_t>}
      */
     this.mappingTable;
 }
@@ -248,7 +248,7 @@ function function_metadata_t(_owner) {
 function function_variant_param_node_endpoint_metadata_t() {
     /**
      * 
-     * @type {Map<metadata_t, function_metadata_t>}
+     * @type {Map<function_metadata_t, function_metadata_t>}
      */
     this.vTable = new Map();
 }

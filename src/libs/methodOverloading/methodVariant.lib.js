@@ -12,6 +12,7 @@ const { getMetadataFootPrintByKey } = require("../footPrint");
 const { DECORATED_VALUE } = require("../constant");
 const { Any } = require("../../type");
 const { static_cast } = require("../casting.lib");
+const {STATISTIC_TABLE, FUNC_TRIE} = require('../metadata/registry/function.reg');
 
 /**
  * because of using a number (which is 4 bytes floating point) as 
@@ -61,10 +62,13 @@ function dispatchMethodVariant(binder, propMeta, args) {
     
     try {
 
-        const trieEndpoint = diveTrieByArguments(getTypeOf(binder), propMeta, args);
+        const trieEndpoint = diveTrieByArguments(getTypeOf(binder), propMeta.functionMeta, args);
         
-        if (!trieEndpoint) {
-
+        if (
+            !trieEndpoint ||
+            !trieEndpoint.vTable.has(propMeta.functionMeta)
+        ) {
+            
             throw new MethodVariantMismatchError();
         }
         //console.time('endpoint eval')
@@ -72,7 +76,9 @@ function dispatchMethodVariant(binder, propMeta, args) {
         //console.timeEnd('endpoint eval')
         //return ret;
 
-        const funcMeta = extractFuncMeta(binder, trieEndpoint, args);
+        //const funcMeta = extractFuncMeta(binder, trieEndpoint, args);
+
+        const funcMeta = trieEndpoint.vTable.get(propMeta.functionMeta)
         return invoke(funcMeta, binder, args);
     }
     catch (e) {
@@ -105,6 +111,7 @@ function extractFuncMeta(binder, trieEndpoint, args) {
     ) {
         
         const typeMeta = metaOf(_class);
+        
         const funcMeta = trieEndpoint.vTable.get(typeMeta);
 
         // if (trieEndpoint.vTable.has(typeMeta)) {
@@ -180,23 +187,27 @@ function traceAndHandleMismatchVariant(e) {
 /**
  * 
  * @param {Function} _class 
- * @param {property_metadata_t} propMeta 
+ * @param {function_metadata_t} funcMeta 
  * @param {Array} args 
  * 
  * @returns {function_variant_param_node_endpoint_metadata_t}
  */
-function diveTrieByArguments(_class, propMeta, args) {
+function diveTrieByArguments(_class, funcMeta, args) {
     console.time('estimation time');
+    const propMeta = funcMeta.owner
+    // const variantMaps = propMeta.owner.typeMeta.methodVariantMaps;
     const variantMaps = propMeta.owner.typeMeta.methodVariantMaps;
     const targetMap = propMeta.static ? variantMaps?.static : variantMaps._prototype;
+
     const statisticTable = targetMap.statisticTable;
+    //const statisticTable = STATISTIC_TABLE;
 
     if (!statisticTable) {
 
         return false;
     }
 
-    const estimation = estimateArgs(propMeta, args);
+    const estimation = estimateArgs(funcMeta, args);
     //console.log(['e'], estimation)
 
     console.timeEnd('estimation time');
@@ -209,7 +220,8 @@ function diveTrieByArguments(_class, propMeta, args) {
     }
 
     console.time('calc')
-    const targetTrie = retrieveTrie(propMeta);
+    //const targetTrie = retrieveTrie(propMeta);
+    const targetTrie = FUNC_TRIE;
     //console.log(['trie'], targetTrie)
     const ret = retrieveEndpointByEstimation(targetTrie, estimation)?.endpoint;
     console.timeEnd('calc')

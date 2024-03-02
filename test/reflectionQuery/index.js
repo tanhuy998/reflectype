@@ -41,6 +41,7 @@ const { isPrimitive, getTypeOf } = require('../../src/libs/type.js');
 
 const v8 = require('node:v8');
 const { getCastedTypeOf, dynamic_cast, static_cast } = require('../../src/libs/casting.lib.js');
+const {FUNC_TRIE} = require('../../src/libs/metadata/registry/function.reg.js')
 // const {A} = require('./compiled.js');
 //console.log(METHOD)
 // const refl = new Reflector(A);
@@ -96,6 +97,8 @@ const { getCastedTypeOf, dynamic_cast, static_cast } = require('../../src/libs/c
 // console.log(N[METADATA] === wrapperA)
 
 console.log(getTypeOf(true))
+console.log()
+
 
 //console.log(A)
 const ref = new ReflectionClassPrototype(H);
@@ -103,6 +106,9 @@ const mRef = new ReflectionPrototypeMethod(H, 'func');
 
 const funcMeta = ref.metadata.functionMeta;
 
+console.log(metaOf(T).methodVariantMaps._prototype.statisticTable)
+console.log(metaOf(H).methodVariantMaps.static.statisticTable)
+console.log(metaOf(H).methodVariantMaps._prototype.statisticTable)
 
 const o = new T();
 const obj = new H();
@@ -115,11 +121,14 @@ console.log()
 //     diveTrieByArguments(H, mRef.metadata, ['1'])?.map.get(ref.metadata)
 // )
 
+console.log(['all method variant'], retrieveAllSignatures(FUNC_TRIE));
+
 console.log(['000000000000000000000000000000000000000000000000000000'])
 
 const args = [dynamic_cast(obj.prop), new A(), 1];
 console.time(2)
-obj.func(...args);
+H.stFunc('1', 1)
+
 // for (const [key, value] of diveTrieByArguments(H, mRef.metadata, args)?.map.entries() || [[]]) {
 
 //     console.log(value.call(new H(), ...args));
@@ -150,8 +159,8 @@ for (let i = 0; i < 0; ++i) {
 
     //console.time(2)
 
-    obj.func(...args);
-    //obj.func(obj.prop, new A(), 1)
+    //obj.func(...args);
+    obj.func(obj.prop, new A(), 1)
 
     //console.timeEnd(2)
 }
@@ -168,14 +177,13 @@ for (let i = 0; i < 100000; ++i) {
 }
 console.timeEnd('total2')
 
-const typeMeta = ref.metadata.owner.typeMeta;
-const trieMaps = typeMeta.methodVariantMaps;
-const prototypeMap = trieMaps._prototype;
-const trie = prototypeMap.mappingTable.get('func');
+// const typeMeta = ref.metadata.owner.typeMeta;
+// const trieMaps = typeMeta.methodVariantMaps;
+// const prototypeMap = trieMaps._prototype;
+// const trie = prototypeMap.mappingTable.get('func');
 
-//console.log(ref.metadata.properties.func)
-console.log(['all method variant'], retrieveAllSignatures(trie));
-console.log(['statistic table'], prototypeMap.statisticTable)
+// //console.log(ref.metadata.properties.func)
+// console.log(['statistic table'], prototypeMap.statisticTable)
 
 console.log(v8.getHeapStatistics());
 

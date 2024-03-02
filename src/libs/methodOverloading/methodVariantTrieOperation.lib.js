@@ -136,10 +136,18 @@ function hasVariant(rootTrieNode, paramTypeList) {
  * @param {Array<parameter_metadata_t>} paramMetaList 
  * @param {function_metadata_t} rootTrieNode 
  * @param {?Map<Function, number>} statisticTable
+ * @param {function_metadata_t} indexFuncMeta
+ * @param {function_metadata_t} targetFuncMeta
  * 
  * @returns {function_variant_param_node_metadata_t}
  */
-function mergeFuncVariant(paramMetaList, rootTrieNode, statisticTable) {
+function mergeFuncVariant(
+  paramMetaList,
+  rootTrieNode,
+  statisticTable,
+  indexFuncMeta,
+  targetFuncMeta
+) {
 
     if (hasVariant(rootTrieNode, paramMetaList)) {
 
@@ -153,6 +161,11 @@ function mergeFuncVariant(paramMetaList, rootTrieNode, statisticTable) {
 
         ret = insertTrieNode(ret, paramMeta, statisticTable); //locateNewFuncVariantTrieNode(paramMeta, rootTrieNode);
     }
+
+    ret.endpoint ??= new function_variant_param_node_endpoint_metadata_t();
+    //const typeMeta = funcMeta.owner.typeMeta;
+    //ret.endpoint.vTable.set(typeMeta, funcMeta);
+    //ret.endpoint.vTable.set(indexFuncMeta, targetFuncMeta);
 
     return ret;
 }
@@ -170,6 +183,8 @@ function insertTrieNode(currentNode, paraMeta, statisticTable) {
 
     const _type = paraMeta?.type || Any;
 
+    addStatisticalPieace(paraMeta, currentNode, statisticTable);
+
     if (currentNode.current.has(_type)) {
 
         return currentNode.current.get(_type);
@@ -177,8 +192,6 @@ function insertTrieNode(currentNode, paraMeta, statisticTable) {
 
     const nextNode = new function_variant_param_node_metadata_t(currentNode);
     currentNode.current.set(_type, nextNode);
-
-    addStatisticalPieace(paraMeta, currentNode, statisticTable);
 
     return nextNode;
 

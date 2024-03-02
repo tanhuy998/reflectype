@@ -1,18 +1,20 @@
 const MetadataAspect = require("../../metadata/aspect/metadataAspect");
-const { property_metadata_t, function_metadata_t, function_variant_param_node_metadata_t, parameter_metadata_t, function_variant_param_node_endpoint_metadata_t } = require("../../reflection/metadata");
+const { property_metadata_t, function_metadata_t, function_variant_param_node_metadata_t, parameter_metadata_t, function_variant_param_node_endpoint_metadata_t, method_variant_map_metadata_t, metaOf, metadata_t } = require("../../reflection/metadata");
 const Any = require("../../type/any");
 const { DECORATED_VALUE } = require("../constant");
 const { getMetadataFootPrintByKey } = require("../footPrint");
 const { OVERLOAD_APPLIED, OVERLOAD_TARGET, OVERRIDE_APPLIED } = require("./constant");
-const { isObjectLike } = require("../type");
+const { isObjectLike, isFirstClass } = require("../type");
 const {getAllParametersMeta} = require('../functionParam.lib');
 const { locateNewFuncVariantTrieNode, searchForMethodVariant, hasVariant, mergeFuncVariant } = require("./methodVariantTrieOperation.lib");
 const { dispatchMethodVariant } = require("./methodVariant.lib");
+const {FUNC_TRIE, STATISTIC_TABLE} = require('../metadata/registry/function.reg');
 
 const IS_ENTRY_POINT = '_is_entry_point';
 
 module.exports = {
     manipulateMethodVariantBehavior,
+    manipulateMethodVariantsStatisticTables,
     isOwnerOfPropMeta,
 }
 
@@ -46,7 +48,7 @@ function manipulateMethodVariantBehavior(propName, propMeta) {
         isPseudoOverloadingMethod.call(this, propName, propMeta) ||
         isDerivedOverloadingMethod.call(this, propName, propMeta)
     ) {
-
+        
         createEntryPoint.call(this, propName, propMeta);
         manipulatePseudoOveloading.call(this, propName, propMeta);
         return;
@@ -75,14 +77,29 @@ function createEntryPoint(propName, hostPropMeta) {
         return;
     }
 
+    const variantMaps = remotePropMeta.owner.typeMeta.methodVariantMaps;
+    const map = remotePropMeta.static ? variantMaps.static : variantMaps._prototype;
+    const mappedPropMeta = map.mappingTable.get(remotePropMeta.name);
+
     if (
-        isVariantEntryPointFunction(this[propName])
+        isVariantEntryPointFunction(this[remotePropMeta.name]) &&
+        mappedPropMeta === remotePropMeta
     ) {
 
         return;
     }
+    console.log([propName], this)
 
-    this[remotePropMeta.name] = generateEntryPointForMethodVariants(remotePropMeta);
+    /**
+     *  remote on base class
+     *      
+     *  remote on current class
+     */
+
+    const actualMappedPropMeta = getActualMappedPropMeta.call(this, propName, hostPropMeta);
+
+    this[remotePropMeta.name] = generateEntryPointForMethodVariants(actualMappedPropMeta);
+    map.mappingTable.set(remotePropMeta.name, actualMappedPropMeta);
 }
 
 /**
@@ -92,13 +109,20 @@ function createEntryPoint(propName, hostPropMeta) {
 function generateEntryPointForMethodVariants(originPropMeta) {
 
     const ENTRY_POINT = function () {
-
+        console.log(this, originPropMeta.owner.typeMeta.abstract);
         return dispatchMethodVariant(this, originPropMeta, arguments);
     }
 
     markAsVariantEntryPoint(ENTRY_POINT)
 
     return ENTRY_POINT;
+}
+
+function getActualMappedPropMeta(propName, propMeta) {
+
+    const remotePropMeta = getMetadataFootPrintByKey(propMeta.functionMeta, OVERLOAD_TARGET);
+
+    return isOwnerOfPropMeta.call(this, propName, remotePropMeta) ? remotePropMeta : propMeta;
 }
 
 /**
@@ -177,7 +201,9 @@ function initIfNoVariantMap(methodName, variantMap) {
 function registerOverloadVariant(hostPropMeta) {
 
     const hostFuncMeta = hostPropMeta.functionMeta;
-    const overloadedMethodName = getMetadataFootPrintByKey(hostFuncMeta, OVERLOAD_TARGET)?.name || hostPropMeta.name;
+    
+    const remotePropMeta = getMetadataFootPrintByKey(hostFuncMeta, OVERLOAD_TARGET) || hostPropMeta;
+    const overloadedMethodName = remotePropMeta?.name || hostPropMeta.name;
     const isPseudoMethod = overloadedMethodName === hostPropMeta.name;
 
     const typeMeta = hostPropMeta.owner.typeMeta;
@@ -185,14 +211,18 @@ function registerOverloadVariant(hostPropMeta) {
     const variantMappingTable = hostPropMeta.static ? maps.static : maps._prototype;
     const variantMap = variantMappingTable.mappingTable;
     
-    const variantTrie = variantMap.get(overloadedMethodName) || initIfNoVariantMap(hostPropMeta.name, variantMap);
+    //const variantTrie = variantMap.get(overloadedMethodName) || initIfNoVariantMap(hostPropMeta.name, variantMap);
+
+    const variantTrie = FUNC_TRIE;
     const hostParamMetaList = getAllParametersMeta(hostFuncMeta);
 
     const searchedNodeEndpoint = searchForMethodVariant(variantTrie, hostParamMetaList, paramMeta => paramMeta?.type || Any);
 
-    const hasSignature = searchedNodeEndpoint?.vTable.has(typeMeta);
+    //const hasSignature = searchedNodeEndpoint?.vTable.has(typeMeta);
     //console.log(['signature existence check'], hasSignature)
-    const overloadedFuncMeta = searchedNodeEndpoint?.vTable.get(typeMeta);
+    //const overloadedFuncMeta = searchedNodeEndpoint?.vTable.get(typeMeta);
+    const hasSignature = searchedNodeEndpoint?.vTable.has(remotePropMeta.functionMeta);
+    const overloadedFuncMeta = searchedNodeEndpoint?.vTable.get(remotePropMeta.functionMeta);
 
     if (
         hasSignature && 
@@ -233,12 +263,21 @@ function registerOverloadVariant(hostPropMeta) {
     /**
      * last case: the current signature is not mapped to any funcMeta
      */
-
-    const endPointNode = mergeFuncVariant(hostParamMetaList, variantTrie, variantMappingTable.statisticTable);
+    // const endPointNode = mergeFuncVariant(hostParamMetaList, variantTrie, variantMappingTable.statisticTable);
+    const endPointNode = mergeFuncVariant(
+        hostParamMetaList, 
+        variantTrie, 
+        variantMappingTable.statisticTable, 
+        // remotePropMeta.functionMeta, 
+        // hostFuncMeta
+    );
     
-    endPointNode.endpoint ??= new function_variant_param_node_endpoint_metadata_t();
+    //endPointNode.endpoint ??= new function_variant_param_node_endpoint_metadata_t();
     //endPointNode.endpoint.vTable.set(typeMeta, getMetadataFootPrintByKey(hostPropMeta, DECORATED_VALUE));
-    endPointNode.endpoint.vTable.set(typeMeta, hostPropMeta.functionMeta);
+    //endPointNode.endpoint.vTable.set(typeMeta, hostPropMeta.functionMeta);
+    const mappedPropMeta = getActualMappedPropMeta.call(this, remotePropMeta.name, hostPropMeta);
+    //endPointNode.endpoint.vTable.set(remotePropMeta.functionMeta, hostFuncMeta);
+    endPointNode.endpoint.vTable.set(mappedPropMeta.functionMeta, hostFuncMeta);
 }
 
 /**
@@ -316,4 +355,43 @@ function isOwnerOfPropMeta(propName, propMeta) {
     return  isObjectLike(this) &&
             (propMetaOwnerClass === this ||
             propMetaOwnerClass === this.constructor);
+}
+
+/**
+ * 
+ * @param {metadata_t} typeMeta 
+ */
+function manipulateMethodVariantsStatisticTables(typeMeta) {
+
+    const _class = this;
+
+    const baseClass = Object.getPrototypeOf(_class);
+    const baseTypeMeta = metaOf(baseClass);
+
+    /**@type {method_variant_map_metadata_t} */
+    const baseClassMethodVariantMaps = baseTypeMeta?.methodVariantMaps;
+    const currentClassMeta = typeMeta;//metaOf(_class);
+    /**@type {method_variant_map_metadata_t} */
+    const currentClassMethodVariantMaps = currentClassMeta.methodVariantMaps = new method_variant_map_metadata_t();
+
+    /**
+     * initialize parameter types statistical table 
+     */
+    currentClassMethodVariantMaps._prototype.statisticTable = new Map(baseClassMethodVariantMaps?._prototype?.statisticTable?.entries());
+    currentClassMethodVariantMaps.static.statisticTable = new Map(baseClassMethodVariantMaps?.static?.statisticTable?.entries());
+
+    if (isFirstClass(_class)) {
+
+        currentClassMethodVariantMaps._prototype.mappingTable = new Map();
+        currentClassMethodVariantMaps.static.mappingTable = new Map();
+
+        return;
+    }
+    /**
+     * will optimize the following lines
+     */
+
+    // console.log(currentClassMethodVariantMaps._prototype === baseClassMethodVariantMaps._prototype)
+    currentClassMethodVariantMaps._prototype.mappingTable = new Map(Array.from(baseClassMethodVariantMaps._prototype.mappingTable.entries()));
+    currentClassMethodVariantMaps.static.mappingTable = new Map(Array.from(baseClassMethodVariantMaps.static.mappingTable.entries()));
 }

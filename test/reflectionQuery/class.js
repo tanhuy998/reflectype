@@ -200,12 +200,29 @@ class T {
 
         console.log('B')
     }
+
+    @parameters({
+        a: String
+    })
+    static stFunc(a) {
+
+        console.log("static T");
+    }
 }
 
 class H extends T {
 
     @type(IDisposable)
     accessor prop;
+
+    @parameters({
+        a: String,
+        b: Number,
+    })
+    static stFunc(a, b) {
+
+        console.log("static H");
+    }
 
     //@allowNull
     @returnType(Number)
@@ -236,7 +253,7 @@ class H extends T {
     })
     [METHOD('func')](param1, param2, param3) {
 
-        //console.log('func bool num')
+        console.log('string bool num')
     }
 
     @parameters({
@@ -264,7 +281,7 @@ class H extends T {
     })
     [METHOD('func')](param1, b, c) {
 
-        //console.log('8');
+        console.log('8');
     }
 }
 
