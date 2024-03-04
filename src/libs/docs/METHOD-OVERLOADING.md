@@ -44,6 +44,10 @@ situations
 	2. the overloaded method is owned by it's owner class. (not effective)
 -> pseudo function just lookup on the variant trie to find which method it oveloads so just be sure the target method was decorated before the pseudo method is define no matter whose owner of the target of overload method is.
 
+#### METHOD RESOLUTION EVALUATION STRATEGIES CONSIDERATION
+
+
+
 ------------------------------------------------------------
 #### METHOD DECISION INVOCATION
 

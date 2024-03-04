@@ -202,7 +202,7 @@ class T {
     }
 
     @parameters({
-        a: String
+        a: Number
     })
     static stFunc(a) {
 
@@ -223,6 +223,14 @@ class H extends T {
 
         console.log("static H");
     }
+
+    // @parameters({
+    //     a: Number 
+    // })
+    // static [METHOD('stFunc')](a) {
+
+    //     console.log('another static H')
+    // }
 
     //@allowNull
     @returnType(Number)

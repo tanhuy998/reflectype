@@ -8,7 +8,7 @@ const { initGeneralMetadata } = require("./decoratorGeneral.js");
 const { pseudo_decorator_context_t, pseudo_parameter_decorator_context_t } = require("../utils/pseudoDecorator.js");
 const { ensureIfPseudoMethodTakeRightPlace } = require("./methodOverloading/pseudoMethod.lib.js");
 const { isNonIterableObjectKey, isObjectKey } = require("./type.js");
-const { PSEUDO_OVERLOADED_METHOD_NAME } = require("./methodOverloading/constant.js");
+const { PSEUDO_OVERLOADED_METHOD_NAME, OVERLOADED_METHOD_NAME } = require("./methodOverloading/constant.js");
 
 const PSEUDO_DECORATION = '_pseudo_decoration';
 
@@ -65,6 +65,7 @@ function initMetadata(_, _context) {
     ) {
         
         setMetadataFootPrint(propMeta, PSEUDO_OVERLOADED_METHOD_NAME, targetOfOverloadName);
+        setMetadataFootPrint(propMeta, OVERLOADED_METHOD_NAME, targetOfOverloadName)
     }
 
     if (decoratorHasFootPrint(_, _context, DECORATED)) {

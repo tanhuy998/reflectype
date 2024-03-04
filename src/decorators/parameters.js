@@ -25,7 +25,7 @@ function parameters(paramsList) {
 
         refreshMeta(propMeta);
         enumerateDeclaredParams(paramsList, propMeta.functionMeta, _, context);
-        postDecoratorInit(_, context, propMeta);
+        //postDecoratorInit(_, context, propMeta);
 
         return retrieveDecoratorFootPrintByKey(_, context, DECORATED_VALUE);
     }

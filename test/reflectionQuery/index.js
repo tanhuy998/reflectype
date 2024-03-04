@@ -106,6 +106,7 @@ const mRef = new ReflectionPrototypeMethod(H, 'func');
 
 const funcMeta = ref.metadata.functionMeta;
 
+console.log(metaOf(T).methodVariantMaps.static.statisticTable)
 console.log(metaOf(T).methodVariantMaps._prototype.statisticTable)
 console.log(metaOf(H).methodVariantMaps.static.statisticTable)
 console.log(metaOf(H).methodVariantMaps._prototype.statisticTable)
@@ -127,7 +128,9 @@ console.log(['000000000000000000000000000000000000000000000000000000'])
 
 const args = [dynamic_cast(obj.prop), new A(), 1];
 console.time(2)
-H.stFunc('1', 1)
+
+H.stFunc('1')
+H.stFunc(1)
 
 // for (const [key, value] of diveTrieByArguments(H, mRef.metadata, args)?.map.entries() || [[]]) {
 
@@ -150,7 +153,7 @@ class Temp {
 
 const t = new Temp();
 
-obj.func('1', 1, true)
+o.func('1', 1, true)
 
 console.timeEnd(2)
 

@@ -54,30 +54,42 @@ function owner_metadata_t() {
     this.decoratorContext;
 }
 
-function method_variant_map_metadata_t() {
+/**
+ * 
+ * @param {method_variant_map_metadata_t} ref 
+ */
+function method_variant_map_metadata_t(ref) {
    
     /**
      * @type {method_variant_mapping_table_metadata_t}
      */
-    this.static = new method_variant_mapping_table_metadata_t(); //= new Map();
+    this.static = new method_variant_mapping_table_metadata_t(ref?.static); //= new Map();
 
     /**
      * @type {method_variant_mapping_table_metadata_t}
      */
-    this._prototype = new method_variant_mapping_table_metadata_t(); //= new Map();
+    this._prototype = new method_variant_mapping_table_metadata_t(ref?._prototype); //= new Map();
 }
 
-function method_variant_mapping_table_metadata_t() {
+/**
+ * 
+ * @param {method_variant_mapping_table_metadata_t} ref 
+ */
+function method_variant_mapping_table_metadata_t(ref) {
 
     /**
+     * stastisticTable is evaluated when establishing metadata resolution
+     * 
      * @type {Map<Function, number>}
      */
-    this.statisticTable = new Map();
+    this.statisticTable;// = new Map();
 
     /**
+     * mappingTable is evaluated when method decorator decorates the method
+     * 
      * @type {Map<string|symbol, property_metadata_t>}
      */
-    this.mappingTable;
+    this.mappingTable = new Map(ref?.mappingTable.entries());
 }
 
 /**
@@ -100,7 +112,8 @@ function metadata_t(_abstract, _ref) {
     /**
      * @type {method_variant_map_metadata_t}
      */
-    this.methodVariantMaps = _ref?.methodVariantMaps || new method_variant_map_metadata_t();
+    //this.methodVariantMaps = _ref?.methodVariantMaps || new method_variant_map_metadata_t();
+    this.methodVariantMaps = new method_variant_map_metadata_t(_ref?.methodVariantMaps);
 
     /**@type {InterfacePrototype} */
     this.interfaces = _ref?.interfaces?.clone();

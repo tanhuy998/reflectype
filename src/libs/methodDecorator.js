@@ -12,7 +12,10 @@ const {
 } = require('./constant.js');
 //const { resolveTypeMetaResolution } = require('./metadata/resolution.js');
 const { extractFunctionInformations } = require('../utils/function.util.js');
-const { MULTIPLE_DISPATCH } = require('./methodOverloading/constant.js');
+const { MULTIPLE_DISPATCH, OVERLOAD_APPLIED, PSEUDO_OVERLOADED_METHOD_NAME } = require('./methodOverloading/constant.js');
+const { isPseudoMethod } = require('./methodOverloading/pseudoMethod.lib.js');
+const overload = require('../decorators/overload.js');
+//const { manipulateOverloading } = require('../utils/decorator/overload.util.js');
 
 module.exports = {
     decorateMethod, 
@@ -166,7 +169,29 @@ function decorateMethod(_method, context, propMeta) {
     propMeta.decoratorContext = context;
     propMeta.isInitialized = true;
 
+    initIfPseudoMethod(_method, context, propMeta);
+
     context.addInitializer(overrideClassPrototype(propMeta));
+}
+
+
+function initIfPseudoMethod(_, decoratorContext, propMeta) {
+
+    if (
+        !isPseudoMethod(propMeta) ||
+        getMetadataFootPrintByKey(propMeta, OVERLOAD_APPLIED)
+    ) {
+
+        return;
+    }
+
+    const overloadedName = getMetadataFootPrintByKey(propMeta, PSEUDO_OVERLOADED_METHOD_NAME);
+
+    try {
+
+        overload(overloadedName)(_, decoratorContext);
+    }
+    catch {}
 }
 
 /**

@@ -1,5 +1,6 @@
 const config = require('../../../config.json');
-const { retrieveDecoratorFootPrintByKey } = require('../footPrint');
+const { property_metadata_t } = require('../../reflection/metadata');
+const { retrieveDecoratorFootPrintByKey, getMetadataFootPrintByKey } = require('../footPrint');
 const { PSEUDO_OVERLOADED_METHOD_NAME } = require('./constant');
 
 const PSEUDO_METHOD_NAME_PATTERN = /^pseudoMethod\$(\w+)-\d+$/;
@@ -9,7 +10,19 @@ module.exports = {
     ensureIfPseudoMethodTakeRightPlace,
     retrieveOverloadedNameIfPseudoMethodExists,
     retrieveOverloadedNameIfPseudoMethodExists,
+    isPseudoMethod,
 };
+
+/**
+ * 
+ * @param {property_metadata_t} propMeta 
+ * @returns 
+ */
+function isPseudoMethod(propMeta) {
+
+  return propMeta.isMethod &&
+        typeof getMetadataFootPrintByKey(propMeta, PSEUDO_OVERLOADED_METHOD_NAME) === 'string';
+}
 
 function ensureIfPseudoMethodTakeRightPlace(_, decoaratorContext) {
 

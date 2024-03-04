@@ -1,4 +1,4 @@
-const { OVERLOAD_TARGET, OVERLOAD_APPLIED, OVERLOAD_PENDING } = require('../../libs/methodOverloading/constant');
+const { OVERLOAD_TARGET, OVERLOAD_APPLIED, OVERLOAD_PENDING, OVERLOADED_METHOD_NAME } = require('../../libs/methodOverloading/constant');
 const {IS_FINAL} = require('../../libs/keyword/constant')
 const { getMetadataFootPrintByKey, setMetadataFootPrint } = require('../../libs/footPrint');
 const { retrieveTypeMetadata } = require('../../libs/metadata/metadataTrace');
@@ -7,9 +7,11 @@ const MetadataAspect = require('../../metadata/aspect/metadataAspect');
 const ReflectionQuerySubject = require('../../metadata/query/reflectionQuerySubject');
 const { property_metadata_t, metadata_t } = require('../../reflection/metadata');
 const final = require('../../decorators/final');
+const { METADATA } = require('../../constants');
 
 module.exports = {
-    setFootPrint,
+    setOverloadFootPrint,
+    setupOverload,
     manipulateOverloading,
     ensureOverloadingTakesRightPlace,
     ensureTargetOfOverloadingExists,
@@ -21,14 +23,20 @@ module.exports = {
  * @param {property_metadata_t} propMeta 
  * @param {property_metadata_t} targetPropMeta
  */
-function setFootPrint(_, decoratorContext, propMeta, targetPropMeta) {
+function setupOverload(_, decoratorContext, propMeta, targetPropMeta) {
+
+    final(_, decoratorContext); // decorator that mark the current method is final
+    setOverloadFootPrint(propMeta, targetPropMeta)
+}
+
+function setOverloadFootPrint(propMeta, targetPropMeta) {
 
     const funcMeta = propMeta.functionMeta;
 
-    final(_, decoratorContext); // decorator that mark the current method is final
     setMetadataFootPrint(funcMeta, OVERLOAD_TARGET, targetPropMeta);
     setMetadataFootPrint(funcMeta, OVERLOAD_PENDING);
     setMetadataFootPrint(propMeta, OVERLOAD_APPLIED);
+    setMetadataFootPrint(propMeta, OVERLOADED_METHOD_NAME, targetPropMeta.name);
 }
 
 function ensureOverloadingTakesRightPlace(_, context, nameOfMethodToOverload) {
@@ -81,7 +89,12 @@ function ensureTargetOfOverloadingExistsOnTypeMeta(typeMeta, nameOfMethodToOverl
         throw new ReferenceError();
     }
 
-    
+    if (
+        targetPropMeta.owner.typeMeta !== typeMeta
+    ) {
+
+        throw new ReferenceError();
+    }
 
     if (
         getMetadataFootPrintByKey(targetPropMeta.functionMeta, IS_FINAL) === true
@@ -100,7 +113,7 @@ function manipulateOverloading(_, decoratorContext, nameOfMethodToOverload) {
     const propMeta = propertyDecorator.initMetadata(_, decoratorContext);
 
 
-    setFootPrint(_, decoratorContext, propMeta, targetPropMeta);
+    setupOverload(_, decoratorContext, propMeta, targetPropMeta);
 
     return propMeta;
 }

@@ -3,7 +3,7 @@ const { LEGACY_PROP_META } = require("../../libs/metadata/constant");
 const { retrieveOverloadedNameIfPseudoMethodExists } = require("../../libs/methodOverloading/pseudoMethod.lib");
 const { isObjectKey } = require("../../libs/type");
 const { property_metadata_t } = require("../../reflection/metadata");
-const { ensureTargetOfOverloadingExists, setFootPrint, ensureTargetOfOverloadingExistsOnTypeMeta } = require("./overload.util");
+const { ensureTargetOfOverloadingExists, ensureTargetOfOverloadingExistsOnTypeMeta, setupOverload } = require("./overload.util");
 
 module.exports = {
     postDecoratorInit
@@ -38,7 +38,7 @@ function postDecoratorInit(_, decoratorContext, propMeta) {
                                             decoratorContext, 
                                             targetOfPseudoOverloadingName
                                         );
-    setFootPrint(_, decoratorContext, propMeta, targetOfOverloadingPropMeta);
+    setupOverload(_, decoratorContext, propMeta, targetOfOverloadingPropMeta);
 }
 
 /**

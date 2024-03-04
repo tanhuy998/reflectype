@@ -144,7 +144,7 @@ function estimateArgs(funcMeta, args = []) {
     let ret;
     let argMasses;
     let index = 0;
-    console.log(funcMeta.owner.owner.typeMeta.methodVariantMaps.static);
+    //console.log(funcMeta.owner.owner.typeMeta.methodVariantMaps.static);
     for (const argVal of args || []) {
 
         const estimatedTypes = estimateArgType(argVal, index, statisticTable);

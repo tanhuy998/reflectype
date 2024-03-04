@@ -1,4 +1,4 @@
-const { property_metadata_t, function_variant_param_node_metadata_t, metaOf, function_variant_param_node_endpoint_metadata_t, function_metadata_t, parameter_metadata_t } = require("../../reflection/metadata");
+const { property_metadata_t, function_variant_param_node_metadata_t, metaOf, function_variant_param_node_endpoint_metadata_t, function_metadata_t, parameter_metadata_t, metadata_t } = require("../../reflection/metadata");
 //const { estimateArgType } = require("./methodArgsEstimation.lib.lib");
 const { retrieveTrie } = require("./methodVariantTrieOperation.lib");
 const { getTypeOf, isValuable } = require("../type");
@@ -65,8 +65,8 @@ function dispatchMethodVariant(binder, propMeta, args) {
         const trieEndpoint = diveTrieByArguments(getTypeOf(binder), propMeta.functionMeta, args);
         
         if (
-            !trieEndpoint ||
-            !trieEndpoint.vTable.has(propMeta.functionMeta)
+            !trieEndpoint //||
+            //!trieEndpoint.vTable.has(propMeta.functionMeta)
         ) {
             
             throw new MethodVariantMismatchError();
@@ -76,9 +76,9 @@ function dispatchMethodVariant(binder, propMeta, args) {
         //console.timeEnd('endpoint eval')
         //return ret;
 
-        //const funcMeta = extractFuncMeta(binder, trieEndpoint, args);
+        const funcMeta = extractFuncMeta(binder, trieEndpoint, propMeta, args);
 
-        const funcMeta = trieEndpoint.vTable.get(propMeta.functionMeta)
+        //const funcMeta = trieEndpoint.vTable.get(propMeta.functionMeta)
         return invoke(funcMeta, binder, args);
     }
     catch (e) {
@@ -96,12 +96,19 @@ function dispatchMethodVariant(binder, propMeta, args) {
  * 
  * @param {Function|Object} binder 
  * @param {function_variant_param_node_endpoint_metadata_t} trieEndpoint 
+ * @param {property_metadata_t} propMeta
  * @param {Array<any>} args 
  */
-function extractFuncMeta(binder, trieEndpoint, args) {
+function extractFuncMeta(binder, trieEndpoint, propMeta, args) {
 
-    let _class = getTypeOf(binder);
+    //let _class = typeof binder === 'function' ? binder : getTypeOf(binder);
+    //let typeMeta = propMeta.owner.typeMeta;
+    let _class = propMeta.owner.typeMeta.abstract;
 
+    const funcName = propMeta.name;
+    console.log(funcName)
+    console.log([1], funcName, propMeta.owner.typeMeta.abstract.name);
+    //console.log(trieEndpoint.vTable)
     /**
      * Iterate throught inheritance chain,
      * catch first matched class exist the endpoint's vtable
@@ -109,20 +116,26 @@ function extractFuncMeta(binder, trieEndpoint, args) {
     while (
         _class !== Object.getPrototypeOf(Function)
     ) {
-        
+        /**@type {metadata_t} */
         const typeMeta = metaOf(_class);
-        
-        const funcMeta = trieEndpoint.vTable.get(typeMeta);
+        const variantMaps = typeMeta.methodVariantMaps;
+        const targetMap = propMeta.static ? variantMaps.static : variantMaps._prototype;
 
-        // if (trieEndpoint.vTable.has(typeMeta)) {
-            
-        //     return trieEndpoint.vTable.get(typeMeta).call(binder, MULTIPLE_DISPATCH, ...args);
-        // }
+        const lookedupFuncMeta = targetMap.mappingTable.get(funcName)?.functionMeta;
+        console.log(targetMap.mappingTable)
+        console.log(2, binder?.name || binder, _class.name, typeMeta.abstract.name, propMeta.static, lookedupFuncMeta?.owner.owner.typeMeta.abstract.name)
+        if (trieEndpoint.vTable.has(lookedupFuncMeta)) {
+            console.log(3)
+            return trieEndpoint.vTable.get(lookedupFuncMeta);
+            //return targetFuncMeta = trieEndpoint.vTable.get(lookedupFuncMeta);
 
-        if (typeof funcMeta === 'object') {
-
-            return funcMeta;
+            //invoke(targetFuncMeta, binder, args);
         }
+
+        // if (typeof funcMeta === 'object') {
+
+        //     return funcMeta;
+        // }
 
         _class = Object.getPrototypeOf(_class);
     }
