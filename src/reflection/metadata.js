@@ -82,7 +82,7 @@ function method_variant_mapping_table_metadata_t(ref) {
      * 
      * @type {Map<Function, number>}
      */
-    this.statisticTable;// = new Map();
+    this.statisticTable = ref?.statisticTable;// = new Map();
 
     /**
      * mappingTable is evaluated when method decorator decorates the method

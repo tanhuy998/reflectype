@@ -2,8 +2,9 @@ const { METADATA } = require("../../constants");
 const { metadata_t, metaOf, prototype_metadata_t, property_metadata_t, wrapperOf, method_variant_map_metadata_t } = require("../../reflection/metadata");
 const { extractClassConstructorInfoBaseOnConfig } = require("../../utils/function.util");
 const { DECORATED_VALUE } = require("../constant");
-const { getMetadataFootPrintByKey } = require("../footPrint");
+const { getMetadataFootPrintByKey, setMetadataFootPrint } = require("../footPrint");
 const { isFirstClass } = require("../type");
+const { INHERITANCE_DEPTH } = require("./constant");
 const { refreshTypeMetaObjectForDecoratorMetadata } = require("./metadataTrace");
 
 const RESOLVED_CLASSES = new Set();
@@ -110,12 +111,25 @@ function manipulateMetaDependentClasses(stack = []) {
         typeMeta._constructor = extractClassConstructorInfoBaseOnConfig(currentClass);
 
         assignAbstractToTypeMeta(currentClass, typeMeta);
+        calculateInheritanceDepth(typeMeta);
         manipulateClass(currentClass, typeMeta)
         //manipulateForMethodVariants(currentClass);
         unlinkIndependentPropeMeta(currentClass);
         //show(currentClass)
         RESOLVED_CLASSES.add(currentClass);
     }
+}
+
+/**
+ * 
+ * @param {metadata_t} typeMeta 
+ */
+function calculateInheritanceDepth(typeMeta) {
+
+    const baseClass = Object.getPrototypeOf(typeMeta.abstract);
+    const baseDepth = getMetadataFootPrintByKey(metaOf(baseClass), INHERITANCE_DEPTH);
+
+    setMetadataFootPrint(typeMeta, INHERITANCE_DEPTH, baseDepth >= 0 ? baseDepth : 0);
 }
 
 /**

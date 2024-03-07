@@ -6,4 +6,5 @@ module.exports = {
     ORIGIN_VALUE: 'originValue',
     DEFAULT_ARGS: 'defaultArgs',
     PARAM: 'methodParamsType',
+    DECORATOR_APPLIED: '_decorator_applied'
 }

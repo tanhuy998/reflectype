@@ -59,7 +59,7 @@ module.exports = {
  * @param {Array<any>} args 
  */
 function dispatchMethodVariant(binder, propMeta, args) {
-    
+    //console.log(args)
     try {
 
         const trieEndpoint = diveTrieByArguments(getTypeOf(binder), propMeta.functionMeta, args);
@@ -106,8 +106,8 @@ function extractFuncMeta(binder, trieEndpoint, propMeta, args) {
     let _class = propMeta.owner.typeMeta.abstract;
 
     const funcName = propMeta.name;
-    console.log(funcName)
-    console.log([1], funcName, propMeta.owner.typeMeta.abstract.name);
+    //console.log(funcName)
+    //console.log([1], funcName, propMeta.owner.typeMeta.abstract.name);
     //console.log(trieEndpoint.vTable)
     /**
      * Iterate throught inheritance chain,
@@ -122,10 +122,10 @@ function extractFuncMeta(binder, trieEndpoint, propMeta, args) {
         const targetMap = propMeta.static ? variantMaps.static : variantMaps._prototype;
 
         const lookedupFuncMeta = targetMap.mappingTable.get(funcName)?.functionMeta;
-        console.log(targetMap.mappingTable)
-        console.log(2, binder?.name || binder, _class.name, typeMeta.abstract.name, propMeta.static, lookedupFuncMeta?.owner.owner.typeMeta.abstract.name)
+        //console.log(targetMap.mappingTable)
+        //console.log(2, binder?.name || binder, _class.name, typeMeta.abstract.name, propMeta.static, lookedupFuncMeta?.owner.owner.typeMeta.abstract.name)
         if (trieEndpoint.vTable.has(lookedupFuncMeta)) {
-            console.log(3)
+            //console.log(3)
             return trieEndpoint.vTable.get(lookedupFuncMeta);
             //return targetFuncMeta = trieEndpoint.vTable.get(lookedupFuncMeta);
 

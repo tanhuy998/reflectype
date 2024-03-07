@@ -44,7 +44,24 @@ situations
 	2. the overloaded method is owned by it's owner class. (not effective)
 -> pseudo function just lookup on the variant trie to find which method it oveloads so just be sure the target method was decorated before the pseudo method is define no matter whose owner of the target of overload method is.
 
-#### METHOD RESOLUTION EVALUATION STRATEGIES CONSIDERATION
+#### METHOD RESOLUTION INITIALIZATION STRATEGIES CONSIDERATION
+
+- Every overloading methods of a particular class need an origin method except pseudo method. 
+- Derived class method that inherited base class method as legacy (js default override behavior) is considered as overloading behavior.
+- Pseudo methods have no legacy method.
+- When a derived class non pseudo method tends to overload (override) base class method.
+	1. If base class method have not been merge to the global trie yet.
+	-> merge base method first.
+	2. Merge the derived method.
+- Pseudo methods merge its origin method if the origin haven't been merged before.
+
+#### CONSIDERING REMOTE PROPMETA
+
+Remote propMeta (origin propMeta) could placed on both current class or base class.
+- When remote propMeta is placed on current class, it means another method including pseudo method is overloading it.
+- When remote propMeta is placed on base class, it means that a derived class has method whose name is the same as base class's 
+
+#### STATISTIC TABLE
 
 
 

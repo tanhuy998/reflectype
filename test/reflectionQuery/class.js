@@ -201,6 +201,7 @@ class T {
         console.log('B')
     }
 
+    //@virtual
     @parameters({
         a: Number
     })
@@ -223,6 +224,14 @@ class H extends T {
 
         console.log("static H");
     }
+
+    // @parameters({
+    //     a: Number
+    // })
+    // static [METHOD('stFunc')](a) {
+
+
+    // }
 
     // @parameters({
     //     a: Number 
@@ -289,7 +298,7 @@ class H extends T {
     })
     [METHOD('func')](param1, b, c) {
 
-        console.log('8');
+        //console.log('8');
     }
 }
 

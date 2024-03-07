@@ -129,8 +129,8 @@ console.log(['000000000000000000000000000000000000000000000000000000'])
 const args = [dynamic_cast(obj.prop), new A(), 1];
 console.time(2)
 
-H.stFunc('1')
 H.stFunc(1)
+H.stFunc('1', 1)
 
 // for (const [key, value] of diveTrieByArguments(H, mRef.metadata, args)?.map.entries() || [[]]) {
 
@@ -158,7 +158,7 @@ o.func('1', 1, true)
 console.timeEnd(2)
 
 console.time('total1')
-for (let i = 0; i < 0; ++i) {
+for (let i = 0; i < 1; ++i) {
 
     //console.time(2)
 

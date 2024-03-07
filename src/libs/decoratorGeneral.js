@@ -5,6 +5,8 @@ const { isInstantiable } = require("./type");
 const { extractClassConstructorInformations, extractFunctionInformations, extractClassConstructorInfoBaseOnConfig } = require("../utils/function.util");
 const { resolveTypeMetaResolution } = require("./metadata/resolution");
 const { retrieveTypeMetadata } = require("./metadata/metadataTrace");
+const { setMetadataFootPrint } = require("./footPrint");
+const { DECORATOR_APPLIED } = require("./constant");
 
 const INITIALIZED_META_WRAPPER = new Set();
 
@@ -25,8 +27,14 @@ function initGeneralMetadata(_, decoratorContext) {
 
     initConstructorMetadata(...arguments);
     manipulateMetadataResolution(...arguments);
+    setTypeMetaFootPrint(...arguments);
 
     INITIALIZED_META_WRAPPER.add(metadata);
+}
+
+function setTypeMetaFootPrint(_, decoraotorContext) {
+
+    setMetadataFootPrint(retrieveTypeMetadata(_, decoraotorContext), DECORATOR_APPLIED);
 }
 
 function manipulateMetadataResolution(_, decoratorContext) {

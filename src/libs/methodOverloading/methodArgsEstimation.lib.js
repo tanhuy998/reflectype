@@ -54,18 +54,21 @@ module.exports = {
  * 
  * @param {parameter_metadata_t} paramMeta 
  * @param {function_variant_param_node_metadata_t} variantNodeMeta 
- * @param {?Map<Function, number>} statisticTable 
+ * @param {?Array<Map<Function, number>>} statisticTables 
  */
-function addStatisticalPieace(paramMeta, variantNodeMeta, statisticTable) {
+function addStatisticalPieace(paramMeta, variantNodeMeta, statisticTables = []) {
 
-    try {
+    for (const table of statisticTables) {
+
+        try {
         
-        ensureStatisticTableExists(statisticTable);
-        acknowledge(paramMeta.type, variantNodeMeta.depth, statisticTable);
-    }
-    catch (e) {
-
-        return;
+            ensureStatisticTableExists(table);
+            acknowledge(paramMeta.type, variantNodeMeta.depth, table);
+        }
+        catch (e) {
+    
+            continue;
+        }
     }
 }
 
