@@ -130,7 +130,7 @@ const args = [dynamic_cast(obj.prop), new A(), 1];
 console.time(2)
 
 H.stFunc(1)
-H.stFunc('1', 1)
+T.stFunc(1)
 
 // for (const [key, value] of diveTrieByArguments(H, mRef.metadata, args)?.map.entries() || [[]]) {
 

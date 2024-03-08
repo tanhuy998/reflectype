@@ -209,6 +209,14 @@ class T {
 
         console.log("static T");
     }
+
+    @parameters({
+        a: String
+    })
+    static [METHOD('stFunc')](a) {
+
+        console.log('another static T');
+    }
 }
 
 class H extends T {
@@ -241,15 +249,12 @@ class H extends T {
     //     console.log('another static H')
     // }
 
-    //@allowNull
-    @returnType(Number)
     @parameters({
-        a: [Function, allowNull],
-        b: Number,
+        a: IFoo
     })
-    func(a, e, b) {
+    func(a) {
 
-        console.log('C', ...arguments)
+
     }
 
     @parameters({
@@ -298,7 +303,7 @@ class H extends T {
     })
     [METHOD('func')](param1, b, c) {
 
-        //console.log('8');
+        console.log('8');
     }
 }
 

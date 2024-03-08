@@ -71,10 +71,6 @@ function dispatchMethodVariant(binder, propMeta, args) {
             
             throw new MethodVariantMismatchError();
         }
-        //console.time('endpoint eval')
-        //const ret = retrieveFuncMeta(binder, trieEndpoint, args);
-        //console.timeEnd('endpoint eval')
-        //return ret;
 
         const funcMeta = extractFuncMeta(binder, trieEndpoint, propMeta, args);
 
@@ -101,14 +97,9 @@ function dispatchMethodVariant(binder, propMeta, args) {
  */
 function extractFuncMeta(binder, trieEndpoint, propMeta, args) {
 
-    //let _class = typeof binder === 'function' ? binder : getTypeOf(binder);
-    //let typeMeta = propMeta.owner.typeMeta;
     let _class = propMeta.owner.typeMeta.abstract;
 
     const funcName = propMeta.name;
-    //console.log(funcName)
-    //console.log([1], funcName, propMeta.owner.typeMeta.abstract.name);
-    //console.log(trieEndpoint.vTable)
     /**
      * Iterate throught inheritance chain,
      * catch first matched class exist the endpoint's vtable
@@ -122,20 +113,11 @@ function extractFuncMeta(binder, trieEndpoint, propMeta, args) {
         const targetMap = propMeta.static ? variantMaps.static : variantMaps._prototype;
 
         const lookedupFuncMeta = targetMap.mappingTable.get(funcName)?.functionMeta;
-        //console.log(targetMap.mappingTable)
-        //console.log(2, binder?.name || binder, _class.name, typeMeta.abstract.name, propMeta.static, lookedupFuncMeta?.owner.owner.typeMeta.abstract.name)
+
         if (trieEndpoint.vTable.has(lookedupFuncMeta)) {
-            //console.log(3)
+            
             return trieEndpoint.vTable.get(lookedupFuncMeta);
-            //return targetFuncMeta = trieEndpoint.vTable.get(lookedupFuncMeta);
-
-            //invoke(targetFuncMeta, binder, args);
         }
-
-        // if (typeof funcMeta === 'object') {
-
-        //     return funcMeta;
-        // }
 
         _class = Object.getPrototypeOf(_class);
     }
@@ -153,7 +135,7 @@ function invoke(funcMeta, bindObject, args) {
     console.time('prepare invoke')
     /**@type {function} */
     const actualFunc = getMetadataFootPrintByKey(funcMeta.owner, DECORATED_VALUE);
-    const paramMetas = getAllParametersMeta(funcMeta);
+    //const paramMetas = getAllParametersMeta(funcMeta);
     console.timeEnd('prepare invoke')
     //console.log(funcMeta.owner)
     //args = castDownArgs(paramMetas, args);

@@ -59,7 +59,6 @@ function manipulateMethodVariantBehavior(propName, propMeta) {
     const isOverloading = isOverloadingMethod.call(this, propName, propMeta);
     const hasLegacy = isOverridingBaseClassMethod.call(this, propName, propMeta);
 
-    //console.log(1, this.name || this);
     if (
         !isOverloading &&
         !hasLegacy
@@ -78,17 +77,22 @@ function manipulateMethodVariantBehavior(propName, propMeta) {
          * of the current propMeta which is placed in base class.
          */
         //createLegacyEntryPoint(remotePropMeta);
-        createEntryPoint(this, propMeta.name, propMeta);
-        console.log(0, remotePropMeta.name)
+        //createEntryPoint(this, propMeta.name, propMeta);
+        autoDetectEntryPointCreation(propMeta);
         statisticTable = retrieveMethodVariantTableOf(propMeta).statisticTable;
     }
 
+    /**
+     * remotePropMeta could be on base class therefore when registering remotePropMeta,
+     * update the state of 
+     */
     registerOverloadVariant(remotePropMeta, [statisticTable]);
-    console.log(1, this.name || this)
-    //createEntryPoint(this, propName, propMeta);
-    createEntryPoint(this, remotePropMeta.name, remotePropMeta);
+    //createEntryPoint(this, remotePropMeta.name, remotePropMeta);
+    autoDetectEntryPointCreation(remotePropMeta);
     registerOverloadVariant(propMeta);
 }
+
+
 
 /**
  * @this
@@ -101,29 +105,15 @@ function manipulateMethodVariantBehavior(propName, propMeta) {
 function retrieveRemotePropMeta(propName, propMeta) {
 
     if (isOverridingBaseClassMethod.call(this, propName, propMeta)) {
-        //console.log(0, propMeta.name, propMeta.owner.typeMeta.abstract.name);
+
         return getMetadataFootPrintByKey(propMeta, LEGACY_PROP_META);
     }
 
     const overloadedName = getMetadataFootPrintByKey(propMeta, OVERLOADED_METHOD_NAME);
-
+    
     return retrieveMethodVariantTableOf(propMeta).mappingTable.get(overloadedName);
 }
 
-/**
- * 
- * @param {string|symbol} propName 
- * @param {property_metadata_t} propMeta 
- * 
- * @returns {Map<Function, Number>}
- */
-function retrieveExactStatisticTable(propName, propMeta) {
-
-    if (isOverridingBaseClassMethod.call(this, propName, propMeta)) {
-
-
-    }
-}
 
 /**
  * 
@@ -131,22 +121,14 @@ function retrieveExactStatisticTable(propName, propMeta) {
  */
 function registerMethodVariantEntryMeta(propMeta) {
 
-    // if (isPseudoMethod(propMeta)) {
-
-    //     return;
-    // }
-
     const variantMaps = propMeta.owner.typeMeta.methodVariantMaps;
     const mappingTable = propMeta.static ? variantMaps.static.mappingTable : variantMaps._prototype.mappingTable;
     
-    //const mappedPropMeta = mappingTable.get(propMeta.name);
-    
     mappingTable.set(propMeta.name, propMeta);
-    //console.log(mappingTable)
 }
 
 function isOverridingBaseClassMethod(propName, propMeta) {
-    //console.log(['check override'], LEGACY_PROP_META, getMetadataFootPrintByKey(propMeta, LEGACY_PROP_META), propMeta)
+    
     return isOwnerOfPropMeta.call(this, propName, propMeta) &&
             !isPseudoMethod(propMeta) &&
             getMetadataFootPrintByKey(propMeta, LEGACY_PROP_META)
@@ -154,14 +136,14 @@ function isOverridingBaseClassMethod(propName, propMeta) {
 
 /**
  * 
- * @param {property_metadata_t} legacyPropMeta 
+ * @param {property_metadata_t} propMeta 
  */
-function createLegacyEntryPoint(legacyPropMeta) {
+function autoDetectEntryPointCreation(propMeta) {
 
-    const legacyClass = legacyPropMeta.owner.typeMeta.abstract;
-    const entryPointTarget = legacyPropMeta.static ? legacyClass : legacyClass.prototype;
-    console.log(0.1)
-    createEntryPoint(entryPointTarget, legacyPropMeta.name, legacyPropMeta);
+    const _class = propMeta.owner.typeMeta.abstract;
+    const entryPointTarget = propMeta.static ? _class : _class.prototype;
+    
+    createEntryPoint(entryPointTarget, propMeta.name, propMeta);
 }
 
 /**
@@ -172,46 +154,32 @@ function createLegacyEntryPoint(legacyPropMeta) {
  */
 function createEntryPoint(entryPointTarget , methodName, refPropMeta) {
 
-    // if (!hostPropMeta.isMethod) {
-
-    //     return;
-    // }
-
     if (!isObjectLike(entryPointTarget)) {
 
         throw new TypeError();
     }
     
-    /**@type {property_metadata_t} */
-    //const remotePropMeta = getMetadataFootPrintByKey(hostPropMeta.functionMeta, OVERLOAD_TARGET);
-
-    //const methodName = getMetadataFootPrintByKey(hostPropMeta, OVERLOADED_METHOD_NAME);
-    console.log('1')
     if (
         !isObjectKey(methodName)
     ) {
 
         return;
     }
-    console.log('2')
-    //const variantMaps = hostPropMeta.owner.typeMeta.methodVariantMaps;
-    const map = retrieveMethodVariantTableOf(refPropMeta);//hostPropMeta.static ? variantMaps.static : variantMaps._prototype;
+
+    const map = retrieveMethodVariantTableOf(refPropMeta);
     const mappedPropMeta = map.mappingTable.get(methodName);
 
     if (!mappedPropMeta) {
 
         return;
     }
-    console.log('3')
-    //console.log(remotePropMeta.name);
+
     if (isVariantEntryPointFunction(entryPointTarget[methodName])) {
 
         return;
     }
 
-    console.log(['entry point'], entryPointTarget)
     entryPointTarget[methodName] = generateEntryPointForMethodVariants(mappedPropMeta);
-    //map.mappingTable.set(remotePropMeta.name, actualMappedPropMeta);
 }
 
 /**
@@ -219,9 +187,9 @@ function createEntryPoint(entryPointTarget , methodName, refPropMeta) {
  * @param {property_metadata_t} originPropMeta 
  */
 function generateEntryPointForMethodVariants(originPropMeta) {
-    //console.log(["generate entry point"], originPropMeta.name);
+    
     const ENTRY_POINT = function () {
-        //console.log(this, originPropMeta);
+        
         return dispatchMethodVariant(this, originPropMeta, arguments);
     }
 
@@ -288,8 +256,16 @@ function registerOverloadVariant(hostPropMeta, extraStatisticTables = []) {
         variantTrie, 
         [statisticTable, ...extraStatisticTables]
     );
-    
+
     const mappedPropMeta = getOverloadedPropMetaOf(hostPropMeta);
+
+    if (
+        endPointNode.endpoint.vTable.has(mappedPropMeta.functionMeta)
+    ) {
+
+        return;
+    }
+
     endPointNode.endpoint.vTable.set(mappedPropMeta.functionMeta, hostFuncMeta);
 }
 
@@ -472,7 +448,7 @@ function manipulateMethodVariantsStatisticTables(typeMeta) {
         
         return;
     }
-
+    
     const _class = this;
 
     const baseClass = Object.getPrototypeOf(_class);
