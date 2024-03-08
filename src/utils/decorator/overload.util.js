@@ -2,7 +2,6 @@ const { OVERLOAD_TARGET, OVERLOAD_APPLIED, OVERLOAD_PENDING, OVERLOADED_METHOD_N
 const {IS_FINAL} = require('../../libs/keyword/constant')
 const { getMetadataFootPrintByKey, setMetadataFootPrint } = require('../../libs/footPrint');
 const { retrieveTypeMetadata } = require('../../libs/metadata/metadataTrace');
-const propertyDecorator = require('../../libs/propertyDecorator');
 const MetadataAspect = require('../../metadata/aspect/metadataAspect');
 const ReflectionQuerySubject = require('../../metadata/query/reflectionQuerySubject');
 const { property_metadata_t, metadata_t } = require('../../reflection/metadata');
@@ -12,10 +11,12 @@ const { METADATA } = require('../../constants');
 module.exports = {
     setOverloadFootPrint,
     setupOverload,
-    manipulateOverloading,
+    //manipulateOverloading,
     ensureOverloadingTakesRightPlace,
-    ensureTargetOfOverloadingExists,
+    ensureTargetOfOverloadingExists: ensureTargetOfOverloadingExistsAndReturn,
+    ensureTargetOfOverloadingExistsAndReturn,
     ensureTargetOfOverloadingExistsOnTypeMeta,
+    validateAndReturnTargetPropMeta,
 }
 
 /**
@@ -54,7 +55,7 @@ function ensureOverloadingTakesRightPlace(_, context, nameOfMethodToOverload) {
  * 
  * @param {metadata_t} typeMeta 
  */
-function ensureTargetOfOverloadingExists(_, context, nameOfMethodToOverload) {
+function ensureTargetOfOverloadingExistsAndReturn(_, context, nameOfMethodToOverload) {
 
     const isStatic = context.static;
     const typeMeta = retrieveTypeMetadata(_, context);
@@ -106,14 +107,19 @@ function ensureTargetOfOverloadingExistsOnTypeMeta(typeMeta, nameOfMethodToOverl
     return targetPropMeta;
 }
 
-function manipulateOverloading(_, decoratorContext, nameOfMethodToOverload) {
+function validateAndReturnTargetPropMeta(_, decoratorContext, nameOfMethodToOverload) {
 
     ensureOverloadingTakesRightPlace(_, decoratorContext, nameOfMethodToOverload);
-    const targetPropMeta = ensureTargetOfOverloadingExists(_, decoratorContext, nameOfMethodToOverload);
-    const propMeta = propertyDecorator.initMetadata(_, decoratorContext);
-
-
-    setupOverload(_, decoratorContext, propMeta, targetPropMeta);
-
-    return propMeta;
+    return ensureTargetOfOverloadingExistsAndReturn(_, decoratorContext, nameOfMethodToOverload);
 }
+
+// function manipulateOverloading(_, decoratorContext, nameOfMethodToOverload) {
+
+//     const targetPropMeta = validateAndReturnTargetPropMeta(_, decoratorContext, nameOfMethodToOverload);
+//     const propertyDecorator = require('../../libs/propertyDecorator');
+//     const propMeta = propertyDecorator.initMetadata(_, decoratorContext);
+
+//     setupOverload(_, decoratorContext, propMeta, targetPropMeta);
+
+//     return propMeta;
+// }

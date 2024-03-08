@@ -14,7 +14,8 @@ const {
 const { extractFunctionInformations } = require('../utils/function.util.js');
 const { MULTIPLE_DISPATCH, OVERLOAD_APPLIED, PSEUDO_OVERLOADED_METHOD_NAME } = require('./methodOverloading/constant.js');
 const { isPseudoMethod } = require('./methodOverloading/pseudoMethod.lib.js');
-const overload = require('../decorators/overload.js');
+const { validateAndReturnTargetPropMeta } = require('../utils/decorator/overload.util.js');
+//const overload = require('../decorators/overload.js');
 //const { manipulateOverloading } = require('../utils/decorator/overload.util.js');
 
 module.exports = {
@@ -187,11 +188,7 @@ function initIfPseudoMethod(_, decoratorContext, propMeta) {
 
     const overloadedName = getMetadataFootPrintByKey(propMeta, PSEUDO_OVERLOADED_METHOD_NAME);
 
-    try {
-
-        overload(overloadedName)(_, decoratorContext);
-    }
-    catch {}
+    validateAndReturnTargetPropMeta(_, decoratorContext, overloadedName);
 }
 
 /**
