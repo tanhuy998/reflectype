@@ -13,6 +13,7 @@ src/test
 **/*.test.js
 
 .vscode
+.env
 
 package-lock.json
 DOC-REFLECTION.md

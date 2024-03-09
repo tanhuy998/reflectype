@@ -12,6 +12,9 @@ const {FUNC_TRIE, STATISTIC_TABLE} = require('../metadata/registry/function.reg'
 const { setOverloadFootPrint } = require("../../utils/decorator/overload.util");
 const { LEGACY_PROP_META, INHERITANCE_DEPTH } = require("../metadata/constant");
 const { isPseudoMethod } = require("./pseudoMethod.lib");
+const MethodDuplicateDeclarationError = require("./error/methodDuplicateDeclarationError");
+const OverridingNonVirtualMethodError = require("./error/overridingNonVirtualMethodError");
+const debug = require('debug')('pkg:methodOverloading:resolution');
 
 const IS_ENTRY_POINT = '_is_entry_point';
 
@@ -67,7 +70,7 @@ function manipulateMethodVariantBehavior(propName, propMeta) {
         return;
     }
 
-    const remotePropMeta = retrieveRemotePropMeta.call(this, propName, propMeta);
+    const ctxGenericPropMeta = retrieveContextGenericPropMeta.call(this, propName, propMeta);
 
     let statisticTable;
 
@@ -76,9 +79,7 @@ function manipulateMethodVariantBehavior(propName, propMeta) {
          * in this case, the remote propMeta is known as the legacy
          * of the current propMeta which is placed in base class.
          */
-        //createLegacyEntryPoint(remotePropMeta);
-        //createEntryPoint(this, propMeta.name, propMeta);
-        autoDetectEntryPointCreation(propMeta);
+        createContextEntryPoint(propMeta);
         statisticTable = retrieveMethodVariantTableOf(propMeta).statisticTable;
     }
 
@@ -86,9 +87,9 @@ function manipulateMethodVariantBehavior(propName, propMeta) {
      * remotePropMeta could be on base class therefore when registering remotePropMeta,
      * update the state of 
      */
-    registerOverloadVariant(remotePropMeta, [statisticTable]);
+    registerOverloadVariant(ctxGenericPropMeta, [statisticTable]);
     //createEntryPoint(this, remotePropMeta.name, remotePropMeta);
-    autoDetectEntryPointCreation(remotePropMeta);
+    createContextEntryPoint(ctxGenericPropMeta);
     registerOverloadVariant(propMeta);
 }
 
@@ -102,7 +103,7 @@ function manipulateMethodVariantBehavior(propName, propMeta) {
  * 
  * @returns {property_metadata_t}
  */
-function retrieveRemotePropMeta(propName, propMeta) {
+function retrieveContextGenericPropMeta(propName, propMeta) {
 
     if (isOverridingBaseClassMethod.call(this, propName, propMeta)) {
 
@@ -138,7 +139,7 @@ function isOverridingBaseClassMethod(propName, propMeta) {
  * 
  * @param {property_metadata_t} propMeta 
  */
-function autoDetectEntryPointCreation(propMeta) {
+function createContextEntryPoint(propMeta) {
 
     const _class = propMeta.owner.typeMeta.abstract;
     const entryPointTarget = propMeta.static ? _class : _class.prototype;
@@ -249,37 +250,43 @@ function registerOverloadVariant(hostPropMeta, extraStatisticTables = []) {
     const {statisticTable, mappingTable} = retrieveMethodVariantTableOf(hostPropMeta);
     const variantTrie = FUNC_TRIE;
 
-    validate(hostPropMeta);
-
     const endPointNode = mergeFuncVariant(
         hostParamMetaList, 
         variantTrie, 
         [statisticTable, ...extraStatisticTables]
     );
+    
+    const vTable = endPointNode.endpoint.vTable;
 
-    const mappedPropMeta = getOverloadedPropMetaOf(hostPropMeta);
+    const genericPropMeta = retrieveGenericPropMetaOf(hostPropMeta);
+    const genericFuncMeta = genericPropMeta.functionMeta;
 
     if (
-        endPointNode.endpoint.vTable.has(mappedPropMeta.functionMeta)
+        vTable.has(genericFuncMeta)
+        && vTable.get(genericFuncMeta) === genericFuncMeta
     ) {
-
+        /**
+         * generic propMeta repeatedly reasigned to vTable
+         * when evaluating overloading methods,
+         */
         return;
     }
 
-    endPointNode.endpoint.vTable.set(mappedPropMeta.functionMeta, hostFuncMeta);
+    validate(hostPropMeta);
+    vTable.set(genericFuncMeta, hostFuncMeta);
 }
 
 /**
  * 
  * @param {property_metadata_t} propMeta 
  */
-function getOverloadedPropMetaOf(propMeta) {
+function retrieveGenericPropMetaOf(propMeta) {
 
     const typeMeta = propMeta.owner.typeMeta;
     const variantMap = propMeta.static ? typeMeta.methodVariantMaps.static : typeMeta.methodVariantMaps._prototype;
-    const overloadedTargetName = getMetadataFootPrintByKey(propMeta, OVERLOADED_METHOD_NAME) || propMeta.name;
+    const genericMethodName = getMetadataFootPrintByKey(propMeta, OVERLOADED_METHOD_NAME) || propMeta.name;
 
-    return variantMap.mappingTable.get(overloadedTargetName);
+    return variantMap.mappingTable.get(genericMethodName);
 }
 
 /**
@@ -287,32 +294,59 @@ function getOverloadedPropMetaOf(propMeta) {
  * @param {property_metadata_t} propMeta 
  */
 function validate(propMeta) {
-
+    
     const hostFuncMeta = propMeta.functionMeta;
+    const deicdeToOverrideBaseImplementation = getMetadataFootPrintByKey(propMeta, OVERRIDE_APPLIED);
     const hostParamMetaList = getAllParametersMeta(hostFuncMeta);
     const searchedNodeEndpoint = searchForMethodVariant(FUNC_TRIE, hostParamMetaList, paramMeta => paramMeta?.type || Any);
-
+    
     if (!searchedNodeEndpoint) {
 
         return;
     }
 
-    const nearestBasePropMeta = getNearestBasePropMeta(propMeta, searchedNodeEndpoint)
+    const nearestBaseImplementation = getNearestBaseImplementationPropMeta(propMeta, searchedNodeEndpoint)
 
-    if (!nearestBasePropMeta) {
+    if (
+        deicdeToOverrideBaseImplementation
+        && !nearestBaseImplementation
+    ) {
+        
+        throw ReferenceError();
+    }
+    
+    if (
+        !nearestBaseImplementation
+    ) {
 
         return;
     }
 
-    if (nearestBasePropMeta.owner === propMeta.owner) {
-
-        throw new ReferenceError();
+    if (
+        nearestBaseImplementation.owner === propMeta.owner
+    ) {
+        
+        throw new MethodDuplicateDeclarationError(propMeta);
     }
 
-    if (!nearestBasePropMeta.functionMeta.allowNull) {
+    if (
+        !nearestBaseImplementation.functionMeta.allowOverride
+    ) {
 
-        throw new ReferenceError();
+        throw new OverridingNonVirtualMethodError(propMeta, nearestBaseImplementation);
     }
+}
+
+/**
+ * 
+ * @param {property_metadata_t} propMeta 
+ * @param {property_metadata_t} nearestPropMeta 
+ * 
+ * @returns {boolean}
+ */
+function isInnerClassConflitct(propMeta, nearestPropMeta) {
+
+
 }
 
 /**
@@ -322,30 +356,47 @@ function validate(propMeta) {
  * 
  * @returns {?property_metadata_t}
  */
-function getNearestBasePropMeta(propMeta, trieEndpoint) {
+function getNearestBaseImplementationPropMeta(propMeta, trieEndpoint) {
 
     const typeMeta = propMeta.owner.typeMeta;
     const _class = typeMeta.abstract;
     const depth = getMetadataFootPrintByKey(typeMeta, INHERITANCE_DEPTH);
+    const overloadedName = getMetadataFootPrintByKey(propMeta, OVERLOADED_METHOD_NAME);
     
-    let nearestDepth = depth;
+    let nearestDepth = Infinity;
     let nearestFuncMeta;
 
-    for (const funcMeta of trieEndpoint.vTable.keys()) {
-
-        const t = funcMeta.owner.owner.typeMeta;
-        const dpth = getMetadataFootPrintByKey(t, INHERITANCE_DEPTH);
+    for (const [genericFuncMeta, variantFuncMeta] of trieEndpoint.vTable.entries()) {
+        
+        const t = genericFuncMeta.owner.owner.typeMeta;
         const c = t.abstract;
 
+        const dpth = getMetadataFootPrintByKey(t, INHERITANCE_DEPTH);
         const d = depth - dpth;
 
         if (
-            d >= 0 &&
-            _class.prototype instanceof c &&
-            d < nearestDepth
+            propMeta.static !== genericFuncMeta.owner.static
+            || overloadedName !== genericFuncMeta.name
         ) {
+
+            continue;
+        }
+        
+        if (
+            _class === c
+        ) {
+
+            return variantFuncMeta.owner;
+        }
+
+        if (
+            d >= 0
+            && d < nearestDepth
+            && _class.prototype instanceof c
+        ) {
+            
             nearestDepth = d;
-            nearestFuncMeta = funcMeta;
+            nearestFuncMeta = variantFuncMeta;
         }
     }
 

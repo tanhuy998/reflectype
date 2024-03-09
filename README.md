@@ -379,7 +379,7 @@ time average for iterating a an one hundred thousand times empty for loop is 0.6
 *Current development state
 - [x] Explicit type matched arguments
 - [x] Interface type matched arguments
-- [ ] Single dispatch
+- [x] Single dispatch
 - [x] Dynamic dispatch
 - [x] Multiple dispatch
 - [ ] primitive types coercion

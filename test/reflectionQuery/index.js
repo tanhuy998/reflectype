@@ -158,12 +158,13 @@ o.func('1', 1, true)
 console.timeEnd(2)
 
 console.time('total1')
+obj.func('1', 1, true)
 for (let i = 0; i < 1; ++i) {
 
     //console.time(2)
 
     //obj.func(...args);
-    obj.func(obj.prop, new A(), 1)
+    obj.func(new A(), new A(), 1)
 
     //console.timeEnd(2)
 }

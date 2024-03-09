@@ -264,6 +264,11 @@ function function_variant_param_node_endpoint_metadata_t() {
      * @type {Map<function_metadata_t, function_metadata_t>}
      */
     this.vTable = new Map();
+
+    /**
+     * @type {Number}
+     */
+    this.depth;
 }
 
 /**

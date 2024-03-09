@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const { metaOf, function_metadata_t, metadata_t } = require("../reflection/metadata");
 const self = require("../utils/self");
 const config = require('../../config.json');

@@ -145,8 +145,6 @@ function mergeFuncVariant(
   paramMetaList,
   rootTrieNode,
   statisticTables,
-  indexFuncMeta,
-  targetFuncMeta
 ) {
 
     if (hasVariant(rootTrieNode, paramMetaList)) {
@@ -159,13 +157,11 @@ function mergeFuncVariant(
 
     for (const paramMeta of paramMetaList || []) {
 
-        ret = insertTrieNode(ret, paramMeta, statisticTables); //locateNewFuncVariantTrieNode(paramMeta, rootTrieNode);
+        ret = insertTrieNode(ret, paramMeta, statisticTables);
     }
 
     ret.endpoint ??= new function_variant_param_node_endpoint_metadata_t();
-    //const typeMeta = funcMeta.owner.typeMeta;
-    //ret.endpoint.vTable.set(typeMeta, funcMeta);
-    //ret.endpoint.vTable.set(indexFuncMeta, targetFuncMeta);
+    ret.endpoint.depth = ret.depth;
 
     return ret;
 }

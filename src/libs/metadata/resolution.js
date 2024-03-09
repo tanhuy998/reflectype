@@ -129,7 +129,7 @@ function calculateInheritanceDepth(typeMeta) {
     const baseClass = Object.getPrototypeOf(typeMeta.abstract);
     const baseDepth = getMetadataFootPrintByKey(metaOf(baseClass), INHERITANCE_DEPTH);
 
-    setMetadataFootPrint(typeMeta, INHERITANCE_DEPTH, baseDepth >= 0 ? baseDepth : 0);
+    setMetadataFootPrint(typeMeta, INHERITANCE_DEPTH, baseDepth >= 0 ? baseDepth + 1 : 0);
 }
 
 /**

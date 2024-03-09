@@ -193,13 +193,25 @@ class T {
     //     console.log('A')
     // }
 
+
     @parameters({
-        a: B
+        a: String,
+        b: Number,
+        c: Number
     })
-    [METHOD('func')](a) {
+    [METHOD('func')](a, b, c) {
+
+
+    }
+
+    @parameters({
+        param: B
+    })
+    [METHOD('func')](param) {
 
         console.log('B')
     }
+
 
     //@virtual
     @parameters({
