@@ -85,11 +85,19 @@ function method_variant_mapping_table_metadata_t(ref) {
     this.statisticTable = ref?.statisticTable;// = new Map();
 
     /**
+     * contain generic propMeta of decorated methods,
      * mappingTable is evaluated when method decorator decorates the method
      * 
      * @type {Map<string|symbol, property_metadata_t>}
      */
     this.mappingTable = new Map(ref?.mappingTable.entries());
+
+    /**
+     * for manipulating nullable function signature
+     * 
+     * @type {function_variant_param_node_metadata_t}
+     */
+    this.localTrie = ref?.localTrie || new function_variant_param_node_metadata_t();
 }
 
 /**

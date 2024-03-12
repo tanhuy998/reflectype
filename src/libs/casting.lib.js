@@ -109,7 +109,13 @@ function getCastedTypeOf(object) {
     // let ret = typeof f === 'function' ? f() : undefined;
 
     //console.timeEnd(2)
-    return object[CASTED_TYPE] || undefined;
+
+    if (!isValuable(object)) {
+
+        return undefined;
+    }
+
+    return object[CASTED_TYPE];
 }
 
 function releaseTypeCast(object) {
@@ -138,32 +144,28 @@ function static_cast(_t, target) {
         return target;
     }
 
-    if (!matchType(_t, target)) {
+    if (
+        !matchType(_t, target) 
+        && _t !== Object
+        && !isPrimitive(target)
+    ) {
 
         throw new TypeError();
     }
-
-    // let cast_t = _t;
-    // let pre = Date.now();
-
-    // target[CASTED_TYPE] = () => {
-
-    //     const ret = Date.now() === pre ? cast_t : undefined;
-    //     cast_t = undefined;
-    //     pre = undefined;
-
-    //     return ret;
-    // };
-
-    // return target;
-    //console.time('cast');
-    const ret = new Proxy(target, {
-        [CASTED_TYPE]: _t,
-        ...traps,
-    });
+    
+    const ret = new Proxy(
+        isPrimitive(target) ? new (getTypeOf(target))(target) : target
+        ,
+        {
+            [CASTED_TYPE]: _t,
+            ...traps,
+        }
+    );
     //console.timeEnd('cast');
     return ret;
 }
+
+console.log()
 
 /**
  * 
@@ -186,5 +188,5 @@ function const_cast(target) {
 
 function meetPrerequisites(target) {
 
-    return !isPrimitive(target) && isValuable(target)
+    return isValuable(target)
 }

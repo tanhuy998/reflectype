@@ -113,6 +113,7 @@ console.log(metaOf(H).methodVariantMaps._prototype.statisticTable)
 
 const o = new T();
 const obj = new H();
+const c = new C();
 
 obj.prop = new A();
 
@@ -129,8 +130,8 @@ console.log(['000000000000000000000000000000000000000000000000000000'])
 const args = [dynamic_cast(obj.prop), new A(), 1];
 console.time(2)
 
-H.stFunc(1)
-T.stFunc(1)
+// H.stFunc(1)
+// T.stFunc(1)
 
 // for (const [key, value] of diveTrieByArguments(H, mRef.metadata, args)?.map.entries() || [[]]) {
 
@@ -153,13 +154,17 @@ class Temp {
 
 const t = new Temp();
 
-o.func('1', 1, true)
+// o.func('1', 1, true)
+// obj.func('1', 1, true)
+c.func(undefined, 1, true);
 
 console.timeEnd(2)
 
 console.time('total1')
-obj.func('1', 1, true)
-for (let i = 0; i < 1; ++i) {
+
+//c.func(new A(), new A(), 1)
+
+for (let i = 0; i < 0; ++i) {
 
     //console.time(2)
 
@@ -171,7 +176,7 @@ for (let i = 0; i < 1; ++i) {
 console.timeEnd('total1')
 
 console.time('total2')
-for (let i = 0; i < 100000; ++i) {
+for (let i = 0; i < 1000; ++i) {
 
     //console.time(2)
 
@@ -189,7 +194,8 @@ console.timeEnd('total2')
 // //console.log(ref.metadata.properties.func)
 // console.log(['statistic table'], prototypeMap.statisticTable)
 
-console.log(v8.getHeapStatistics());
+//console.log(v8.getHeapStatistics());
+console.log(process.memoryUsage())
 
 
 

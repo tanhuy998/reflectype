@@ -66,14 +66,14 @@ module.exports = {
 
 function getTypeOf(value) {
 
-    if (typeof value === 'object') {
-
-        return value.constructor;
-    }
-
     if (!isValuable(value)) {
 
         return value;
+    }
+
+    if (typeof value === 'object') {
+
+        return value.constructor;
     }
 
     if (isPrimitive(value)) {

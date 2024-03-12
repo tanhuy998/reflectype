@@ -3,7 +3,7 @@ const { property_metadata_t, function_metadata_t, function_variant_param_node_me
 const Any = require("../../type/any");
 const { DECORATED_VALUE } = require("../constant");
 const { getMetadataFootPrintByKey } = require("../footPrint");
-const { OVERLOAD_APPLIED, OVERLOAD_TARGET, OVERRIDE_APPLIED } = require("./constant");
+const { OVERLOAD_APPLIED, OVERLOAD_TARGET, OVERRIDE_APPLIED, NULLABLE } = require("./constant");
 const { isObjectLike, isValuable, isObject } = require("../type");
 const {getAllParametersMeta} = require('../functionParam.lib');
 const { addStatisticalPieace } = require("./methodArgsEstimation.lib");
@@ -136,8 +136,6 @@ function hasVariant(rootTrieNode, paramTypeList) {
  * @param {Array<parameter_metadata_t>} paramMetaList 
  * @param {function_metadata_t} rootTrieNode 
  * @param {?Array<Map<Function, number>>} statisticTables
- * @param {function_metadata_t} indexFuncMeta
- * @param {function_metadata_t} targetFuncMeta
  * 
  * @returns {function_variant_param_node_metadata_t}
  */
@@ -170,7 +168,7 @@ function mergeFuncVariant(
  * Insert a node next to the given node, this is unsafe function and is not exposed
  * outside the module.
  * 
- * @param {function_variant_param_node_metadata_t} currentNode 
+ * @param {function_variant_param_node_metadata_t} currentNode insertTrieNode
  * @param {parameter_metadata_t?} paraMeta 
  * @param {?Array<Map<Function, number>>} statisticTables
  * 
@@ -181,13 +179,30 @@ function insertTrieNode(currentNode, paraMeta, statisticTables = []) {
 
     addStatisticalPieace(paraMeta, currentNode, statisticTables);
 
-    if (currentNode.current.has(_type)) {
+    const current = currentNode.current;
 
-        return currentNode.current.get(_type);
+    if (current.has(_type)) {
+
+        return current.get(_type);
     }
 
     const nextNode = new function_variant_param_node_metadata_t(currentNode);
-    currentNode.current.set(_type, nextNode);
+
+    // if (
+    //     paraMeta.allowNull
+    //     && current.has(NULLABLE)
+    // ) {
+
+    //     throw new Error();
+    // }
+    // else if (
+    //     !current.has(NULLABLE)
+    // ) {
+
+    //     current.set(NULLABLE, nextNode);
+    // }
+
+    current.set(_type, nextNode);
 
     return nextNode;
 

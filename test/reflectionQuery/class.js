@@ -212,6 +212,13 @@ class T {
         console.log('B')
     }
 
+    @parameters({
+        a: A
+    })
+    [METHOD('func')](a) {
+
+        console.log('T dispose')
+    }
 
     //@virtual
     @parameters({
@@ -270,7 +277,7 @@ class H extends T {
     }
 
     @parameters({
-        a: String,
+        a: [String, allowNull],
         b: Number,
         c: Boolean
     })
@@ -306,6 +313,22 @@ class H extends T {
     [METHOD('func')](param1, b, c) {
 
         console.log('7');
+
+    }
+
+    
+}
+
+class C extends H {
+
+    @parameters({
+        a: [String, allowNull],
+        b: Number,
+        c: Boolean
+    })
+    func(a, b, c) {
+
+        console.log('C override');
     }
 
     @parameters({
@@ -327,4 +350,4 @@ function dec(_, context) {
 
 //module.exports = {A}
 
-module.exports = {H, T, A, B, Z, Y} // {A, B, C, D, E, F, G, H};
+module.exports = {H, T, A, B, C, Z, Y} // {A, B, C, D, E, F, G, H};

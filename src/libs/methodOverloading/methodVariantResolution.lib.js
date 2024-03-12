@@ -1,19 +1,27 @@
-const MetadataAspect = require("../../metadata/aspect/metadataAspect");
-const { property_metadata_t, function_metadata_t, function_variant_param_node_metadata_t, parameter_metadata_t, function_variant_param_node_endpoint_metadata_t, method_variant_map_metadata_t, metaOf, metadata_t, method_variant_mapping_table_metadata_t } = require("../../reflection/metadata");
+const { 
+    property_metadata_t, 
+    function_variant_param_node_metadata_t, 
+    function_variant_param_node_endpoint_metadata_t, 
+    method_variant_map_metadata_t, 
+    metaOf, 
+    metadata_t, 
+    method_variant_mapping_table_metadata_t, 
+    parameter_metadata_t
+} = require("../../reflection/metadata");
 const Any = require("../../type/any");
 const { DECORATED_VALUE, DECORATOR_APPLIED } = require("../constant");
 const { getMetadataFootPrintByKey } = require("../footPrint");
-const { OVERLOAD_APPLIED, OVERLOAD_TARGET, OVERRIDE_APPLIED, PSEUDO_OVERLOADED_METHOD_NAME, OVERLOADED_METHOD_NAME } = require("./constant");
+const { OVERLOAD_APPLIED, OVERLOAD_TARGET, OVERRIDE_APPLIED, OVERLOADED_METHOD_NAME, NULLABLE } = require("./constant");
 const { isObjectLike, isFirstClass, isObjectKey, isValuable } = require("../type");
 const {getAllParametersMeta} = require('../functionParam.lib');
-const { locateNewFuncVariantTrieNode, searchForMethodVariant, hasVariant, mergeFuncVariant } = require("./methodVariantTrieOperation.lib");
+const { searchForMethodVariant, mergeFuncVariant } = require("./methodVariantTrieOperation.lib");
 const { dispatchMethodVariant } = require("./methodVariant.lib");
-const {FUNC_TRIE, STATISTIC_TABLE} = require('../metadata/registry/function.reg');
-const { setOverloadFootPrint } = require("../../utils/decorator/overload.util");
+const {FUNC_TRIE} = require('../metadata/registry/function.reg');
 const { LEGACY_PROP_META, INHERITANCE_DEPTH } = require("../metadata/constant");
 const { isPseudoMethod } = require("./pseudoMethod.lib");
 const MethodDuplicateDeclarationError = require("./error/methodDuplicateDeclarationError");
 const OverridingNonVirtualMethodError = require("./error/overridingNonVirtualMethodError");
+const AmbigousSignatureConflictError = require("./error/ambigousSignatureConfilictError");
 const debug = require('debug')('pkg:methodOverloading:resolution');
 
 const IS_ENTRY_POINT = '_is_entry_point';
@@ -240,15 +248,17 @@ function manipulatePseudoOveloading(propName, propMeta) {
  * @param {property_metadata_t} hostPropMeta 
  * @param {property_metadata_t} remotePropMeta 
  * @param {Array<Map<Function, Number>>} extraStatisticTables
+ * @param {boolean} local
  * 
  * @returns {function_variant_param_node_metadata_t}
  */
-function registerOverloadVariant(hostPropMeta, extraStatisticTables = []) {
+function registerOverloadVariant(hostPropMeta, extraStatisticTables = [], local = false) {
 
     const hostFuncMeta = hostPropMeta.functionMeta;
-    const hostParamMetaList = getAllParametersMeta(hostFuncMeta);
-    const {statisticTable, mappingTable} = retrieveMethodVariantTableOf(hostPropMeta);
-    const variantTrie = FUNC_TRIE;
+    const hostParamMetaList = getContextBaseParameterMetas(hostFuncMeta, local);
+    const methodVariantTable = retrieveMethodVariantTableOf(hostPropMeta);
+    const {statisticTable, localTrie} = methodVariantTable;
+    const variantTrie = local === true ? localTrie : FUNC_TRIE;
 
     const endPointNode = mergeFuncVariant(
         hostParamMetaList, 
@@ -264,17 +274,52 @@ function registerOverloadVariant(hostPropMeta, extraStatisticTables = []) {
     if (
         vTable.has(genericFuncMeta)
         && vTable.get(genericFuncMeta) === genericFuncMeta
+        && local !== true
     ) {
-        /**
-         * generic propMeta repeatedly reasigned to vTable
-         * when evaluating overloading methods,
-         */
-        return;
+
+        if (local !== true) {
+            /**
+             * generic propMeta repeatedly reasigned to vTable
+             * when evaluating overloading methods,
+             */
+            return;
+        }
+
+        throw new AmbigousSignatureConflictError();
     }
 
-    validate(hostPropMeta);
+    if (
+        local !== true
+    ) {
+
+        registerOverloadVariant(hostPropMeta, extraStatisticTables, true);
+    }
+
+    validateWithBaseClassImplemetation(hostPropMeta);
     vTable.set(genericFuncMeta, hostFuncMeta);
 }
+
+/**
+ * 
+ * @param {property_metadata_t} hostFuncMeta 
+ * @param {boolean} local 
+ * @returns {Array<parameter_metadata_t>}
+ */
+function getContextBaseParameterMetas(hostFuncMeta, local = false) {
+
+    return getAllParametersMeta(hostFuncMeta)
+        ?.map(meta => {
+
+            if (local !== true || meta?.allowNull !== true) {
+
+                return meta;
+            }
+
+            const ret = new parameter_metadata_t();
+            ret.type = NULLABLE;
+            return ret;
+        });
+}``
 
 /**
  * 
@@ -293,7 +338,7 @@ function retrieveGenericPropMetaOf(propMeta) {
  * 
  * @param {property_metadata_t} propMeta 
  */
-function validate(propMeta) {
+function validateWithBaseClassImplemetation(propMeta) {
     
     const hostFuncMeta = propMeta.functionMeta;
     const deicdeToOverrideBaseImplementation = getMetadataFootPrintByKey(propMeta, OVERRIDE_APPLIED);
@@ -531,4 +576,7 @@ function manipulateMethodVariantsStatisticTables(typeMeta) {
     // console.log(currentClassMethodVariantMaps._prototype === baseClassMethodVariantMaps._prototype)
     currentClassMethodVariantMaps._prototype.mappingTable = new Map(Array.from(baseClassMethodVariantMaps._prototype.mappingTable.entries()));
     currentClassMethodVariantMaps.static.mappingTable = new Map(Array.from(baseClassMethodVariantMaps.static.mappingTable.entries()));
+
+    currentClassMethodVariantMaps._prototype.localTrie = baseClassMethodVariantMaps._prototype.localTrie;
+    currentClassMethodVariantMaps.static.localTrie = baseClassMethodVariantMaps.static.localTrie;
 }

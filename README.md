@@ -2,6 +2,12 @@
 
 ### Runtime type checking for Javascript.
 
+## Features
+
+- Runtime type check
+- Interface
+- Method overloading
+
 ### Prerequisites
 
 #### Babel version
@@ -37,7 +43,6 @@ This is configuration dependencies when developing this pacakage
     ]
 }
 ```
-
 
 ## Usage
 
@@ -334,61 +339,68 @@ class A {
 }
 ```
 
-## \[Experimental\] Method Overloading (Multiple Dispatch) 
+## Method Overloading (Multiple Dispatch) 
 
-Test directory {root}/test/reflectionQuery
+Reflectype provides the ability to oeverloading methods like other object oriented languages (C++, C#, Java). The concept and keywords inspired mostly from C# language.
 
-```basg
-# firstly, install dev packages
+### Usage
 
-npm install --only=dev
+### Origin and Pseudo Method
 
-# then run 
+```js
+const {METHOD, returnType, parameters} = require('reflectype');
 
-npm run test-reflect-query
+class A {
+
+    @returnType(Number)
+    func() {
+        /**
+         * this is origin method
+         */
+    }
+
+    @parameters({
+        param1: String
+    })
+    [METHOD('func')](param1) {
+
+        /**
+         * this is pseudo method that is an overloaded version 
+         * of the A.func() method that has 1 parameter accepts 
+         * string type.
+         */
+    }
+}
 ```
 
+### Overloading Without Declaring Pseudo Method
+
+```js
+class A {
+
+    @returnType(Number)
+    func() {
+        /**
+         * this is origin method
+         */
+    }
+
+    @overload('func')
+    @parameters({
+        param1: String
+    })
+    anotherMethod(param1) {
+
+        /**
+         * this is pseudo method that is an overloaded version 
+         * of the A.func() method that has 1 parameter accepts 
+         * string type.
+         */
+    }
+}
+```
 
 Maxium number of type hinted parameter for each method is 32 because part of the overall algorithm for method overloading designed in this package is heuristic approach, the decision for choosing the best match method signature for a particular argument list depends mostly on the statistic table that uses numbers (32 bit) to store indexes of a specific type which is potentially been declared.
-
-## Current Benchmark State
-
-script tested
-
-```
-npm run test-reflect-query
-```
-
-*new benchmark
-
-The new benchmark focused on operation's time of each phase of the algorithm. 
-
-Execution time in detail when dispatching a 3 parameters empty body method for one hundred thousand times in 10x3 dimensions method space (when JIT do it's job in optimizing codes).
-
-- estimation phase: 0.004ms (40%)
-- retrieve signature (lookup signature using estimated datas): 0.001ms (10%)
-- down cast arguments: 0.003ms (30%)
-- invoke: 0.002ms (20%)
-
-It seems like the operation time of the argument down casting phase approximately equal to the estimation's time because the two operation is identical. Time complexity of the two operation is O(mm) with m is number of arguments and n is the number of each argument's class inheritance chain.
-
-Time average for invoking such a method is 0.010ms.
-
-time average for iterating a an one hundred thousand times empty for loop is 0.6ms.
-
-*Current development state
-- [x] Explicit type matched arguments
-- [x] Interface type matched arguments
-- [x] Single dispatch
-- [x] Dynamic dispatch
-- [x] Multiple dispatch
-- [ ] primitive types coercion
-
-New approaches:
-- [ ] argument type caching
-- [x] static type binding (pure method overloading)
-- [ ] evaluate Any type parameters
-- [ ] interface method strict parameters
 
 ### Pure Method Overloading (Static Type Binding)
 
@@ -397,12 +409,8 @@ Cosider the following example written in C#
 ```C#
 using System;
 
-public interface IFoo {
 
-    public void foo();
-}
-
-public class A: IFoo {
+public class A {
 
     public virtual void foo() {
 
@@ -470,13 +478,9 @@ script for test
 npm run test-method-overloading-static-type-cast
 ```
 
-```JS
-class IFoo extends Interface {
+```js
+const {METHOD, parameters, type} = require('reflectype');
 
-    foo() {}
-}
-
-@Implement(IDisposable)
 class A {
 
     foo() {}
@@ -495,7 +499,7 @@ class Test {
     @parameters({
        param: A
     })
-    func(param) {
+    static func(param) {
 
         console.log('overloaded for A');
     }
@@ -503,7 +507,7 @@ class Test {
     @parameters({
         param1: B,
     })
-    [METHOD('func')](param1) {
+    static [METHOD('func')](param1) {
 
         console.log('overloaded for B');   
     }
@@ -513,11 +517,8 @@ class Test {
 const T_obj = new T();
 T_obj.prop = new B();
 
-const test_method_overload_obj = new Test();
-```
-```JS
-test_method_overload_obj.func(T_obj.prop);
-test_method_overload_obj.func(new B());
+T.func(T_obj.prop);
+T.func(new B());
 ```
 result
 
@@ -528,64 +529,62 @@ overloaded for B
 
 The code above is the Javascript conversion of the illustative C# example before. As a result, contents printed to the console is the same as the C#'s version's. Any type hinted properties of object are `static_cast`ed to the type where they are stored. In the JS example, the object that is stored at `T_obj.prop` is type of `B` but T_obj.prop type if determined as `A` so that when passing literally `test_method_overload_obj.func(T_obj.prop);` the type of the object stored at `T_obj.prop` is casted down to `A` and therefore the method with signature `func(param: A)` is dispathed.
 
-### Method Signature
-
 ### Multiple Dispatch Concept
 
-### Origin and Pseudo Method
-
-```js
-class A {
-
-    @returnType(Number)
-    func() {
-        /**
-         * this is origin method
-         */
-    }
-
-    @parameters({
-        param1: String
-    })
-    [METHOD('func')](param1) {
-
-        /**
-         * this is pseudo method that is an overloaded version 
-         * of the A.func() method that has 1 parameter accepts 
-         * string type.
-         */
-    }
-}
-```
-
-### Overloading Without Declaring Pseudo Method
-
-```js
-class A {
-
-    @returnType(Number)
-    func() {
-        /**
-         * this is origin method
-         */
-    }
-
-    @overload('func')
-    @parameters({
-        param1: String
-    })
-    anotherMethod(param1) {
-
-        /**
-         * this is pseudo method that is an overloaded version 
-         * of the A.func() method that has 1 parameter accepts 
-         * string type.
-         */
-    }
-}
-```
-
 ### Method Overloading Resolution
+## Current Benchmark State
 
-### Primitive Type Coercion
+script tested
 
+Test directory {root}/test/reflectionQuery
+
+```bash
+# firstly, install dev packages
+
+npm install --only=dev
+
+# then run 
+
+npm run test-reflect-query
+```
+
+*new benchmark
+
+The new benchmark focused on operation's time of each phase of the algorithm. 
+
+Execution time in detail when dispatching a 3 parameters empty body method for one hundred thousand times in 10x3 dimensions method space (when JIT do it's job in optimizing codes).
+
+Bencmark enviroment
+
+- Operating system: Ubuntu 23.10 linux kernel 6.5.0-25-generic (with performance mode)
+- Node version: v20.11.1
+
+
+Detail execution time:
+
+- estimation phase: 0.002ms (50%)
+- retrieving most specific applicable signature (lookup signature using estimated datas): 0.001ms (25%)
+- down cast arguments: 0.001ms (25%)
+
+The overall time for retrieving the most specific appplicable method for each request is around 0.004ms when requesting one hundred thousand method invocations.
+
+
+It seems like the operation time of the argument down casting phase approximately equal to the estimation's time because the two operation is identical. Time complexity of the two operation is O(mm) with m is number of arguments and n is the number of each argument's class inheritance chain.
+
+Time average for invoking such a method is 0.010ms.
+
+time average for iterating a an one hundred thousand times empty for loop is 0.6ms.
+
+*Current development state
+- [x] Explicit type matched arguments
+- [x] Interface type matched arguments
+- [x] Single dispatch
+- [x] Dynamic dispatch
+- [x] Multiple dispatch
+- [ ] primitive types coercion
+
+New approaches:
+- [ ] argument type caching
+- [x] static type binding (pure method overloading)
+- [ ] evaluate Any type parameters
+- [ ] interface method strict parameters

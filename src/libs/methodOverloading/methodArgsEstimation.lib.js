@@ -1,11 +1,12 @@
 const { Interface } = require("../../interface");
-const { parameter_metadata_t, function_variant_param_node_metadata_t, property_metadata_t, metaOf } = require("../../reflection/metadata");
+const { parameter_metadata_t, function_variant_param_node_metadata_t, property_metadata_t, metaOf, function_metadata_t } = require("../../reflection/metadata");
 const Any = require("../../type/any");
 const { getCastedTypeOf } = require("../casting.lib");
 const { STATISTIC_TABLE } = require("../metadata/registry/function.reg");
 const { getTypeOf, isValuable } = require("../type");
-const { ESTIMATION_MASS } = require("./constant");
+const { ESTIMATION_MASS, NULLABLE } = require("./constant");
 const MethodVariantMismatchError = require("./error/methodVariantMismatchError");
+const { estimation_complex_t, estimation_report_t } = require("./estimationFactor");
 
 /**
  * because of using a number (which is 4 bytes floating point) as 
@@ -64,6 +65,11 @@ function addStatisticalPieace(paramMeta, variantNodeMeta, statisticTables = []) 
         
             ensureStatisticTableExists(table);
             acknowledge(paramMeta.type, variantNodeMeta.depth, table);
+
+            if (paramMeta.allowNull) {
+
+                acknowledge(NULLABLE, variantNodeMeta.depth, table);
+            }
         }
         catch (e) {
     
@@ -86,7 +92,6 @@ function typeStatisticallyExistsOn(statisticTable, _type, index = 0) {
         ensureStatisticTableExists(statisticTable);
 
         const targetPiece = statisticTable.get(_type) || 0;
-        //console.log(_type, statisticTable.get(_type), statisticTable)
         const targetBit = (1 << index);
 
         return (targetPiece & targetBit) === targetBit;
@@ -103,7 +108,7 @@ function typeStatisticallyExistsOn(statisticTable, _type, index = 0) {
  * @param {Map<Function, number>} statisticTable 
  */
 function acknowledge(_type, index = 0, statisticTable) {
-    //console.log(index, _type);    
+   
     const targetPiece = statisticTable.get(_type) || 0;
 
     statisticTable.set(_type, (1 << index) | targetPiece);
@@ -132,13 +137,21 @@ function getVariantMapOf(propMeta) {
     return propMeta.static ? variantMaps?.static : variantMaps?._prototype;
 }
 
-
+/**
+ * 
+ * @param {function_metadata_t} funcMeta 
+ * @param {Array<any>} args 
+ * @returns {estimation_report_t?}
+ */
 function estimateArgs(funcMeta, args = []) {
 
-    //const statisticTable = getVariantMapOf(propMeta)?.statisticTable;
+    if (args.length === 0) {
+
+        return [];
+    }
+    //console.log(args)
     const statisticTable = getVariantMapOf(funcMeta.owner)?.statisticTable;
-    //const statisticTable = STATISTIC_TABLE;
-    //console.log(['stastitic table'], statisticTable)
+
     if (!statisticTable) {
         
         throw new ReferenceError();
@@ -147,30 +160,34 @@ function estimateArgs(funcMeta, args = []) {
     let ret;
     let argMasses;
     let index = 0;
-    //console.log(funcMeta.owner.owner.typeMeta.methodVariantMaps.static);
+
+    let hasNullable;
+    
     for (const argVal of args || []) {
 
-        const estimatedTypes = estimateArgType(argVal, index, statisticTable);
+        const estimationPiece = estimateArgType(argVal, index, statisticTable);
         
         if (
-            !Array.isArray(estimatedTypes) ||
-            estimatedTypes.length === 0
+            !Array.isArray(estimationPiece) ||
+            estimationPiece.length === 0
         ) {
             /**
              * throwing error here in order to 
              */
-            console.log(ret)
-            throw new MethodVariantMismatchError(funcMeta, ret);
+            
+            //throw new MethodVariantMismatchError(funcMeta, ret);
+            return undefined;
         }
-
-        (ret ||= []).push(estimatedTypes);
-
-        (argMasses ||= []).push(estimatedTypes[0]?.[ESTIMATION_MASS]);
+        
+        hasNullable ||= estimationPiece[NULLABLE];
+        (ret ||= []).push(estimationPiece);
+        (argMasses ||= []).push(estimationPiece[ESTIMATION_MASS]);
 
         ++index;
     }
     
-    return [ret, argMasses];
+    //return [ret, argMasses, hasNullable];
+    return new estimation_report_t(ret, argMasses, hasNullable);
     //return ret;
 }
 
@@ -187,40 +204,81 @@ function calculateDelta() {
  */
 function diveInheritanceChain(_type, index, statisticTable, bias = false) {
 
-    if (!isValuable(_type)) {
+    // if (!isValuable(_type)) {
 
-        return undefined;
-    }
-
+    //     return undefined;
+    // }
+    //console.log([], _type)
     let ret;
     let currentType = _type;
-    let delta = bias ? bias + INTERFACE_BIAS : 0;
+    //let delta = bias >= 0  ? bias + INTERFACE_BIAS : 0;
+    let delta = typeof bias === 'number' ? bias + INTERFACE_BIAS : 0;
+    let mass = 0;
+
+    let isNullable;
 
     while (
         currentType !== Object.getPrototypeOf(Function)
+        && currentType !== NULLABLE
     ) {
         
-        if (
-            typeStatisticallyExistsOn(statisticTable, currentType, index)
-        ) {
-            //console.log(['choose'], currentType)
-            (ret ||= []).push({
-                type: currentType,
-                delta,
-                imaginary: 0
-            });
-        }
+        // if (
+        //     typeStatisticallyExistsOn(statisticTable, currentType, index)
+        // ) {
+
+        //     // (ret ||= []).push({
+        //     //     type: currentType,
+        //     //     delta,
+        //     //     imaginary: 0
+        //     // });
+        //     (ret ||= []).push(new estimation_complex_t(
+        //         currentType, delta, 0
+        //     ));
+        // }
+        ret = decideToChoose(currentType, index, statisticTable, delta, ret);
 
         ++delta;
+        ++mass;
         currentType = Object.getPrototypeOf(currentType);
+    }
+
+    if (typeof _type === 'function') {
+        
+        ret = decideToChoose(Object, index, statisticTable, delta, ret);
+
+        ++mass;
+    } 
+    else {
+        /**
+         * when _type is not function, it means the argument passed to 
+         * the generic function is type of nullable (null or undefined)
+         */
+        ret = decideToChoose(NULLABLE, index, statisticTable, 0, ret);
+        isNullable = Array.isArray(ret) && ret.length === 1;
     }
 
     if (Array.isArray(ret)) {
         
-        ret[ESTIMATION_MASS] = delta;
+        ret[ESTIMATION_MASS] = mass;
+        ret[NULLABLE] = isNullable;
     }
 
     return ret;
+}
+
+
+function decideToChoose(_type, index, statisticTable, delta, estimationPiece) {
+
+    if (
+        typeStatisticallyExistsOn(statisticTable, _type, index)
+    ) {
+
+        (estimationPiece ||= []).push(new estimation_complex_t(
+            _type, delta, 0
+        ));
+    }   
+
+    return estimationPiece;
 }
 
 /**
@@ -233,7 +291,56 @@ function diveInheritanceChain(_type, index, statisticTable, bias = false) {
  */
 function estimateArgType(argVal, index = 0, statisticTable) {
 
-    // let ret = _estimatePotentialType(argVal, index, statisticTable);
+    let ret;
+    
+    try {
+        //ensureStatisticTableExists(statisticTable);
+        const _type = getCastedTypeOf(argVal) || getTypeOf(argVal) || NULLABLE;
+        //console.log(_type)
+        ret = diveInheritanceChain(_type, index, statisticTable);
+
+        if (
+            typeof _type !== 'function'
+            || _type instanceof Interface
+        ) {
+
+            throw undefined;
+        }
+
+        ret = diveInterfaces(argVal, index, statisticTable, ret);
+        
+        // for (const intf of getAllInterfacesOf(argVal) || []) {
+
+        //     ret = [...(ret||[]), ...(diveInheritanceChain(intf, index, statisticTable, ret?.[ESTIMATION_MASS]) || [])];
+        //     //(ret ??= []).push(...(diveInheritanceChain(intf, index, statisticTable, ret?.[ESTIMATION_MASS]) || []));
+        // }
+    }
+    catch (e){}
+    finally {
+
+        if (
+            (!Array.isArray(ret) || ret.length === 0)
+            &&
+            typeStatisticallyExistsOn(statisticTable, Any, index)
+        ) {
+            /**
+             * when there no types defined in the index, 
+             * check for the existence of Any in the variant trie.
+             */
+            // (ret ??= []).push({
+            //     type: Any,
+            //     delta: Infinity,
+            //     imaginary: 1,
+            // });
+            (ret ??= []).push(new estimation_complex_t(
+                Any, Infinity, 1
+            ))
+        }
+        
+        return ret;
+    }
+
+        // let ret = _estimatePotentialType(argVal, index, statisticTable);
     
     // if (
     //     (!Array.isArray(ret) || ret.length === 0)
@@ -252,50 +359,38 @@ function estimateArgType(argVal, index = 0, statisticTable) {
     // }
 
     // return ret;
+}
 
-    let ret;
+/**
+ * 
+ * @param {any} argVal 
+ * @param {Map<Function, Number>} statisticTable
+ * @returns {Array?}
+ */
+function diveInterfaces(argVal, index, statisticTable, placeHolder) {
 
-    try {
-        ensureStatisticTableExists(statisticTable);
-        //throwIfCastedTypeExist(argVal);        
-        //console.time(1)
-        const _type = getCastedTypeOf(argVal) || getTypeOf(argVal);
-        //const _type = getTypeOf(argVal)
-        //console.timeEnd(1)
-        ret = diveInheritanceChain(_type/*getTypeOf(argVal)*/, index, statisticTable);
+    for (const intf of getAllInterfacesOf(argVal) || []) {
 
-        if (_type instanceof Interface) {
-
-            throw undefined;
-        }
-
-        for (const intf of getAllInterfacesOf(argVal) || []) {
-
-            ret = [...(ret||[]), ...(diveInheritanceChain(intf, index, statisticTable, ret?.[ESTIMATION_MASS]) || [])];
-            //(ret || []).push(...(diveInheritanceChain(intf, index, statisticTable, ret?.[ESTIMATION_MASS]) || []));
-        }
-    }
-    catch {}
-    finally {
+        const estimatedIntfs = diveInheritanceChain(intf, index, statisticTable, placeHolder?.[ESTIMATION_MASS]);
+        //const estimatedIntfs = diveInheritanceChain(intf, index, statisticTable, true);
 
         if (
-            (!Array.isArray(ret) || ret.length === 0)
-            &&
-            typeStatisticallyExistsOn(statisticTable, Any, index)
+            !Array.isArray(estimatedIntfs) 
+            || !estimatedIntfs.length === 0
         ) {
-            /**
-             * when there no types defined in the index, 
-             * check for the existence of Any in the variant trie.
-             */
-            (ret ??= []).push({
-                type: Any,
-                delta: Infinity,
-                imaginary: 1,
-            });
+
+            continue;
         }
-        
-        return ret;
+
+        if (!Array.isArray(placeHolder)) {
+
+            placeHolder = [];
+        }
+
+        placeHolder.push(...estimatedIntfs);
     }
+    
+    return placeHolder;
 }
 
 /**

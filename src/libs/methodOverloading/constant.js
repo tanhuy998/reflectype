@@ -19,6 +19,7 @@ module.exports = {
     ESTIMATION_MASS: Symbol('_estimation_mass'),
     OVERRIDE: '_is_override_method',
     OVERLOADED_METHOD_NAME: "_overloaded_method_name",
+    NULLABLE: Symbol('NULLABLE'),
 }
 
 

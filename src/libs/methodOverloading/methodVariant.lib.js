@@ -1,6 +1,12 @@
-const { property_metadata_t, function_variant_param_node_metadata_t, metaOf, function_variant_param_node_endpoint_metadata_t, function_metadata_t, parameter_metadata_t, metadata_t } = require("../../reflection/metadata");
-//const { estimateArgType } = require("./methodArgsEstimation.lib.lib");
-const { retrieveTrie } = require("./methodVariantTrieOperation.lib");
+const { 
+    property_metadata_t, 
+    function_variant_param_node_metadata_t, 
+    metaOf, 
+    function_variant_param_node_endpoint_metadata_t, 
+    function_metadata_t, 
+    parameter_metadata_t, 
+    metadata_t 
+} = require("../../reflection/metadata");
 const { getTypeOf, isValuable } = require("../type");
 const { estimateArgs } = require("./methodArgsEstimation.lib");
 const { Interface } = require("../../interface");
@@ -12,40 +18,8 @@ const { getMetadataFootPrintByKey } = require("../footPrint");
 const { DECORATED_VALUE } = require("../constant");
 const { Any } = require("../../type");
 const { static_cast } = require("../casting.lib");
-const {STATISTIC_TABLE, FUNC_TRIE} = require('../metadata/registry/function.reg');
-
-/**
- * because of using a number (which is 4 bytes floating point) as 
- * statistic rows of statistic table therefore the maximum parameters 
- * for the estimation is 32, so bias for interface delta will
- * be 1 divided to 32 in order to not only mark method variants with interface has 
- * less priority than traditional classes but also not affect much in the calculated
- * distance between arguments and the method variant's signature. The less distances betwwen
- * arguments and signature, the more priority the signature is and when parameters reach 
- * 32 Interfaces, the distance just increased by 1 (this case is hard to happen in real application).
- * 
- * eg. the following pseudo code represent the issue.
- * 
- * class Foo implements IDisposable
- * 
- * given 2 signatures
- * a = (Number, Foo, String)
- * b = (Number, IDisposable, String)
- * 
- * given an arguments list determined args = [1, new Foo(), 'foo']
- * 
- * distance(args, a) = delta(args[0], a[0]) + delta(args[1], a[1]) + delta(args[2], a[2]) 
- *    = 0 + 0 + 0 
- *    = 0
- * 
- * distance(args, b) = delta(args[0], b[0]) + delta(args[1], b[1]) + delta(args[2], b[2])
- *    = 0 + (0+1/32) + 0 
- *    = 1/32
- * 
- * as we can see, the two signatures a and b are relavant to each other, but a has more
- * priority than b because types of signature a is more explicit than b's types.
- */
-const INTERFACE_BIAS = 1/32;
+const {FUNC_TRIE} = require('../metadata/registry/function.reg');
+const { function_signature_vector, estimation_report_t } = require("./estimationFactor");
 
 module.exports = {
     dispatchMethodVariant,
@@ -71,9 +45,9 @@ function dispatchMethodVariant(binder, propMeta, args) {
             
             throw new MethodVariantMismatchError();
         }
-
+        console.time('extract vtable')
         const funcMeta = extractFuncMeta(binder, trieEndpoint, propMeta, args);
-
+        console.timeEnd('extract vtable')
         //const funcMeta = trieEndpoint.vTable.get(propMeta.functionMeta)
         return invoke(funcMeta, binder, args);
     }
@@ -132,16 +106,21 @@ function extractFuncMeta(binder, trieEndpoint, propMeta, args) {
  * @param {Array<any>} args
  */
 function invoke(funcMeta, bindObject, args) {
+
     console.time('prepare invoke')
     /**@type {function} */
     const actualFunc = getMetadataFootPrintByKey(funcMeta.owner, DECORATED_VALUE);
-    //const paramMetas = getAllParametersMeta(funcMeta);
+    const paramMetaList = getAllParametersMeta(funcMeta);
     console.timeEnd('prepare invoke')
     //console.log(funcMeta.owner)
-    //args = castDownArgs(paramMetas, args);
-    console.time('invoke')
+
+    console.time('cast down args');
+    args = castDownArgs(paramMetaList, args);
+    console.timeEnd('cast down args')
+
+    //console.time('invoke')
     const ret = actualFunc.call(bindObject, MULTIPLE_DISPATCH, ...args);
-    console.timeEnd('invoke');
+    //console.timeEnd('invoke');
 
     return ret;
     //return actualFunc.call(bindObject, ...args);
@@ -156,18 +135,16 @@ function castDownArgs(paramMetas, args) {
 
     const ret = [];
     let i = 0;
-    console.time('down cast')
+
     for (const argVal of args) {
         //console.time('e')
         const meta = paramMetas[i++];
         const paramType = meta?.type;
         //console.timeEnd('e')
-        ret.push((paramType === Any || meta.allowNull || !isValuable(meta) ? argVal : static_cast(paramType, argVal)));
-        
+        ret.push((paramType === Any || meta.allowNull || !isValuable(meta) || !isValuable(argVal) ? argVal : static_cast(paramType, argVal)));
     }
-    console.timeEnd('down cast')
+
     return ret;
-    //return args;
 }
 
 /**
@@ -188,51 +165,64 @@ function traceAndHandleMismatchVariant(e) {
  * @returns {function_variant_param_node_endpoint_metadata_t}
  */
 function diveTrieByArguments(_class, funcMeta, args) {
+
     console.time('estimation time');
     const propMeta = funcMeta.owner
-    // const variantMaps = propMeta.owner.typeMeta.methodVariantMaps;
     const variantMaps = propMeta.owner.typeMeta.methodVariantMaps;
     const targetMap = propMeta.static ? variantMaps?.static : variantMaps._prototype;
 
     const statisticTable = targetMap.statisticTable;
-    //const statisticTable = STATISTIC_TABLE;
 
     if (!statisticTable) {
 
         return false;
     }
 
-    const estimation = estimateArgs(funcMeta, args);
+    const estimationReport = estimateArgs(funcMeta, args);
+    
     //console.log(['e'], estimation)
-
     console.timeEnd('estimation time');
+    //console.log(estimation)
     if (
-        !Array.isArray(estimation) ||
-        estimation.length === 0
+        estimationReport?.constructor !== estimation_report_t
     ) {
 
         return false;
     }
 
     console.time('calc')
-    //const targetTrie = retrieveTrie(propMeta);
-    const targetTrie = FUNC_TRIE;
-    //console.log(['trie'], targetTrie)
-    const ret = retrieveEndpointByEstimation(targetTrie, estimation)?.endpoint;
+    const targetTrie = estimationReport.hasNullable ? retrieveLocalTrieOf(funcMeta) : FUNC_TRIE;
+    console.log(targetTrie)
+    const ret = estimationReport.length === 0 ? targetTrie.endpoint : retrieveEndpointByEstimation(targetTrie, estimationReport)?.endpoint;
     console.timeEnd('calc')
     
     return ret;
 } 
 
+/**
+ * 
+ * @param {function_metadata_t} funcMeta 
+ * 
+ * @returns {function_variant_param_node_metadata_t}
+ */
+function retrieveLocalTrieOf(funcMeta) {
+
+    const variantMaps = funcMeta.owner.owner.typeMeta.methodVariantMaps;
+    const targetMap = funcMeta.owner.static ? variantMaps.static : variantMaps._prototype;
+
+    return targetMap.localTrie;
+}
 
 /**
  * 
  * @param {function_variant_param_node_metadata_t} trieNode 
- * @param {Array<Object>} estimations 
+ * @param {estimation_report_t} estimationReport
+ * @param {number} dMass
+ * @param {number} dImaginary
  */
-function retrieveEndpointByEstimation(trieNode, estimationFactors, distance = Infinity) {
+function retrieveEndpointByEstimation(trieNode, estimationReport, dMass = Infinity, dImaginary = Infinity) {
     
-    const [estimations, argMasses] = estimationFactors || [undefined, undefined];
+    const {estimations, argMasses} = estimationReport || new estimation_report_t();
     const estimationPiece = estimations[trieNode.depth];
     const argslength = estimations.length;
     /**
@@ -244,16 +234,11 @@ function retrieveEndpointByEstimation(trieNode, estimationFactors, distance = In
     let nearest = {
         //delta: trieNode.endpoint ? (estimationPiece?.[undefined] || 0) * (estimations.length - trieNode.depth) + distance : distance,
         //endpoint: trieNode.endpoint || undefined
-        delta: distance
+        vector: new function_signature_vector(dMass, dImaginary),
+        delta: dMass,
+        dImaginary: dImaginary,
     };
     
-    // if (trieNode.endpoint) {
-
-    //     console.log(['init nearest'], 'has endpoint', typeof trieNode.endpoint === 'object', 'at', trieNode.depth)
-    //     console.log((estimationPiece?.[undefined] || 0) * (estimations.length - trieNode.depth) + distance)
-    //     console.log(['init delta'], nearest.delta)
-    // }
-    //console.log(['p'], estimationPiece)
     if (
         trieNode.depth === argslength//estimations.length 
     ) {
@@ -261,7 +246,6 @@ function retrieveEndpointByEstimation(trieNode, estimationFactors, distance = In
          * anchor condition when we reach the trie node whose depth is equal 
          * to the last estimation piece (also known as last argument)
          */
-        //console.log(['anchor'],trieNode.depth, nearest.delta)
         nearest.endpoint = trieNode.endpoint;
         return nearest;
     }
@@ -276,7 +260,7 @@ function retrieveEndpointByEstimation(trieNode, estimationFactors, distance = In
         }
 
         const nextNode = trieNode.current.get(type);
-        const d = calculateDistance(distance, delta, (type instanceof Interface));
+        const d = calculateDistance(dMass, delta, (type instanceof Interface));
  
         // if (nextNode.endpoint) {
 
@@ -287,21 +271,21 @@ function retrieveEndpointByEstimation(trieNode, estimationFactors, distance = In
         // }
 
         nearest = min(nearest, retrieveEndpointByEstimation(
-            nextNode, estimationFactors, d
+            nextNode, estimationReport, d
         ));
 
-        if (
-            globalConfig.multipleDispatchStrictLength !== true &&
-            trieNode.endpoint
-        ) {
+        // if (
+        //     globalConfig.multipleDispatchStrictLength !== true &&
+        //     trieNode.endpoint
+        // ) {
     
-            const mass = calculateMass(trieNode.depth + 1, argslength - 1, argMasses);
+        //     const mass = calculateMass(trieNode.depth + 1, argslength - 1, argMasses);
     
-            nearest = min(nearest, {
-                delta: d + mass,
-                endpoint: trieNode.endpoint
-            })
-        }
+        //     nearest = min(nearest, {
+        //         delta: d + mass,
+        //         endpoint: trieNode.endpoint
+        //     })
+        // }
     }
 
     return nearest;
