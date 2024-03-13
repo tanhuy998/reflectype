@@ -139,11 +139,7 @@ function hasVariant(rootTrieNode, paramTypeList) {
  * 
  * @returns {function_variant_param_node_metadata_t}
  */
-function mergeFuncVariant(
-  paramMetaList,
-  rootTrieNode,
-  statisticTables,
-) {
+function mergeFuncVariant(paramMetaList, rootTrieNode, statisticTables) {
 
     if (hasVariant(rootTrieNode, paramMetaList)) {
 
@@ -187,31 +183,9 @@ function insertTrieNode(currentNode, paraMeta, statisticTables = []) {
     }
 
     const nextNode = new function_variant_param_node_metadata_t(currentNode);
-
-    // if (
-    //     paraMeta.allowNull
-    //     && current.has(NULLABLE)
-    // ) {
-
-    //     throw new Error();
-    // }
-    // else if (
-    //     !current.has(NULLABLE)
-    // ) {
-
-    //     current.set(NULLABLE, nextNode);
-    // }
-
     current.set(_type, nextNode);
 
     return nextNode;
-
-    // const _type = paraMeta?.type || Any;
-    // const current = currentNode.current;
-
-    // return current.has(_type) ? current.get(_type) 
-    //         : current.set(_type, new function_variant_param_node_metadata_t(currentNode))
-    //                 .get(_type);
 }
 
 

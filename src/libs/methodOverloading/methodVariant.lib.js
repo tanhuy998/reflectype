@@ -33,17 +33,20 @@ module.exports = {
  * @param {Array<any>} args 
  */
 function dispatchMethodVariant(binder, propMeta, args) {
-    //console.log(args)
+    
     try {
 
-        const trieEndpoint = diveTrieByArguments(getTypeOf(binder), propMeta.functionMeta, args);
+        const genericFuncMeta = propMeta.functionMeta;
+        const trieEndpoint = args.length === 0 ?
+            FUNC_TRIE.endpoint 
+            : diveTrieByArguments(getTypeOf(binder), genericFuncMeta, args);
         
         if (
             !trieEndpoint //||
             //!trieEndpoint.vTable.has(propMeta.functionMeta)
         ) {
             
-            throw new MethodVariantMismatchError();
+            throw new MethodVariantMismatchError(genericFuncMeta, args);
         }
         console.time('extract vtable')
         const funcMeta = extractFuncMeta(binder, trieEndpoint, propMeta, args);
@@ -96,7 +99,7 @@ function extractFuncMeta(binder, trieEndpoint, propMeta, args) {
         _class = Object.getPrototypeOf(_class);
     }
 
-    throw new MethodVariantMismatchError();
+    throw new MethodVariantMismatchError(propMeta.functionMeta, args);
 }
 
 /**
@@ -110,9 +113,9 @@ function invoke(funcMeta, bindObject, args) {
     console.time('prepare invoke')
     /**@type {function} */
     const actualFunc = getMetadataFootPrintByKey(funcMeta.owner, DECORATED_VALUE);
+    
     const paramMetaList = getAllParametersMeta(funcMeta);
     console.timeEnd('prepare invoke')
-    //console.log(funcMeta.owner)
 
     console.time('cast down args');
     args = castDownArgs(paramMetaList, args);
@@ -120,10 +123,8 @@ function invoke(funcMeta, bindObject, args) {
 
     //console.time('invoke')
     const ret = actualFunc.call(bindObject, MULTIPLE_DISPATCH, ...args);
-    //console.timeEnd('invoke');
 
     return ret;
-    //return actualFunc.call(bindObject, ...args);
 }
 
 /**
@@ -137,11 +138,17 @@ function castDownArgs(paramMetas, args) {
     let i = 0;
 
     for (const argVal of args) {
-        //console.time('e')
+
         const meta = paramMetas[i++];
         const paramType = meta?.type;
-        //console.timeEnd('e')
-        ret.push((paramType === Any || meta.allowNull || !isValuable(meta) || !isValuable(argVal) ? argVal : static_cast(paramType, argVal)));
+
+        ret.push(
+            paramType === Any 
+            || meta.allowNull 
+            || !isValuable(meta) 
+            || !isValuable(argVal) ? 
+                argVal : static_cast(paramType, argVal)
+        );
     }
 
     return ret;
@@ -170,7 +177,6 @@ function diveTrieByArguments(_class, funcMeta, args) {
     const propMeta = funcMeta.owner
     const variantMaps = propMeta.owner.typeMeta.methodVariantMaps;
     const targetMap = propMeta.static ? variantMaps?.static : variantMaps._prototype;
-
     const statisticTable = targetMap.statisticTable;
 
     if (!statisticTable) {
@@ -179,10 +185,7 @@ function diveTrieByArguments(_class, funcMeta, args) {
     }
 
     const estimationReport = estimateArgs(funcMeta, args);
-    
-    //console.log(['e'], estimation)
     console.timeEnd('estimation time');
-    //console.log(estimation)
     if (
         estimationReport?.constructor !== estimation_report_t
     ) {
@@ -191,9 +194,10 @@ function diveTrieByArguments(_class, funcMeta, args) {
     }
 
     console.time('calc')
-    const targetTrie = FUNC_TRIE;//estimationReport.hasNullable ? retrieveLocalTrieOf(funcMeta) : FUNC_TRIE;
-    //console.log(targetTrie)
-    const ret = estimationReport.length === 0 ? targetTrie.endpoint : retrieveEndpointByEstimation(targetTrie, estimationReport)?.endpoint;
+    const targetTrie = FUNC_TRIE;
+    const ret = estimationReport.length === 0 ? 
+        targetTrie.endpoint 
+        : retrieveEndpointByEstimation(targetTrie, estimationReport)?.endpoint;
     console.timeEnd('calc')
     
     return ret;

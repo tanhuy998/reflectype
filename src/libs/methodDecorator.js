@@ -1,5 +1,5 @@
 const {metaOf, metadata_t, property_metadata_t, prototype_metadata_t, PROP_META_INITIALIZED, function_metadata_t} = require('../reflection/metadata.js');
-const {decoratorHasFootPrint, setDecoratorFootPrint, getMetadataFootPrintByKey, metadataHasFootPrint, setMetadataFootPrint} = require('./footPrint.js');
+const {getMetadataFootPrintByKey, metadataHasFootPrint, setMetadataFootPrint} = require('./footPrint.js');
 const matchType = require('./matchType.js');
 const {compareArgsWithType} = require('../libs/argumentType.js');
 const {isIterable, isInstantiable, isAbstract} = require('./type.js');
@@ -10,13 +10,10 @@ const {
     DECORATED_VALUE,
     ORIGIN_VALUE,
 } = require('./constant.js');
-//const { resolveTypeMetaResolution } = require('./metadata/resolution.js');
 const { extractFunctionInformations } = require('../utils/function.util.js');
 const { MULTIPLE_DISPATCH, OVERLOAD_APPLIED, PSEUDO_OVERLOADED_METHOD_NAME } = require('./methodOverloading/constant.js');
 const { isPseudoMethod } = require('./methodOverloading/pseudoMethod.lib.js');
 const { validateAndReturnTargetPropMeta } = require('../utils/decorator/overload.util.js');
-//const overload = require('../decorators/overload.js');
-//const { manipulateOverloading } = require('../utils/decorator/overload.util.js');
 
 module.exports = {
     decorateMethod, 
@@ -41,11 +38,12 @@ function generateDecorateMethod(_method, propMeta) {
         const [state, ...rest] = arguments;
         const actualInput = state === MULTIPLE_DISPATCH ? rest : arguments;
         
-        //const functionMeta = propMeta.functionMeta;
         const injectedArgs = getInjectedArguments(this, propMeta.name ?? _method.name);
         const defaultArguments = propMeta.functionMeta.defaultArguments;
         //const args = arguments.length !== 0 ? arguments : injectedArgs ?? (isIterable(defaultArguments) ? defaultArguments : [defaultArguments]);
-        const args = actualInput.length !== 0 ? actualInput : injectedArgs ?? (isIterable(defaultArguments) ? defaultArguments : [defaultArguments]);
+        const args = actualInput.length !== 0 ? 
+            actualInput 
+            : injectedArgs ?? (isIterable(defaultArguments) ? defaultArguments : [defaultArguments]);
 
 
         if (state !== MULTIPLE_DISPATCH) {
@@ -160,7 +158,7 @@ function decorateMethod(_method, context, propMeta) {
     }
 
     //refreshMeta(propMeta);
-    discoverParams(propMeta);
+    discoverFunction(propMeta);
 
     if (!metadataHasFootPrint(propMeta, DECORATED_VALUE)) {
 
@@ -208,7 +206,7 @@ function refreshMeta(propMeta) {
  * @param {property_metadata_t} propMeta 
  * @returns 
  */
-function discoverParams(propMeta) {
+function discoverFunction(propMeta) {
 
     if (propMeta.funcMeta?.isDiscovered === true) {
         
@@ -221,10 +219,10 @@ function discoverParams(propMeta) {
     }
 
     const oldFuncMeta = propMeta.functionMeta;
-
     const actualFunc = getMetadataFootPrintByKey(propMeta, ORIGIN_VALUE);
     const newFuncMeta = propMeta.functionMeta = extractFunctionInformations(actualFunc);
 
+    newFuncMeta.owner = propMeta;
     newFuncMeta.paramList = oldFuncMeta?.paramList;
     newFuncMeta.isDiscovered = true;
 }

@@ -11,6 +11,6 @@ module.exports = class MethodDuplicateDeclarationError extends Error {
      */
     constructor(propMeta) {
 
-        super(`Duplicate declaration of ${stringifyFullyQualifiedFuncName(propMeta.functionMeta)}`);
+        super(`Duplicate overload implemetation of ${stringifyFullyQualifiedFuncName(propMeta.functionMeta)}`);
     }
 }

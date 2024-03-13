@@ -271,6 +271,7 @@ class H extends T {
         console.log('test nullable')
     }
 
+
     //@overload('func')
     @parameters({
         param1: String,
@@ -333,6 +334,14 @@ class C extends H {
 
         console.log('8');
     }
+
+    @returnType(Number)
+    [METHOD('func')]() {
+
+        console.log('no params method');
+
+        return 1;
+    }   
 }
 
 function dec(_, context) {

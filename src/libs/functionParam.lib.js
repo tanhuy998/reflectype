@@ -34,12 +34,11 @@ function getParamMetaByIndex(funcMeta, index) {
 function getAllParametersMeta(funcMeta) {
 
     const paramNames = funcMeta.paramsName;
-
-    let ret = [];
+    const ret = [];
 
     for (const pName of paramNames || []) {
 
-        (ret ||= []).push(funcMeta.parameters[pName]);
+        ret.push(funcMeta.parameters[pName]);
     }
 
     return ret;
