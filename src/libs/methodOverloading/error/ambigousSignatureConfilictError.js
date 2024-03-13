@@ -13,6 +13,6 @@ module.exports = class AmbigousSignatureConflictError extends ReferenceError {
         const second = stringifyFullyQualifiedFuncName(overloadingFuncMeta);
         const first = stringifyFullyQualifiedFuncName(existedFuncMeta);
 
-        super(`ambigous between declaration ${first} and ${second}`);
+        super(`ambigous between declarations ${first} and ${second}`);
     }
 }

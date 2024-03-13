@@ -159,7 +159,8 @@ class Temp {
 const t = new Temp();
 
 o.func('1', 1, true)
-obj.func('1', 1, true)
+obj.func(null, 1, true)
+obj.func(1, '1', '1')
 c.func(null, 1, true);
 //c.func(new A(), new A(), 1)
 console.timeEnd(2)

@@ -32,5 +32,5 @@ function stringifyFullyQualifiedFuncName(funcMeta) {
     const methodName = getMetadataFootPrintByKey(propMeta, OVERLOADED_METHOD_NAME) || propMeta.name;
     const signature = stringifySignatureOf(funcMeta);
 
-    return `${propMeta.static?' static ': ' '}method [${_class?.name || _class}].${methodName}(${signature})`;
+    return `${propMeta.static?'static ': ''}method [${_class?.name || _class}].${methodName}(${signature})`;
 }

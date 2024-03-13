@@ -184,58 +184,49 @@ class T {
         console.log('T base')
     }
 
-    // @parameters({
-    //     a: A
-        
-    // })
-    // [METHOD('func')](a) {
 
-    //     console.log('A')
-    // }
-
-
-    // @parameters({
-    //     a: String,
-    //     b: Number,
-    //     c: Number
-    // })
-    // [METHOD('func')](a, b, c) {
+    @parameters({
+        a: String,
+        b: Number,
+        c: Number
+    })
+    [METHOD('func')](a, b, c) {
 
 
-    // }
+    }
 
-    // @parameters({
-    //     param: B
-    // })
-    // [METHOD('func')](param) {
+    @parameters({
+        param: B
+    })
+    [METHOD('func')](param) {
 
-    //     console.log('B')
-    // }
+        console.log('B')
+    }
 
-    // @parameters({
-    //     a: A
-    // })
-    // [METHOD('func')](a) {
+    @parameters({
+        a: A
+    })
+    [METHOD('func')](a) {
 
-    //     console.log('T dispose')
-    // }
+        console.log('T dispose')
+    }
 
-    // //@virtual
-    // @parameters({
-    //     a: Number
-    // })
-    // static stFunc(a) {
+    @virtual
+    @parameters({
+        a: Number
+    })
+    static stFunc(a) {
 
-    //     console.log("static T");
-    // }
+        console.log("static T");
+    }
 
-    // @parameters({
-    //     a: String
-    // })
-    // static [METHOD('stFunc')](a) {
+    @parameters({
+        a: String
+    })
+    static [METHOD('stFunc')](a) {
 
-    //     console.log('another static T');
-    // }
+        console.log('another static T');
+    }
 }
 
 class H extends T {
@@ -243,37 +234,21 @@ class H extends T {
     @type(IDisposable)
     accessor prop;
 
-    // @parameters({
-    //     a: String,
-    //     b: Number,
-    // })
-    // static stFunc(a, b) {
+    @parameters({
+        a: String,
+        b: Number,
+    })
+    static stFunc(a, b) {
 
-    //     console.log("static H");
-    // }
-
-    // @parameters({
-    //     a: Number
-    // })
-    // static [METHOD('stFunc')](a) {
-
-
-    // }
-
-    // @parameters({
-    //     a: Number 
-    // })
-    // static [METHOD('stFunc')](a) {
-
-    //     console.log('another static H')
-    // }
+        console.log("static H");
+    }
 
     @parameters({
-        a: IFoo
+        a: Number 
     })
-    func(a) {
+    static [METHOD('stFunc')](a) {
 
-
+        console.log('another static H')
     }
 
     @parameters({
@@ -281,42 +256,50 @@ class H extends T {
         b: Number,
         c: Boolean
     })
-    [METHOD('func')](a, b, c) {
+    func(a, b, c) {
 
         console.log('H override');
     }
 
-    // //@overload('func')
-    // @parameters({
-    //     param1: String,
-    //     param2: Boolean,
-    //     param3: Number
-    // })
-    // [METHOD('func')](param1, param2, param3) {
+    @parameters({
+        a: Number,
+        b: [String, allowNull],
+        c: String,
+    })
+    [METHOD('func')](a, b, c) {
 
-    //     console.log('string bool num')
-    // }
+        console.log('test nullable')
+    }
 
-    // @parameters({
-    //     param1: IDisposable,
-    // })
-    // [METHOD('func')](param1) {
+    //@overload('func')
+    @parameters({
+        param1: String,
+        param2: Boolean,
+        param3: Number
+    })
+    [METHOD('func')](param1, param2, param3) {
 
-    //     console.log('dispose')
-    // }
+        console.log('string bool num')
+    }
 
-    // @parameters({
-    //     param1: A,
-    //     b: IDisposable,
-    //     c: Number
-    // })
-    // [METHOD('func')](param1, b, c) {
+    @parameters({
+        param1: IDisposable,
+    })
+    [METHOD('func')](param1) {
 
-    //     console.log('7');
+        console.log('dispose')
+    }
 
-    // }
+    @parameters({
+        param1: A,
+        b: IDisposable,
+        c: Number
+    })
+    [METHOD('func')](param1, b, c) {
 
-    
+        console.log('7');
+
+    }
 }
 
 class C extends H {
@@ -332,24 +315,24 @@ class C extends H {
     }
 
     @parameters({
-        a: [Number, allowNull],
+        a: [Number],
         b: Number,
         c: Boolean
     })
     [METHOD('func')](a, b, c) {
 
-
+        console.log('n n b')
     }
 
-    // @parameters({
-    //     param1: IDisposable,
-    //     b: IDisposable,
-    //     c: Number
-    // })
-    // [METHOD('func')](param1, b, c) {
+    @parameters({
+        param1: IDisposable,
+        b: IDisposable,
+        c: Number
+    })
+    [METHOD('func')](param1, b, c) {
 
-    //     console.log('8');
-    // }
+        console.log('8');
+    }
 }
 
 function dec(_, context) {

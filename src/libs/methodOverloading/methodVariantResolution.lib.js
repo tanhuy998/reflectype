@@ -98,10 +98,9 @@ function manipulateMethodVariantBehavior(propName, propMeta) {
      */
     registerOverloadVariant(ctxGenericPropMeta, getAllParametersMeta(ctxGenericPropMeta.functionMeta), [statisticTable]);
     registerIfNullableBranch(ctxGenericPropMeta, getAllParametersMetaWithNullableFilter(ctxGenericPropMeta.functionMeta), [statisticTable]);
-    //createEntryPoint(this, remotePropMeta.name, remotePropMeta);
-    createContextEntryPoint(ctxGenericPropMeta);
     registerOverloadVariant(propMeta, getAllParametersMeta(propMeta.functionMeta));
     registerIfNullableBranch(propMeta, getAllParametersMetaWithNullableFilter(propMeta.functionMeta));
+    createContextEntryPoint(ctxGenericPropMeta);
 }
 
 
@@ -272,7 +271,6 @@ function registerIfNullableBranch(hostPropMeta, paramMetaList, extraStatisticTab
  * @returns {function_variant_param_node_metadata_t}
  */
 function registerOverloadVariant(hostPropMeta, paramMetaList, extraStatisticTables = [], nullableBranch = false) {
-    console.log('--------------------')
     
     if (paramMetaList === null) {
 
@@ -300,17 +298,16 @@ function registerOverloadVariant(hostPropMeta, paramMetaList, extraStatisticTabl
     
     if (
         hasImplemetantion
-        // && vTable.get(genericFuncMeta) === genericFuncMeta
-        && genericImplementation === genericFuncMeta
+        && genericImplementation === hostPropMeta//genericFuncMeta
     ) {
 
         return;
     }
-
+    
     if (
         nullableBranch
     ) {
-        console.log(0, endPointNode.endpoint)
+
         validateNullableBranch(hostFuncMeta, genericImplementation, endPointNode);
     }
     else if (
@@ -353,7 +350,6 @@ function registerNullableVariant() {
  * @param {function_variant_param_node_metadata_t} endpointNode
  */
 function validateNullableBranch(funcMeta, genericImplementation, endpointNode) {
-    console.log([1], console.log(genericImplementation))
 
     if (
         !genericImplementation 
