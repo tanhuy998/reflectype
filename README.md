@@ -562,9 +562,9 @@ Bencmark enviroment
 
 Detail execution time:
 
-- estimation phase: 0.002ms (50%)
-- retrieving most specific applicable signature (lookup signature using estimated datas): 0.001ms (25%)
-- down cast arguments: 0.001ms (25%)
+- estimation phase: 0.006ms (50%)
+- retrieving most specific applicable signature (lookup signature using estimated datas): 0.003ms (25%)
+- down cast arguments: 0.003ms (25%)
 
 The overall time for retrieving the most specific appplicable method for each request is around 0.004ms when requesting one hundred thousand method invocations.
 
@@ -581,7 +581,8 @@ time average for iterating a an one hundred thousand times empty for loop is 0.6
 - [x] Single dispatch
 - [x] Dynamic dispatch
 - [x] Multiple dispatch
-- [ ] primitive types coercion
+- [x] Nullable parameters
+- [ ] types coersion 
 
 New approaches:
 - [ ] argument type caching

@@ -1,3 +1,5 @@
+'use strict';
+
 const { Interface } = require("../../interface");
 const { parameter_metadata_t, function_variant_param_node_metadata_t, property_metadata_t, metaOf, function_metadata_t } = require("../../reflection/metadata");
 const Any = require("../../type/any");
@@ -6,7 +8,7 @@ const { STATISTIC_TABLE } = require("../metadata/registry/function.reg");
 const { getTypeOf, isValuable } = require("../type");
 const { ESTIMATION_MASS, NULLABLE } = require("./constant");
 const MethodVariantMismatchError = require("./error/methodVariantMismatchError");
-const { estimation_complex_t, estimation_report_t } = require("./estimationFactor");
+const { estimation_complex_t, estimation_report_t, EstimationPieace } = require("./estimationFactor");
 
 /**
  * because of using a number (which is 4 bytes floating point) as 
@@ -168,14 +170,12 @@ function estimateArgs(funcMeta, args = []) {
         const estimationPiece = estimateArgType(argVal, index, statisticTable);
         
         if (
-            !Array.isArray(estimationPiece) ||
+            //!Array.isArray(estimationPiece) ||
             estimationPiece.length === 0
         ) {
             /**
              * throwing error here in order to 
              */
-            
-            //throw new MethodVariantMismatchError(funcMeta, ret);
             return undefined;
         }
         
@@ -201,84 +201,94 @@ function calculateDelta() {
  * @param {Function} _type 
  * @param {number} index 
  * @param {?Map<Function, number>} statisticTable 
+ * @param {EstimationPieace} estimationPiece 
+ * @param {number|boolean} bias
+ * 
+ * @returns {EstimationPieace}
  */
-function diveInheritanceChain(_type, index, statisticTable, bias = false) {
-
-    // if (!isValuable(_type)) {
-
-    //     return undefined;
-    // }
-    //console.log([], _type)
-    let ret;
+function diveInheritanceChain(_type, index, statisticTable, estimationPiece, bias = 0) {
+    
     let currentType = _type;
-    //let delta = bias >= 0  ? bias + INTERFACE_BIAS : 0;
-    let delta = typeof bias === 'number' ? bias + INTERFACE_BIAS : 0;
-    let mass = 0;
+    let delta = typeof bias === 'number' ? bias : 0;
+    let mass = delta;
 
     let isNullable;
-
+    
     while (
         currentType !== Object.getPrototypeOf(Function)
-        && currentType !== NULLABLE
+        && typeof currentType === 'function'
     ) {
-        
-        // if (
-        //     typeStatisticallyExistsOn(statisticTable, currentType, index)
-        // ) {
 
-        //     // (ret ||= []).push({
-        //     //     type: currentType,
-        //     //     delta,
-        //     //     imaginary: 0
-        //     // });
-        //     (ret ||= []).push(new estimation_complex_t(
-        //         currentType, delta, 0
-        //     ));
-        // }
-        ret = decideToChoose(currentType, index, statisticTable, delta, ret);
+        decideToChoose(currentType, index, statisticTable, estimationPiece, delta);
 
         ++delta;
         ++mass;
+        
         currentType = Object.getPrototypeOf(currentType);
     }
 
-    if (typeof _type === 'function') {
-        
-        ret = decideToChoose(Object, index, statisticTable, delta, ret);
+    if (
+        typeof _type === 'function'
+        && !bias
+    ) {
+        /**
+         * when there is bias value, thera too situation of the current argument value:
+         * - the current argument is an instance of a class
+         * - the current argument is casted as interface
+         */
+        decideToChoose(Object, index, statisticTable, estimationPiece, delta);
 
         ++mass;
     } 
-    else {
+    else if (
+        _type === NULLABLE
+    ) {
         /**
          * when _type is not function, it means the argument passed to 
          * the generic function is type of nullable (null or undefined)
          */
-        ret = decideToChoose(NULLABLE, index, statisticTable, 0, ret);
-        isNullable = Array.isArray(ret) && ret.length === 1;
+        decideToChoose(NULLABLE, index, statisticTable, estimationPiece);
+        isNullable = estimationPiece.length === 1;
     }
-
-    if (Array.isArray(ret)) {
-        
-        ret[ESTIMATION_MASS] = mass;
-        ret[NULLABLE] = isNullable;
-    }
-
-    return ret;
-}
-
-
-function decideToChoose(_type, index, statisticTable, delta, estimationPiece) {
 
     if (
-        typeStatisticallyExistsOn(statisticTable, _type, index)
+        //Array.isArray(estimationPiece)
+        !bias
+    ) {
+        
+        estimationPiece[ESTIMATION_MASS] = mass;
+        estimationPiece[NULLABLE] = isNullable;
+    }
+    
+    //console.log('mass', [_type?.name || _type], mass)
+    //return estimationPiece;
+}
+
+/**
+ * 
+ * @param {Function|symbol} _type 
+ * @param {number} index 
+ * @param {Map<Function, Number>} statisticTable 
+ * @param {number} delta 
+ * @param {EstimationPieace} estimationPiece 
+ * @returns 
+ */
+function decideToChoose(_type, index, statisticTable, estimationPiece, delta = 0, inmaginary = 0) {
+
+    if (
+        !typeStatisticallyExistsOn(statisticTable, _type, index)
     ) {
 
-        (estimationPiece ||= []).push(new estimation_complex_t(
-            _type, delta, 0
-        ));
+        return;// estimationPiece;
     }   
 
-    return estimationPiece;
+    //console.log('choose', [_type?.name || _type], delta);
+
+    estimationPiece.push(new estimation_complex_t(
+        _type, delta, inmaginary
+    ));
+
+    //return estimationPiece;
 }
 
 /**
@@ -291,106 +301,67 @@ function decideToChoose(_type, index, statisticTable, delta, estimationPiece) {
  */
 function estimateArgType(argVal, index = 0, statisticTable) {
 
-    let ret;
-    
-    try {
-        //ensureStatisticTableExists(statisticTable);
-        const _type = getCastedTypeOf(argVal) || getTypeOf(argVal) || NULLABLE;
-        //console.log(_type)
-        ret = diveInheritanceChain(_type, index, statisticTable);
+    const _type = getCastedTypeOf(argVal) || getTypeOf(argVal) || NULLABLE;
+    //console.log(`-------------- index ${index} | type`, [_type.name],`---------------`)
+    const estimationPiece = new EstimationPieace(_type);
+    diveInheritanceChain(_type, index, statisticTable, estimationPiece);
 
-        if (
-            typeof _type !== 'function'
-            || _type instanceof Interface
-        ) {
+    if (
+        typeof _type === 'function'
+        && !(_type instanceof Interface)
+    ) {
 
-            throw undefined;
-        }
-
-        ret = diveInterfaces(argVal, index, statisticTable, ret);
-        
-        // for (const intf of getAllInterfacesOf(argVal) || []) {
-
-        //     ret = [...(ret||[]), ...(diveInheritanceChain(intf, index, statisticTable, ret?.[ESTIMATION_MASS]) || [])];
-        //     //(ret ??= []).push(...(diveInheritanceChain(intf, index, statisticTable, ret?.[ESTIMATION_MASS]) || []));
-        // }
-    }
-    catch (e){}
-    finally {
-
-        if (
-            (!Array.isArray(ret) || ret.length === 0)
-            &&
-            typeStatisticallyExistsOn(statisticTable, Any, index)
-        ) {
-            /**
-             * when there no types defined in the index, 
-             * check for the existence of Any in the variant trie.
-             */
-            // (ret ??= []).push({
-            //     type: Any,
-            //     delta: Infinity,
-            //     imaginary: 1,
-            // });
-            (ret ??= []).push(new estimation_complex_t(
-                Any, Infinity, 1
-            ))
-        }
-        
-        return ret;
+        diveInterfaces(argVal, index, statisticTable, estimationPiece);
     }
 
-        // let ret = _estimatePotentialType(argVal, index, statisticTable);
-    
-    // if (
-    //     (!Array.isArray(ret) || ret.length === 0)
-    //     &&
-    //     typeStatisticallyExistsOn(statisticTable, Any, index)
-    // ) {
-    //     /**
-    //      * when there no types defined in the index, 
-    //      * check for the existence of Any in the variant trie.
-    //      */
-    //     (ret ??= []).push({
-    //         type: Any,
-    //         delta: Infinity,
-    //         imaginary: 1,
-    //     });
-    // }
+    if (
+        estimationPiece.length === 0
+    ) {
 
-    // return ret;
+        decideToChoose(Any, index, statisticTable, estimationPiece, 0, 1);
+    }
+
+    //console.log(estimationPiece)
+
+    return estimationPiece;
 }
 
 /**
  * 
  * @param {any} argVal 
  * @param {Map<Function, Number>} statisticTable
- * @returns {Array?}
+ * @param {EstimationPieace} estimationPeace
+ * 
+ * @returns {EstimationPieace} 
  */
-function diveInterfaces(argVal, index, statisticTable, placeHolder) {
+function diveInterfaces(argVal, index, statisticTable, estimationPeace) {
 
-    for (const intf of getAllInterfacesOf(argVal) || []) {
+    const bias = estimationPeace[ESTIMATION_MASS] + INTERFACE_BIAS;
+    const interfaceList = getAllInterfacesOf(argVal);
 
-        const estimatedIntfs = diveInheritanceChain(intf, index, statisticTable, placeHolder?.[ESTIMATION_MASS]);
-        //const estimatedIntfs = diveInheritanceChain(intf, index, statisticTable, true);
+    if (
+        !isValuable(interfaceList?.length) ||
+        interfaceList.length === 0
+    ) {
 
-        if (
-            !Array.isArray(estimatedIntfs) 
-            || !estimatedIntfs.length === 0
-        ) {
+        return;
+    }
 
-            continue;
-        }
-
-        if (!Array.isArray(placeHolder)) {
-
-            placeHolder = [];
-        }
-
-        placeHolder.push(...estimatedIntfs);
+    //for (const intf of getAllInterfacesOf(argVal) || []) {
+    for (let i = 0; i < interfaceList.length; ++i)  {
+        
+        const intf = interfaceList[i];
+        diveInheritanceChain(
+            intf,
+            index, 
+            statisticTable, 
+            estimationPeace, 
+            bias
+            //estimationPeace?.[ESTIMATION_MASS]
+        );
     }
     
-    return placeHolder;
+    return estimationPeace;
 }
 
 /**

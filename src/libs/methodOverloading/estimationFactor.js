@@ -1,9 +1,34 @@
-const { NULLABLE } = require("./constant");
+const { NULLABLE, ESTIMATION_MASS } = require("./constant");
+
+class EstimationPieace extends Array {
+
+    /**
+     * @type {Function|symbol}
+     */
+    inputType;
+
+    /**
+     *  @type {number}
+     */
+    [ESTIMATION_MASS] = 0;
+
+    /**
+     *  @type {boolean}
+     */
+    [NULLABLE] = false;
+
+    constructor(inputType) {
+
+        super();
+        this.inputType = inputType;
+    }
+}
 
 module.exports = {
     estimation_complex_t,
     function_signature_vector,
-    estimation_report_t
+    estimation_report_t,
+    EstimationPieace,
 }
 
 function estimation_complex_t(type, delta, imaginary) {
@@ -41,6 +66,14 @@ function estimation_report_t(est, masses, hasNullable) {
      */
     this.hasNullable = typeof hasNullable === 'boolean' ? hasNullable : false;
 }
+
+// function estimation_piece_t() {
+
+//     /**
+//      * @type {Array<estimation_complex_t>}
+//      */
+//     this.complexList = [];
+// }
 
 /**
  * 

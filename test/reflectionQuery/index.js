@@ -169,19 +169,19 @@ console.time('total1')
 
 //c.func(new A(), new A(), 1)
 
-for (let i = 0; i < 1; ++i) {
+for (let i = 0; i < 100000; ++i) {
 
     //console.time(2)
 
     //obj.func(...args);
-    obj.func(new A(), new A(), 1)
+    c.func(new B(), new A(), 1)
 
     //console.timeEnd(2)
 }
 console.timeEnd('total1')
 
 console.time('total2')
-for (let i = 0; i < 1000; ++i) {
+for (let i = 0; i < 100000; ++i) {
 
     //console.time(2)
 

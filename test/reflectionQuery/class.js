@@ -147,31 +147,31 @@ class T {
         console.log('origin')
     }
 
-    // @parameters({
-    //     a: String,
-    //     b: B
-    // })
-    // [METHOD('func')](a, b) {
-    //     console.log('string')
-    // }
+    @parameters({
+        a: String,
+        b: B
+    })
+    [METHOD('func')](a, b) {
+        console.log('string')
+    }
 
-    // @parameters({
-    //     a: String,
-    //     b: B,
-    //     c: IDisposable
-    // })
-    // [METHOD('func')](a, b, c) {
-    //     console.log('0')
-    // }
+    @parameters({
+        a: String,
+        b: B,
+        c: IDisposable
+    })
+    [METHOD('func')](a, b, c) {
+        console.log('0')
+    }
 
-    // @parameters({
-    //     a: String,
-    //     b: Number
-    // })
-    // [METHOD('func')](a, b) {
+    @parameters({
+        a: String,
+        b: Number
+    })
+    [METHOD('func')](a, b) {
 
-    //     console.log('number')
-    // }
+        console.log('number')
+    }
 
     @virtual
     @parameters({
@@ -333,6 +333,17 @@ class C extends H {
     [METHOD('func')](param1, b, c) {
 
         console.log('8');
+    }
+
+    @parameters({
+        param1: B,
+        b: IDisposable,
+        c: Number
+    })
+    [METHOD('func')](param1, b, c) {
+
+        console.log('9');
+
     }
 
     @returnType(Number)

@@ -33,7 +33,7 @@ module.exports = {
  * @param {Array<any>} args 
  */
 function dispatchMethodVariant(binder, propMeta, args) {
-    
+    //console.log(args)
     try {
 
         const genericFuncMeta = propMeta.functionMeta;
@@ -51,7 +51,7 @@ function dispatchMethodVariant(binder, propMeta, args) {
         console.time('extract vtable')
         const funcMeta = extractFuncMeta(binder, trieEndpoint, propMeta, args);
         console.timeEnd('extract vtable')
-        //const funcMeta = trieEndpoint.vTable.get(propMeta.functionMeta)
+
         return invoke(funcMeta, binder, args);
     }
     catch (e) {
@@ -184,6 +184,13 @@ function diveTrieByArguments(_class, funcMeta, args) {
         return false;
     }
 
+    if (
+        args.length === 0
+    ) {
+
+        return FUNC_TRIE.endpoint;
+    }
+
     const estimationReport = estimateArgs(funcMeta, args);
     console.timeEnd('estimation time');
     if (
@@ -195,9 +202,7 @@ function diveTrieByArguments(_class, funcMeta, args) {
 
     console.time('calc')
     const targetTrie = FUNC_TRIE;
-    const ret = estimationReport.length === 0 ? 
-        targetTrie.endpoint 
-        : retrieveEndpointByEstimation(targetTrie, estimationReport)?.endpoint;
+    const ret = retrieveEndpointByEstimation(targetTrie, estimationReport)?.endpoint;
     console.timeEnd('calc')
     
     return ret;
