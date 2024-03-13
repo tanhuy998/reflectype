@@ -106,14 +106,18 @@ const mRef = new ReflectionPrototypeMethod(H, 'func');
 
 const funcMeta = ref.metadata.functionMeta;
 
-console.log(metaOf(T).methodVariantMaps.static.statisticTable)
-console.log(metaOf(T).methodVariantMaps._prototype.statisticTable)
-console.log(metaOf(H).methodVariantMaps.static.statisticTable)
-console.log(metaOf(H).methodVariantMaps._prototype.statisticTable)
 
 const o = new T();
 const obj = new H();
 const c = new C();
+
+
+console.log(metaOf(T).methodVariantMaps.static.statisticTable)
+console.log(metaOf(T).methodVariantMaps._prototype.statisticTable)
+console.log(metaOf(H).methodVariantMaps.static.statisticTable)
+console.log(metaOf(H).methodVariantMaps._prototype.statisticTable)
+console.log(metaOf(C).methodVariantMaps.static.statisticTable)
+console.log(metaOf(C).methodVariantMaps._prototype.statisticTable)
 
 obj.prop = new A();
 
@@ -154,10 +158,10 @@ class Temp {
 
 const t = new Temp();
 
-// o.func('1', 1, true)
-// obj.func('1', 1, true)
-c.func(undefined, 1, true);
-
+o.func('1', 1, true)
+obj.func('1', 1, true)
+c.func(null, 1, true);
+//c.func(new A(), new A(), 1)
 console.timeEnd(2)
 
 console.time('total1')

@@ -1,9 +1,11 @@
 const { function_metadata_t, parameter_metadata_t } = require("../reflection/metadata");
+const { NULLABLE } = require("./methodOverloading/constant");
 
 module.exports = {
     getParamMetaByIndex,
     getParamMetaByName,
     getAllParametersMeta,
+    getAllParametersMetaWithNullableFilter,
 }
 
 /**
@@ -33,7 +35,7 @@ function getAllParametersMeta(funcMeta) {
 
     const paramNames = funcMeta.paramsName;
 
-    let ret;
+    let ret = [];
 
     for (const pName of paramNames || []) {
 
@@ -51,4 +53,31 @@ function getAllParametersMeta(funcMeta) {
 function getParamMetaByName(funcMeta, name) {
 
     return funcMeta.parameters?.[name];
+}
+
+/**
+ * 
+ * @param {function_metadata_t} funcMeta 
+ * 
+ * @returns {Array<parameter_metadata_t|NULLABLE>|null}
+ */
+function getAllParametersMetaWithNullableFilter(funcMeta) {
+
+    let hasNullable;
+    
+    const ret = getAllParametersMeta(funcMeta)
+        ?.map(meta => {
+
+            if (meta?.allowNull !== true) {
+
+                return meta;
+            }
+
+            hasNullable = true;
+            const ret = new parameter_metadata_t();
+            ret.type = NULLABLE;
+            return ret;
+        });
+    //console.log(['check nullable'], hasNullable, ret)
+    return hasNullable ? ret : null;
 }

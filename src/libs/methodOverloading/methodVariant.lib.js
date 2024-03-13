@@ -191,8 +191,8 @@ function diveTrieByArguments(_class, funcMeta, args) {
     }
 
     console.time('calc')
-    const targetTrie = estimationReport.hasNullable ? retrieveLocalTrieOf(funcMeta) : FUNC_TRIE;
-    console.log(targetTrie)
+    const targetTrie = FUNC_TRIE;//estimationReport.hasNullable ? retrieveLocalTrieOf(funcMeta) : FUNC_TRIE;
+    //console.log(targetTrie)
     const ret = estimationReport.length === 0 ? targetTrie.endpoint : retrieveEndpointByEstimation(targetTrie, estimationReport)?.endpoint;
     console.timeEnd('calc')
     

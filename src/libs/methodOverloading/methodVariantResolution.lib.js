@@ -6,14 +6,15 @@ const {
     metaOf, 
     metadata_t, 
     method_variant_mapping_table_metadata_t, 
-    parameter_metadata_t
+    parameter_metadata_t,
+    function_metadata_t
 } = require("../../reflection/metadata");
 const Any = require("../../type/any");
 const { DECORATED_VALUE, DECORATOR_APPLIED } = require("../constant");
 const { getMetadataFootPrintByKey } = require("../footPrint");
 const { OVERLOAD_APPLIED, OVERLOAD_TARGET, OVERRIDE_APPLIED, OVERLOADED_METHOD_NAME, NULLABLE } = require("./constant");
 const { isObjectLike, isFirstClass, isObjectKey, isValuable } = require("../type");
-const {getAllParametersMeta} = require('../functionParam.lib');
+const {getAllParametersMeta, getAllParametersMetaWithNullableFilter} = require('../functionParam.lib');
 const { searchForMethodVariant, mergeFuncVariant } = require("./methodVariantTrieOperation.lib");
 const { dispatchMethodVariant } = require("./methodVariant.lib");
 const {FUNC_TRIE} = require('../metadata/registry/function.reg');
@@ -95,10 +96,12 @@ function manipulateMethodVariantBehavior(propName, propMeta) {
      * remotePropMeta could be on base class therefore when registering remotePropMeta,
      * update the state of 
      */
-    registerOverloadVariant(ctxGenericPropMeta, [statisticTable]);
+    registerOverloadVariant(ctxGenericPropMeta, getAllParametersMeta(ctxGenericPropMeta.functionMeta), [statisticTable]);
+    registerIfNullableBranch(ctxGenericPropMeta, getAllParametersMetaWithNullableFilter(ctxGenericPropMeta.functionMeta), [statisticTable]);
     //createEntryPoint(this, remotePropMeta.name, remotePropMeta);
     createContextEntryPoint(ctxGenericPropMeta);
-    registerOverloadVariant(propMeta);
+    registerOverloadVariant(propMeta, getAllParametersMeta(propMeta.functionMeta));
+    registerIfNullableBranch(propMeta, getAllParametersMetaWithNullableFilter(propMeta.functionMeta));
 }
 
 
@@ -242,26 +245,47 @@ function manipulatePseudoOveloading(propName, propMeta) {
 }
 
 /**
+ * 
+ * @param {property_metadata_t} hostPropMeta 
+ * @param {Array<parameter_metadata_t>} paramMetaList 
+ * @param {Array<Map<Function, Number>>} extraStatisticTables
+ */
+function registerIfNullableBranch(hostPropMeta, paramMetaList, extraStatisticTables = []) {
+
+    if (paramMetaList === null) {
+
+        return;
+    }
+
+    registerOverloadVariant(hostPropMeta, paramMetaList, extraStatisticTables, true);
+}
+
+/**
  * Get paramMeta list of hostPropMeta register for new method variant of remotePropMeta
  * 
  * 
  * @param {property_metadata_t} hostPropMeta 
- * @param {property_metadata_t} remotePropMeta 
+ * @param {Array<parameter_metadata_t>} paramMetaList 
  * @param {Array<Map<Function, Number>>} extraStatisticTables
- * @param {boolean} local
+ * @param {boolean} nullableBranch
  * 
  * @returns {function_variant_param_node_metadata_t}
  */
-function registerOverloadVariant(hostPropMeta, extraStatisticTables = [], local = false) {
+function registerOverloadVariant(hostPropMeta, paramMetaList, extraStatisticTables = [], nullableBranch = false) {
+    console.log('--------------------')
+    
+    if (paramMetaList === null) {
+
+        return;
+    }
 
     const hostFuncMeta = hostPropMeta.functionMeta;
-    const hostParamMetaList = getContextBaseParameterMetas(hostFuncMeta, local);
     const methodVariantTable = retrieveMethodVariantTableOf(hostPropMeta);
     const {statisticTable, localTrie} = methodVariantTable;
-    const variantTrie = local === true ? localTrie : FUNC_TRIE;
+    const variantTrie = FUNC_TRIE;
 
     const endPointNode = mergeFuncVariant(
-        hostParamMetaList, 
+        paramMetaList, 
         variantTrie, 
         [statisticTable, ...extraStatisticTables]
     );
@@ -270,56 +294,79 @@ function registerOverloadVariant(hostPropMeta, extraStatisticTables = [], local 
 
     const genericPropMeta = retrieveGenericPropMetaOf(hostPropMeta);
     const genericFuncMeta = genericPropMeta.functionMeta;
-
+    
+    const hasImplemetantion = vTable.has(genericFuncMeta);
+    const genericImplementation = vTable.get(genericFuncMeta);
+    
     if (
-        vTable.has(genericFuncMeta)
-        && vTable.get(genericFuncMeta) === genericFuncMeta
-        && local !== true
+        hasImplemetantion
+        // && vTable.get(genericFuncMeta) === genericFuncMeta
+        && genericImplementation === genericFuncMeta
     ) {
 
-        if (local !== true) {
-            /**
-             * generic propMeta repeatedly reasigned to vTable
-             * when evaluating overloading methods,
-             */
-            return;
-        }
-
-        throw new AmbigousSignatureConflictError();
+        return;
     }
 
     if (
-        local !== true
+        nullableBranch
+    ) {
+        console.log(0, endPointNode.endpoint)
+        validateNullableBranch(hostFuncMeta, genericImplementation, endPointNode);
+    }
+    else if (
+        !nullableBranch
     ) {
 
-        registerOverloadVariant(hostPropMeta, extraStatisticTables, true);
+        validateWithBaseClassImplemetation(hostPropMeta)
     }
-
-    validateWithBaseClassImplemetation(hostPropMeta);
+    
     vTable.set(genericFuncMeta, hostFuncMeta);
 }
 
+
+
 /**
  * 
- * @param {property_metadata_t} hostFuncMeta 
- * @param {boolean} local 
- * @returns {Array<parameter_metadata_t>}
+ * @param {function_variant_param_node_metadata_t} rootTrieNode 
+ * @param {property_metadata_t} genericPropMeta
+ * @param {Array<parameter_metadata_t>} paramMetaList 
+ * @param {Map<Function, Number>[]} statisticTables
  */
-function getContextBaseParameterMetas(hostFuncMeta, local = false) {
+function mergeSignature(rootTrieNode, genericPropMeta, paramMetaList, statisticTables = []) {
 
-    return getAllParametersMeta(hostFuncMeta)
-        ?.map(meta => {
+    return mergeFuncVariant(
+        paramMetaList, 
+        rootTrieNode, 
+        //[statisticTable, ...extraStatisticTables]
+        statisticTables
+    );
+}
 
-            if (local !== true || meta?.allowNull !== true) {
+function registerNullableVariant() {
 
-                return meta;
-            }
 
-            const ret = new parameter_metadata_t();
-            ret.type = NULLABLE;
-            return ret;
-        });
-}``
+}
+
+/**
+ * @param {function_metadata_t} funcMeta
+ * @param {function_metadata_t} genericImplementation 
+ * @param {function_variant_param_node_metadata_t} endpointNode
+ */
+function validateNullableBranch(funcMeta, genericImplementation, endpointNode) {
+    console.log([1], console.log(genericImplementation))
+
+    if (
+        !genericImplementation 
+        || funcMeta === genericImplementation
+        || funcMeta.owner.static !== genericImplementation.owner.static
+    ) {
+
+        return;
+    }
+
+    throw new AmbigousSignatureConflictError(funcMeta, genericImplementation);
+}
+
 
 /**
  * 
@@ -338,7 +385,7 @@ function retrieveGenericPropMetaOf(propMeta) {
  * 
  * @param {property_metadata_t} propMeta 
  */
-function validateWithBaseClassImplemetation(propMeta) {
+function validateWithBaseClassImplemetation(propMeta, nullable = false) {
     
     const hostFuncMeta = propMeta.functionMeta;
     const deicdeToOverrideBaseImplementation = getMetadataFootPrintByKey(propMeta, OVERRIDE_APPLIED);
@@ -381,6 +428,7 @@ function validateWithBaseClassImplemetation(propMeta) {
         throw new OverridingNonVirtualMethodError(propMeta, nearestBaseImplementation);
     }
 }
+
 
 /**
  * 
