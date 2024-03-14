@@ -137,8 +137,10 @@ function castDownArgs(paramMetas, args) {
     const ret = [];
     let i = 0;
 
-    for (const argVal of args) {
+    //for (const argVal of args) {
+    for (let i = 0; i < args.length; ++i) {
 
+        const argVal = args[i];
         const meta = paramMetas[i++];
         const paramType = meta?.type;
 
@@ -259,7 +261,10 @@ function retrieveEndpointByEstimation(trieNode, estimationReport, dMass = Infini
         return nearest;
     }
 
-    for (const {type, delta} of estimationPiece || [{}]) {
+    //for (const {type, delta} of estimationPiece || [{}]) {
+    for (let i = 0; i < estimationPiece.length; ++i) {
+        
+        const {type, delta} = estimationPiece[i];
         
         if (
             !trieNode.current.has(type)

@@ -61,7 +61,10 @@ module.exports = {
  */
 function addStatisticalPieace(paramMeta, variantNodeMeta, statisticTables = []) {
 
-    for (const table of statisticTables) {
+    //for (const table of statisticTables) {
+    for  (let i = 0; i < statisticTables.length; ++i) {
+
+        const table = statisticTables[i];
 
         try {
         
@@ -165,8 +168,10 @@ function estimateArgs(funcMeta, args = []) {
 
     let hasNullable;
     
-    for (const argVal of args || []) {
+    //for (const argVal of args || []) {
+    for (let i = 0; i < args.length; ++i) {
 
+        const argVal = args[i];
         const estimationPiece = estimateArgType(argVal, index, statisticTable);
         
         if (
