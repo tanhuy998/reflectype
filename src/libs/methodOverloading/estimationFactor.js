@@ -26,7 +26,7 @@ class EstimationPieace extends Array {
 
 module.exports = {
     estimation_complex_t,
-    function_signature_vector,
+    vector,
     estimation_report_t,
     EstimationPieace,
 }
@@ -52,7 +52,7 @@ function estimation_complex_t(type, delta, imaginary) {
 function estimation_report_t(est, masses, hasNullable) {
 
     /**
-     * @type {Array<Function>}
+     * @type {Array<EstimationPieace>}
      */
     this.estimations = Array.isArray(est) ? est : undefined;
 
@@ -80,17 +80,17 @@ function estimation_report_t(est, masses, hasNullable) {
  * @param {number} mass 
  * @param {number} imaginary 
  */
-function function_signature_vector(mass, imaginary) {
+function vector(real, imaginary) {
 
     /**
      * Mass is sum of inheritance chain of all signature types 
      * 
      * @type {number}
      */
-    this.mass;
+    this.real = typeof real === 'number' ? real : 0;
 
     /**
      * @type {number}
      */
-    this.imaginary;
+    this.imaginary = typeof imaginary === "number" ? imaginary : 0;
 } 

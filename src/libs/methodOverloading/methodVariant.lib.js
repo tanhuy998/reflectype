@@ -19,7 +19,7 @@ const { DECORATED_VALUE } = require("../constant");
 const { Any } = require("../../type");
 const { static_cast } = require("../casting.lib");
 const {FUNC_TRIE} = require('../metadata/registry/function.reg');
-const { function_signature_vector, estimation_report_t } = require("./estimationFactor");
+const { function_signature_vector, estimation_report_t, vector } = require("./estimationFactor");
 
 module.exports = {
     dispatchMethodVariant,
@@ -33,7 +33,7 @@ module.exports = {
  * @param {Array<any>} args 
  */
 function dispatchMethodVariant(binder, propMeta, args) {
-    //console.log(args)
+    
     try {
 
         const genericFuncMeta = propMeta.functionMeta;
@@ -121,9 +121,9 @@ function invoke(funcMeta, bindObject, args) {
     args = castDownArgs(paramMetaList, args);
     console.timeEnd('cast down args')
 
-    //console.time('invoke')
+    console.time('invoke');
     const ret = actualFunc.call(bindObject, MULTIPLE_DISPATCH, ...args);
-
+    console.timeEnd("invoke");
     return ret;
 }
 
@@ -135,9 +135,8 @@ function invoke(funcMeta, bindObject, args) {
 function castDownArgs(paramMetas, args) {
 
     const ret = [];
-    let i = 0;
+    //let i = 0;
 
-    //for (const argVal of args) {
     for (let i = 0; i < args.length; ++i) {
 
         const argVal = args[i];
@@ -145,10 +144,11 @@ function castDownArgs(paramMetas, args) {
         const paramType = meta?.type;
 
         ret.push(
-            paramType === Any 
-            || meta.allowNull 
+            isValuable(paramType)
+            || paramType === Any 
+            || !isValuable(argVal)
             || !isValuable(meta) 
-            || !isValuable(argVal) ? 
+            || meta.allowNull ? 
                 argVal : static_cast(paramType, argVal)
         );
     }
@@ -204,7 +204,7 @@ function diveTrieByArguments(_class, funcMeta, args) {
 
     console.time('calc')
     const targetTrie = FUNC_TRIE;
-    const ret = retrieveEndpointByEstimation(targetTrie, estimationReport)?.endpoint;
+    const ret = retrieveMostSpecificApplicableEndpoint(targetTrie, estimationReport)?.endpoint;
     console.timeEnd('calc')
     
     return ret;
@@ -231,7 +231,12 @@ function retrieveLocalTrieOf(funcMeta) {
  * @param {number} dMass
  * @param {number} dImaginary
  */
-function retrieveEndpointByEstimation(trieNode, estimationReport, dMass = Infinity, dImaginary = Infinity) {
+//function retrieveEndpointByEstimation(trieNode, estimationReport, dMass = Infinity, dImaginary = Infinity) {
+function retrieveMostSpecificApplicableEndpoint(
+  trieNode,
+  estimationReport,
+  dVector = new vector(Infinity, Infinity)
+) {
     
     const {estimations, argMasses} = estimationReport || new estimation_report_t();
     const estimationPiece = estimations[trieNode.depth];
@@ -245,9 +250,9 @@ function retrieveEndpointByEstimation(trieNode, estimationReport, dMass = Infini
     let nearest = {
         //delta: trieNode.endpoint ? (estimationPiece?.[undefined] || 0) * (estimations.length - trieNode.depth) + distance : distance,
         //endpoint: trieNode.endpoint || undefined
-        vector: new function_signature_vector(dMass, dImaginary),
-        delta: dMass,
-        dImaginary: dImaginary,
+        vector: dVector//new function_signature_vector(dMass, dImaginary),
+        // delta: dMass,
+        // dImaginary: dImaginary,
     };
     
     if (
@@ -258,13 +263,17 @@ function retrieveEndpointByEstimation(trieNode, estimationReport, dMass = Infini
          * to the last estimation piece (also known as last argument)
          */
         nearest.endpoint = trieNode.endpoint;
+        //console.log(dVector);
         return nearest;
     }
 
-    //for (const {type, delta} of estimationPiece || [{}]) {
     for (let i = 0; i < estimationPiece.length; ++i) {
         
-        const {type, delta} = estimationPiece[i];
+        const {
+            /**@type {Function}*/ type, 
+            /**@type {number}*/ delta, 
+            /**@type {number}*/ imaginary
+        } = estimationPiece[i];
         
         if (
             !trieNode.current.has(type)
@@ -274,8 +283,12 @@ function retrieveEndpointByEstimation(trieNode, estimationReport, dMass = Infini
         }
 
         const nextNode = trieNode.current.get(type);
-        const d = calculateDistance(dMass, delta, (type instanceof Interface));
- 
+        //const d = calculateDistance(dMass, delta, (type instanceof Interface));
+        const d = new vector(
+            (dVector.real === Infinity ? 0 : dVector.real) + delta, 
+            (dVector.imaginary === Infinity ? 0 : dVector.imaginary) + imaginary
+        );
+
         // if (nextNode.endpoint) {
 
         //     nearest = min(nearest, {
@@ -284,7 +297,11 @@ function retrieveEndpointByEstimation(trieNode, estimationReport, dMass = Infini
         //     });
         // }
 
-        nearest = min(nearest, retrieveEndpointByEstimation(
+        // nearest = min(nearest, retrieveEndpointByEstimation(
+        //     nextNode, estimationReport, d
+        // ));
+
+        nearest = min(nearest, retrieveMostSpecificApplicableEndpoint(
             nextNode, estimationReport, d
         ));
 
@@ -333,15 +350,43 @@ function calculateDistance(ref, delta, isInterface = false) {
     return (ref === Infinity ? 0 : ref) + delta; //+ isInterface ? INTERFACE_BIAS : 0;
 }
 
+/**
+ * 
+ * @param {vector} v
+ * 
+ * @returns {number}
+ */
+function modulus(v = new vector(Infinity, Infinity)) {
+
+    const { real, imaginary } = v;
+
+    // if (!imaginary) {
+
+    //     return real;
+    // }
+
+    return !imaginary ? real : Math.sqrt(real ** 2 + imaginary ** 2);
+}
+
 function min(left, right) {
 
     if (
         !left.endpoint &&
         right.endpoint
-    ) {
+    ) { 
 
         return right;
     }
+
+    if (
+        left.endpoint 
+        && !right.endpoint
+    ) {
+
+        return left;
+    }
+
+    return modulus(left.vector) < modulus(right.vector) ? left : right;
 
     const ld = typeof left.delta !== 'number' || !left.endpoint ? Infinity : left.delta;
     const rd = typeof right.delta !== 'number' || !right.endpoint ? Infinity : right.delta;

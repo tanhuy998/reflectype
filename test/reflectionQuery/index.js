@@ -165,6 +165,8 @@ c.func(null, 1, true);
 //c.func(new A(), new A(), 1)
 console.timeEnd(2)
 
+c.func(new A(), new A(), true)
+
 console.time('total1')
 
 //c.func(new A(), new A(), 1)
@@ -189,6 +191,12 @@ for (let i = 0; i < 100000; ++i) {
 
     //console.timeEnd(2)
 }
+
+for (let i = 0; i < 100000; ++i) {
+
+    Math.sqrt();
+}
+
 console.timeEnd('total2')
 
 // const typeMeta = ref.metadata.owner.typeMeta;

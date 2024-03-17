@@ -61,24 +61,20 @@ module.exports = {
  */
 function addStatisticalPieace(paramMeta, variantNodeMeta, statisticTables = []) {
 
-    //for (const table of statisticTables) {
-    for  (let i = 0; i < statisticTables.length; ++i) {
+    for (let i = 0; i < statisticTables.length; ++i) {
 
         const table = statisticTables[i];
-
-        try {
         
-            ensureStatisticTableExists(table);
-            acknowledge(paramMeta.type, variantNodeMeta.depth, table);
-
-            if (paramMeta.allowNull) {
-
-                acknowledge(NULLABLE, variantNodeMeta.depth, table);
-            }
-        }
-        catch (e) {
-    
+        if (!(table instanceof Map)) {
+            
             continue;
+        }
+
+        acknowledge(paramMeta?.type ?? Any, variantNodeMeta.depth, table);
+
+        if (paramMeta?.allowNull) {
+
+            acknowledge(NULLABLE, variantNodeMeta.depth, table);
         }
     }
 }
@@ -154,7 +150,7 @@ function estimateArgs(funcMeta, args = []) {
 
         return [];
     }
-    //console.log(args)
+
     const statisticTable = getVariantMapOf(funcMeta.owner)?.statisticTable;
 
     if (!statisticTable) {
@@ -168,7 +164,6 @@ function estimateArgs(funcMeta, args = []) {
 
     let hasNullable;
     
-    //for (const argVal of args || []) {
     for (let i = 0; i < args.length; ++i) {
 
         const argVal = args[i];
@@ -178,9 +173,7 @@ function estimateArgs(funcMeta, args = []) {
             //!Array.isArray(estimationPiece) ||
             estimationPiece.length === 0
         ) {
-            /**
-             * throwing error here in order to 
-             */
+
             return undefined;
         }
         
@@ -191,9 +184,7 @@ function estimateArgs(funcMeta, args = []) {
         ++index;
     }
     
-    //return [ret, argMasses, hasNullable];
     return new estimation_report_t(ret, argMasses, hasNullable);
-    //return ret;
 }
 
 function calculateDelta() {
@@ -222,6 +213,7 @@ function diveInheritanceChain(_type, index, statisticTable, estimationPiece, bia
     while (
         currentType !== Object.getPrototypeOf(Function)
         && typeof currentType === 'function'
+        && currentType !== Interface
     ) {
 
         decideToChoose(currentType, index, statisticTable, estimationPiece, delta);
@@ -264,9 +256,6 @@ function diveInheritanceChain(_type, index, statisticTable, estimationPiece, bia
         estimationPiece[ESTIMATION_MASS] = mass;
         estimationPiece[NULLABLE] = isNullable;
     }
-    
-    //console.log('mass', [_type?.name || _type], mass)
-    //return estimationPiece;
 }
 
 /**
@@ -284,16 +273,12 @@ function decideToChoose(_type, index, statisticTable, estimationPiece, delta = 0
         !typeStatisticallyExistsOn(statisticTable, _type, index)
     ) {
 
-        return;// estimationPiece;
-    }   
-
-    //console.log('choose', [_type?.name || _type], delta);
+        return;
+    }
 
     estimationPiece.push(new estimation_complex_t(
         _type, delta, inmaginary
     ));
-
-    //return estimationPiece;
 }
 
 /**
@@ -302,12 +287,12 @@ function decideToChoose(_type, index, statisticTable, estimationPiece, delta = 0
  * @param {number} index
  * @param {?Map<Function, number>} statisticTable 
  * 
- * @returns {?Array<Function>}
+ * @returns {EstimationPieace}
  */
 function estimateArgType(argVal, index = 0, statisticTable) {
 
     const _type = getCastedTypeOf(argVal) || getTypeOf(argVal) || NULLABLE;
-    //console.log(`-------------- index ${index} | type`, [_type.name],`---------------`)
+
     const estimationPiece = new EstimationPieace(_type);
     diveInheritanceChain(_type, index, statisticTable, estimationPiece);
 
@@ -319,14 +304,14 @@ function estimateArgType(argVal, index = 0, statisticTable) {
         diveInterfaces(argVal, index, statisticTable, estimationPiece);
     }
 
-    if (
-        estimationPiece.length === 0
-    ) {
+    // if (
+    //     estimationPiece.length === 0
+    // ) {
 
-        decideToChoose(Any, index, statisticTable, estimationPiece, 0, 1);
-    }
+    //     decideToChoose(Any, index, statisticTable, estimationPiece, 0, 1);
+    // }
 
-    //console.log(estimationPiece)
+    decideToChoose(Any, index, statisticTable, estimationPiece, 0, 1);
 
     return estimationPiece;
 }
@@ -345,14 +330,12 @@ function diveInterfaces(argVal, index, statisticTable, estimationPeace) {
     const interfaceList = getAllInterfacesOf(argVal);
 
     if (
-        !isValuable(interfaceList?.length) ||
-        interfaceList.length === 0
+        !Array.isArray(interfaceList)
     ) {
 
         return;
     }
 
-    //for (const intf of getAllInterfacesOf(argVal) || []) {
     for (let i = 0; i < interfaceList.length; ++i)  {
         
         const intf = interfaceList[i];
@@ -362,56 +345,10 @@ function diveInterfaces(argVal, index, statisticTable, estimationPeace) {
             statisticTable, 
             estimationPeace, 
             bias
-            //estimationPeace?.[ESTIMATION_MASS]
         );
     }
     
     return estimationPeace;
-}
-
-/**
- * 
- * @param {any} argVal 
- * @param {number} index
- * @param {?Map<Function, number>} statisticTable 
- * 
- * @returns {?Array<Function>}
- */
-function _estimatePotentialType(argVal, index = 0, statisticTable) {
-
-    //throwIfCastedTypeExist(argVal);        
-    //console.time(1)
-    const _type = getCastedTypeOf(argVal) || getTypeOf(argVal);
-    //const _type = getTypeOf(argVal)
-    //console.timeEnd(1)
-    let ret = diveInheritanceChain(_type/*getTypeOf(argVal)*/, index, statisticTable);
-    
-    if (_type instanceof Interface) {
-
-        return ret;
-    }
-
-    for (const intf of getAllInterfacesOf(argVal) || []) {
-
-        (ret || []).push(...(diveInheritanceChain(intf, index, statisticTable, ret?.[ESTIMATION_MASS]) || []));
-    }
-
-    return ret;
-}
-
-function throwIfInterface(type) {
-
-    const casted_type = getCastedTypeOf(argVal);
-
-    if (!casted_type) {
-
-        return;
-    }
-
-    const e = new TypeError(HANDLE_CAST);
-    e[CASTED] = casted_type;
-
-    throw e;
 }
 
 /**
@@ -422,8 +359,8 @@ function throwIfInterface(type) {
 function getAllInterfacesOf(_unknown) {
 
     const _type = getTypeOf(_unknown);
-    const meta = metaOf(_type)?.interfaces?.properties;
+    const intfList = metaOf(_type)?.interfaces?.all;
 
-    return typeof meta === 'object' ? Object.values(meta) : undefined;
+    return Array.isArray(intfList) ? intfList : undefined;
 }
 

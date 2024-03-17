@@ -3,14 +3,22 @@ const { metaOf, property_metadata_t } = require("../reflection/metadata");
 const self = require("../utils/self");
 const Interface = require("./interface");
 
-class InterfacePrototype {
+module.exports = class InterfacePrototype {
 
     /**@type {Set<Interface>} */
     #interfaces;
 
+    /**@type {Array<Interface>} */
+    #pool;
+
     /**@type {Set<Interface>} */
     get list() {
         return this.#interfaces;
+    }
+
+    get all() {
+
+        return this.#pool;
     }
 
     /**
@@ -44,6 +52,7 @@ class InterfacePrototype {
     constructor(_origin , _interfaces = []) {
 
         this.#interfaces = new Set(_interfaces);
+        this.#pool = _interfaces;
         this.#prototype = new Map();
 
         this.#origin = _origin;
@@ -197,4 +206,4 @@ class InterfacePrototype {
     }
 }
 
-module.exports = InterfacePrototype;
+//module.exports = InterfacePrototype;

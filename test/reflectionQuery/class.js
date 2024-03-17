@@ -353,6 +353,23 @@ class C extends H {
 
         return 1;
     }   
+
+    @parameters({
+        b: Number,
+        c: Boolean
+    })
+    [METHOD('func')](a, b, c) {
+
+        console.log('any')
+    }
+
+    @parameters({
+        c: Boolean,
+    })
+    [METHOD('func')](a, b, c) {
+
+        console.log('double any')
+    }
 }
 
 function dec(_, context) {
