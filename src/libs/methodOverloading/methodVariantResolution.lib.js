@@ -15,7 +15,7 @@ const { getMetadataFootPrintByKey } = require("../footPrint");
 const { OVERLOAD_APPLIED, OVERLOAD_TARGET, OVERRIDE_APPLIED, OVERLOADED_METHOD_NAME, NULLABLE } = require("./constant");
 const { isObjectLike, isFirstClass, isObjectKey, isValuable } = require("../type");
 const {getAllParametersMeta, getAllParametersMetaWithNullableFilter} = require('../functionParam.lib');
-const { searchForMethodVariant, mergeFuncVariant } = require("./methodVariantTrieOperation.lib");
+const { searchForMethodVariant, mergeFuncVariant, searchForMatchTrieNode } = require("./methodVariantTrieOperation.lib");
 const { dispatchMethodVariant } = require("./methodVariant.lib");
 const {FUNC_TRIE} = require('./registry/function.reg');
 const { LEGACY_PROP_META, INHERITANCE_DEPTH } = require("../metadata/constant");
@@ -23,6 +23,8 @@ const { isPseudoMethod } = require("./pseudoMethod.lib");
 const MethodDuplicateDeclarationError = require("./error/methodDuplicateDeclarationError");
 const OverridingNonVirtualMethodError = require("./error/overridingNonVirtualMethodError");
 const AmbigousSignatureConflictError = require("./error/ambigousSignatureConfilictError");
+const Interface = require("../../interface/interface");
+const InterfaceMethodNotImplementedError = require("./error/interfaceMethodNotImplementedError");
 const debug = require('debug')('pkg:methodOverloading:resolution');
 
 const IS_ENTRY_POINT = '_is_entry_point';
@@ -30,6 +32,7 @@ const IS_ENTRY_POINT = '_is_entry_point';
 module.exports = {
     manipulateMethodVariantBehavior,
     manipulateMethodVariantsStatisticTables,
+    verifyInterfaceImplementation,
     isOwnerOfPropMeta,
 }
 
@@ -576,6 +579,101 @@ function isOwnerOfPropMeta(propName, propMeta) {
 }
 
 /**
+ * @this Function
+ * 
+ * @param {metadata_t} typeMeta 
+ */
+function verifyInterfaceImplementation(typeMeta) {
+
+    if (this.prototype instanceof Interface) {
+
+        return;
+    }
+    
+    const interfaceList = typeMeta.interfaces?.all;
+    
+    for (const Intf of interfaceList || []) {
+
+        verifyInterface(typeMeta, Intf);
+    }
+}
+
+/**
+ * 
+ * @param {metadata_t} hostTypMeta
+ * @param {Interface} intf 
+ */
+function verifyInterface(hostTypMeta, intf) {
+    /**@type {metadata_t} */
+    const typeMeta = metaOf(intf);
+
+    if (!typeMeta) {
+
+        return;
+    }
+    
+    const prototype = typeMeta._prototype;
+
+    for (const propMeta of Object.values(prototype.properties)) {
+
+        if (!propMeta.isMethod) {
+
+            continue;
+        }
+
+        const targetMethodName = getMetadataFootPrintByKey(
+            propMeta,
+            OVERLOADED_METHOD_NAME
+        ) || propMeta.name;
+
+        const genericPropMeta =
+            hostTypMeta.methodVariantMaps._prototype.mappingTable.get(targetMethodName);
+
+        if (!genericPropMeta) {
+
+            throw new InterfaceMethodNotImplementedError(hostTypMeta, propMeta);
+        }
+
+        verifyOnTrie(propMeta.functionMeta, genericPropMeta);
+    }
+}
+
+/**
+ * 
+ * @param {function_metadata_t} interfaceFuncMeta 
+ * @param {property_metadata_t} hostGenericPropMeta
+ */
+function verifyOnTrie(interfaceFuncMeta, hostGenericPropMeta) {
+
+    const paraMetaList = getAllParametersMeta(interfaceFuncMeta);
+    const trieEndpoint = searchForMatchTrieNode(
+        FUNC_TRIE, paraMetaList, meta => meta?.type || Any
+    )?.endpoint;
+
+    if (!trieEndpoint?.vTable.has(hostGenericPropMeta)) {
+        
+        throw new InterfaceMethodNotImplementedError(
+            hostGenericPropMeta.owner.typeMeta,
+            interfaceFuncMeta.owner
+        );
+    }
+
+    const nullableEndpoint = searchForMatchTrieNode(
+        FUNC_TRIE,
+        paraMetaList,
+        (meta) => (meta?.allowNull ? NULLABLE : meta?.type || Any)
+    )?.endpoint;
+
+    if (!nullableEndpoint?.vTable.has(hostGenericPropMeta)) {
+
+        throw new InterfaceMethodNotImplementedError(
+            hostGenericPropMeta.owner.typeMeta,
+            interfaceFuncMeta.owner
+        );
+    }
+}
+
+/**
  * Decide a how derieved classes inherits its base class method variant maps
  * 
  * @param {metadata_t} typeMeta 
@@ -616,11 +714,13 @@ function manipulateMethodVariantsStatisticTables(typeMeta) {
     /**
      * will optimize the following lines
      */
-
+    
     // console.log(currentClassMethodVariantMaps._prototype === baseClassMethodVariantMaps._prototype)
-    currentClassMethodVariantMaps._prototype.mappingTable = new Map(Array.from(baseClassMethodVariantMaps._prototype.mappingTable.entries()));
-    currentClassMethodVariantMaps.static.mappingTable = new Map(Array.from(baseClassMethodVariantMaps.static.mappingTable.entries()));
+    // currentClassMethodVariantMaps._prototype.mappingTable = new Map(Array.from(baseClassMethodVariantMaps?._prototype?.mappingTable?.entries()));
+    // currentClassMethodVariantMaps.static.mappingTable = new Map(Array.from(baseClassMethodVariantMaps?.static?.mappingTable?.entries()));
+    currentClassMethodVariantMaps._prototype.mappingTable = new Map(baseClassMethodVariantMaps?._prototype?.mappingTable?.entries());
+    currentClassMethodVariantMaps.static.mappingTable = new Map(baseClassMethodVariantMaps?.static?.mappingTable?.entries());
 
-    currentClassMethodVariantMaps._prototype.localTrie = baseClassMethodVariantMaps._prototype.localTrie;
-    currentClassMethodVariantMaps.static.localTrie = baseClassMethodVariantMaps.static.localTrie;
+    // currentClassMethodVariantMaps._prototype.localTrie = baseClassMethodVariantMaps._prototype.localTrie;
+    // currentClassMethodVariantMaps.static.localTrie = baseClassMethodVariantMaps.static.localTrie;
 }

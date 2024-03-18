@@ -117,7 +117,12 @@ class IDisposable extends Interface {
 
 class IFoo extends IDisposable {
 
-    foo() {}
+    @parameters({
+        a: String,
+    })
+    foo(a) {
+
+    }
 }
 
 @implement(IDisposable)
@@ -135,7 +140,11 @@ class B extends A {
 class Y {
 
     func() {}
-    foo() {}
+
+    @parameters({
+        a: String,
+    })
+    foo(a) {}
 }
 
 class T {

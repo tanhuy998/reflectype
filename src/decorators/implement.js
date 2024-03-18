@@ -3,6 +3,7 @@ const Interface = require('../interface/interface.js');
 const InterfacePrototype = require('../interface/interfacePrototype.js');
 const { initTypeMeta } = require('../libs/classDecorator.js');
 const { refreshTypeMetadata } = require('../libs/metadata/metadataTrace.js');
+const { resolveTypeMetaResolution } = require('../libs/metadata/resolution.js');
 //const initMetadata = require('../reflection/initMetadata');
 //const initPrototypeMetadata = require('../reflection/initPrototypeMetadata');
 const { metaOf, metadata_t, TYPE_JS } = require('../reflection/metadata');
@@ -11,9 +12,15 @@ const self = require('../utils/self.js');
 
 module.exports = implement;
 
+/**
+ * 
+ * @param  {...Interface} interfaces 
+ * @returns 
+ */
 function implement(...interfaces) {
 
     checkInput(interfaces);
+    resolveInterfaceListResolution(interfaces);
 
     function implementDecorator(_class, _context) {
 
@@ -24,14 +31,31 @@ function implement(...interfaces) {
             throw new Error('cannot apply @implement on non-class object'); 
         }
         
+        if (_class.prototype instanceof Interface) {
+
+            throw new TypeError('Interface could not implement another interface')
+        }
+
         initTypeMeta(_class, _context);
         handle(_class, _context, interfaces);
-        
+
         return _class;
     }
 
     markAsDecorator(implementDecorator);
     return implementDecorator;
+}
+
+/**
+ * 
+ * @param {Array<Interface>} interfaceList 
+ */
+function resolveInterfaceListResolution(interfaceList = []) {
+
+    for (const interface of interfaceList) {
+
+        resolveTypeMetaResolution(interface);
+    }
 }
 
 function checkInput(inputs) {

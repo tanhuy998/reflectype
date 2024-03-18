@@ -1,5 +1,6 @@
-const { manipulateMethodVariantsStatisticTables } = require("../../methodOverloading/methodVariantResolution.lib");
+const { manipulateMethodVariantsStatisticTables, verifyInterfaceImplementation } = require("../../methodOverloading/methodVariantResolution.lib");
 
 module.exports = [
-    manipulateMethodVariantsStatisticTables
+    manipulateMethodVariantsStatisticTables,
+    verifyInterfaceImplementation,
 ];

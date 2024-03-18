@@ -15,7 +15,8 @@ module.exports = {
     retrieveAllSignatures,
     hasTrie,
     retrieveTrie,
-    retrieveSignatureMatrix
+    retrieveSignatureMatrix,
+    searchForMatchTrieNode,
 }
 
 /**

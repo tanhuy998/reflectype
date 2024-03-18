@@ -171,7 +171,7 @@ console.time('total1')
 
 //c.func(new A(), new A(), 1)
 
-for (let i = 0; i < 100000; ++i) {
+for (let i = 0; i < 1; ++i) {
 
     //console.time(2)
 
