@@ -41,7 +41,7 @@ const { isPrimitive, getTypeOf } = require('../../src/libs/type.js');
 
 const v8 = require('node:v8');
 const { getCastedTypeOf, dynamic_cast, static_cast } = require('../../src/libs/casting.lib.js');
-const {FUNC_TRIE} = require('../../src/libs/metadata/registry/function.reg.js')
+const {FUNC_TRIE} = require('../../src/libs/methodOverloading/registry/function.reg.js')
 // const {A} = require('./compiled.js');
 //console.log(METHOD)
 // const refl = new Reflector(A);

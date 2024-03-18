@@ -18,7 +18,7 @@ const { getMetadataFootPrintByKey } = require("../footPrint");
 const { DECORATED_VALUE } = require("../constant");
 const { Any } = require("../../type");
 const { static_cast } = require("../casting.lib");
-const {FUNC_TRIE} = require('../metadata/registry/function.reg');
+const {FUNC_TRIE} = require('./registry/function.reg');
 const { function_signature_vector, estimation_report_t, vector } = require("./estimationFactor");
 
 module.exports = {

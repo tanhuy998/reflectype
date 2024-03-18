@@ -587,5 +587,5 @@ time average for iterating a an one hundred thousand times empty for loop is 0.6
 New approaches:
 - [ ] argument type caching
 - [x] static type binding (pure method overloading)
-- [ ] evaluate Any type parameters
+- [x] evaluate Any type parameters
 - [ ] interface method strict parameters
