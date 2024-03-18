@@ -1,5 +1,5 @@
 const ArgumentsNotMatchError = require('../error/argumentsNotMatchError.js');
-const { matchType, isObject, isAbstract, isValuable } = require('./type.js');
+const { matchType, isObject, isAbstract, isValuable, isCoerciveType, getTypeOf } = require('./type.js');
 
 /**
  * @typedef {import('../reflection/metadata.js').property_metadata_t} property_metadata_t
@@ -10,7 +10,6 @@ const { matchType, isObject, isAbstract, isValuable } = require('./type.js');
 module.exports = {
     compareArgsWithType
 };
-
 /**
  * 
  * @param {property_metadata_t} _propMeta 
@@ -74,6 +73,11 @@ function compareArgsWithType(_propMeta, _args = []) {
         }
 
         if (!matchType(type, currentArgValue)) {
+
+            if (isCoerciveType(getTypeOf(currentArgValue), type)) {
+
+                return true;
+            }
 
             const paramIndentifier = _propMeta.functionMeta.paramsName[i] || i;
             throw new ArgumentsNotMatchError({

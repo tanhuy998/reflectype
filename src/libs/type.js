@@ -61,6 +61,28 @@ module.exports = {
     isFirstClass,
     isFirstClassOrFalse,
     getTypeOf,
+    isCoerciveType,
+}
+
+
+/**
+ * 
+ * @param {Function} target 
+ * @param {Function} ref 
+ */
+function isCoerciveType(target, ref) {
+
+    if (ref === Boolean) {
+
+        return isValuable(target);
+    }
+
+    if (ref === String) {
+
+        return target === Number;
+    }
+
+    return false;
 }
 
 

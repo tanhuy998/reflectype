@@ -42,6 +42,7 @@ const { estimation_complex_t, estimation_report_t, EstimationPieace } = require(
  * priority than b because types of signature a is more explicit than b's types.
  */
 const INTERFACE_BIAS = 1/32;
+const COERCIVE_TYPE_IMAGINARY_BIAS = 1/32;
 const HANDLE_CAST = 'handle_cast';
 const CASTED = 'casted';
 
@@ -311,9 +312,28 @@ function estimateArgType(argVal, index = 0, statisticTable) {
     //     decideToChoose(Any, index, statisticTable, estimationPiece, 0, 1);
     // }
 
+    checkForCoerciveTypes(_type, index, statisticTable, estimationPiece);
     decideToChoose(Any, index, statisticTable, estimationPiece, 0, 1);
 
     return estimationPiece;
+}
+
+/**
+ * 
+ * @param {Function} _type 
+ * @param {number} index 
+ * @param {Map<Function, number>} statisticTable 
+ * @param {EstimationPieace} estimationPeace 
+ */
+function checkForCoerciveTypes(_type, index, statisticTable, estimationPeace) {
+
+    switch(_type) {
+        case Number:
+            decideToChoose(Boolean, index, statisticTable, estimationPeace, 0, COERCIVE_TYPE_IMAGINARY_BIAS*2);
+            decideToChoose(String, index, statisticTable, estimationPeace, 0, COERCIVE_TYPE_IMAGINARY_BIAS);
+        case String:
+            decideToChoose(Boolean, index, statisticTable, estimationPeace, 0, COERCIVE_TYPE_IMAGINARY_BIAS*2);       
+    }
 }
 
 /**

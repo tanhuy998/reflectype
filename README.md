@@ -582,7 +582,7 @@ time average for iterating a an one hundred thousand times empty for loop is 0.6
 - [x] Dynamic dispatch
 - [x] Multiple dispatch
 - [x] Nullable parameters
-- [ ] types coersion 
+- [x] types coersion 
 
 New approaches:
 - [ ] argument type caching
