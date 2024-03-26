@@ -118,7 +118,7 @@ class IDisposable extends Interface {
 class IFoo extends IDisposable {
 
     @parameters({
-        a: String,
+        a: [String, allowNull]
     })
     foo(a) {
 
@@ -142,7 +142,7 @@ class Y {
     func() {}
 
     @parameters({
-        a: String,
+        a: [String, allowNull]
     })
     foo(a) {}
 }
@@ -238,6 +238,7 @@ class T {
     }
 }
 
+@implement(IFoo)
 class H extends T {
 
     @type(IDisposable)
@@ -260,6 +261,23 @@ class H extends T {
         console.log('another static H')
     }
 
+    static foo(a) {
+
+    }
+
+    foo() {
+        
+    }
+
+    @parameters({
+        a: [String, allowNull]
+    })
+    foo(a) {
+
+
+    }
+
+    
     @parameters({
         a: [String, allowNull],
         b: Number,

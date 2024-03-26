@@ -75,13 +75,13 @@ function recursiveResolveResolution(_class) {
 
         return;
     }
-
+    
     const stack = [];
     
-    while (_class !== Function.__proto__) {
+    while (_class !== Object.getPrototypeOf(Function)) {
 
         if (!needToBeManipulateResolution(_class)) {
-
+            
             break;
         }
 
@@ -109,12 +109,12 @@ function manipulateMetaDependentClasses(stack = []) {
 
         const typeMeta = metaOf(currentClass);
         typeMeta._constructor = extractClassConstructorInfoBaseOnConfig(currentClass);
-
+        
         assignAbstractToTypeMeta(currentClass, typeMeta);
         calculateInheritanceDepth(typeMeta);
         manipulateClass(currentClass, typeMeta)
         //manipulateForMethodVariants(currentClass);
-        unlinkIndependentPropeMeta(currentClass);
+        //unlinkIndependentPropeMeta(currentClass);
         //show(currentClass)
         RESOLVED_CLASSES.add(currentClass);
     }
@@ -138,8 +138,20 @@ function calculateInheritanceDepth(typeMeta) {
  * @param {metadata_t} typeMeta 
  */
 function manipulateClass(target, typeMeta) {
-
+    
     runClassResolutionPlugins(target, typeMeta);
+    unlinkIndependentPropeMeta(target);
+    runPostClassResolutionPlugins(target, typeMeta);
+}
+
+function runPostClassResolutionPlugins(target, typeMeta) {
+    
+    const plugins = require("./resolutionPlugins/postClassResolutionPlugins");
+
+    for (const plugin of plugins) {
+
+        plugin.call(target, typeMeta);
+    }
 }
 
 /**
@@ -155,65 +167,6 @@ function runClassResolutionPlugins(target, typeMeta) {
 
         plugin.call(target, typeMeta);
     }
-}
-
-// function manipulateForMethodVariants(_class) {
-
-//     // if (isFirstClass(_class)) {
-
-//     //     return;
-//     // }
-
-//     const baseClass = Object.getPrototypeOf(_class);
-//     const baseTypeMeta = metaOf(baseClass);
-
-//     // if (!baseTypeMeta) {
-
-//     //     return;
-//     // }
-
-//     /**@type {method_variant_map_metadata_t} */
-//     const baseClassMethodVariantMaps = baseTypeMeta?.methodVariantMaps;
-//     const currentClassMeta = metaOf(_class);
-//     /**@type {method_variant_map_metadata_t} */
-//     const currentClassMethodVariantMaps = currentClassMeta.methodVariantMaps = new method_variant_map_metadata_t();
-
-//     /**
-//      * initialize parameter types statistical table 
-//      */
-//     // currentClassMethodVariantMaps._prototype.statisticTable = baseClassMethodVariantMaps?._prototype?.statisticTable || new Map();
-//     // currentClassMethodVariantMaps.static.statisticTable = baseClassMethodVariantMaps?.static?.statisticTable || new Map();
-//     currentClassMethodVariantMaps._prototype.statisticTable = new Map(baseClassMethodVariantMaps?._prototype?.statisticTable?.entries());
-//     currentClassMethodVariantMaps.static.statisticTable = new Map(baseClassMethodVariantMaps?.static?.statisticTable?.entries());
-
-//     // if (isFirstClass(_class)) {
-
-//     //     currentClassMethodVariantMaps._prototype.mappingTable = new Map();
-//     //     currentClassMethodVariantMaps.static.mappingTable = new Map();
-
-//     //     return;
-//     // }
-//     // /**
-//     //  * will optimize the following lines
-//     //  */
-
-//     // // console.log(currentClassMethodVariantMaps._prototype === baseClassMethodVariantMaps._prototype)
-//     // currentClassMethodVariantMaps._prototype.mappingTable = new Map(Array.from(baseClassMethodVariantMaps._prototype.mappingTable.entries()));
-//     // currentClassMethodVariantMaps.static.mappingTable = new Map(Array.from(baseClassMethodVariantMaps.static.mappingTable.entries()));
-// }
-
-function show(_class) {
-
-    const baseClass = Object.getPrototypeOf(_class);
-    const baseTypeMeta = metaOf(baseClass);
-
-    /**@type {method_variant_map_metadata_t} */
-    const baseClassMethodVariantMaps = baseTypeMeta?.methodVariantMaps;
-    const currentClassMeta = metaOf(_class);
-    const currentClassMethodVariantMaps = currentClassMeta?.methodVariantMaps;
-
-    console.log(['---'], baseClass?.name, baseClassMethodVariantMaps?._prototype)
-    console.log(['---'], _class.name, currentClassMethodVariantMaps?._prototype)
 }
 
 function checkAndReAssignMetaWrapper(_class) {
@@ -234,7 +187,9 @@ function checkAndReAssignMetaWrapper(_class) {
     const baseClassWrapper = wrapperOf(_class);
 
     Object.defineProperty(_class, METADATA, {
-        writable: false,
+        configurable: true,
+        enumerable: true,
+        //writable: false,
         value: Object.setPrototypeOf({}, baseClassWrapper)
     })
 
@@ -279,7 +234,7 @@ function resolveTypeMetaResolution(_class) {
  * @param {Function} _class 
  */
 function unlinkIndependentPropeMeta(_class) {
-
+    
     scanAndResolveStaticProperties(_class);
     scanAndResolvePrototypeProperties(_class);
 }
@@ -293,6 +248,7 @@ function scanAndResolveStaticProperties(_class) {
 function scanAndResolvePrototypeProperties(_class) {
 
     const meta = metaOf(_class)?._prototype;
+    
     manipulateProperties(_class.prototype, meta);
 }
 
@@ -305,9 +261,9 @@ function manipulateProperties(_target, meta) {
 
     const properties = meta.properties;
     const propertyResolutionPlugins = require('./resolutionPlugins/propertyResolutionPlugins');
-
+    
     for (const [propName, propMeta] of Object.entries(properties) || []) {
-
+        
         if (
             //!isMethodOverridedWithoutDecorattion.call(_target, propName, propMeta) &&
             //!isAttributeOverridedWithoutDecoration.call(

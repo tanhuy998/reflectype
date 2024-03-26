@@ -32,8 +32,9 @@ const IS_ENTRY_POINT = '_is_entry_point';
 module.exports = {
     manipulateMethodVariantBehavior,
     manipulateMethodVariantsStatisticTables,
-    verifyInterfaceImplementation,
+    //verifyInterfaceImplementation,
     isOwnerOfPropMeta,
+    getNearestBaseImplementationPropMeta
 }
 
 /**
@@ -62,48 +63,64 @@ function manipulateMethodVariantBehavior(propName, propMeta) {
         const overridedClass = propMeta.owner.typeMeta.abstract;
         throw new ReferenceError(`could not define undecorated method [${currentClass?.name}].${propName}() to override base class's decorated method [${overridedClass?.name}].${propName}()`);
     }
+    
 
     if (
         !isPseudoMethod(propMeta) &&
         isOwner
     ) {
-
-        registerMethodVariantEntryMeta(propMeta);
+        
+        registerMethodVariantGenericPropMeta(propMeta);
     }
-
+    
     const isOverloading = isOverloadingMethod.call(this, propName, propMeta);
     const hasLegacy = isOverridingBaseClassMethod.call(this, propName, propMeta);
 
-    if (
-        !isOverloading &&
-        !hasLegacy
-    ) {
+    // if (
+    //     !isOverloading &&
+    //     !hasLegacy
+    // ) {
 
-        return;
-    }
+    //     return;
+    // }
 
     const ctxGenericPropMeta = retrieveContextGenericPropMeta.call(this, propName, propMeta);
 
     let statisticTable;
 
-    if (hasLegacy) {
-        /**
-         * in this case, the remote propMeta is known as the legacy
-         * of the current propMeta which is placed in base class.
-         */
-        createContextEntryPoint(propMeta);
-        statisticTable = retrieveMethodVariantTableOf(propMeta).statisticTable;
+    if (
+        (isOverloading
+        || hasLegacy) 
+        //&& !isPseudoMethod(propMeta)
+    ) {
+
+        const overloadedName = getMetadataFootPrintByKey(propMeta, OVERLOADED_METHOD_NAME) || propMeta.name;
+        const genericPropMeta = retrieveMethodVariantTableOf(propMeta).mappingTable.get(overloadedName);
+        createContextEntryPoint(genericPropMeta);
     }
 
-    /**
-     * remotePropMeta could be on base class therefore when registering remotePropMeta,
-     * update the state of 
-     */
-    registerOverloadVariant(ctxGenericPropMeta, getAllParametersMeta(ctxGenericPropMeta.functionMeta), [statisticTable]);
-    registerIfNullableBranch(ctxGenericPropMeta, getAllParametersMetaWithNullableFilter(ctxGenericPropMeta.functionMeta), [statisticTable]);
-    registerOverloadVariant(propMeta, getAllParametersMeta(propMeta.functionMeta));
-    registerIfNullableBranch(propMeta, getAllParametersMetaWithNullableFilter(propMeta.functionMeta));
-    createContextEntryPoint(ctxGenericPropMeta);
+    // if (hasLegacy) {
+    //     /**
+    //      * in this case, the remote propMeta is known as the legacy
+    //      * of the current propMeta which is placed in base class.
+    //      */
+    //     createContextEntryPoint(propMeta);
+    //     statisticTable = retrieveMethodVariantTableOf(propMeta).statisticTable;
+    // }
+
+    // /**
+    //  * remotePropMeta could be on base class therefore when registering remotePropMeta,
+    //  * update the state of 
+    //  */
+    // registerOverloadVariant(ctxGenericPropMeta, getAllParametersMeta(ctxGenericPropMeta.functionMeta), [statisticTable]);
+    // registerIfNullableBranch(ctxGenericPropMeta, getAllParametersMetaWithNullableFilter(ctxGenericPropMeta.functionMeta), [statisticTable]);
+
+    // registerOverloadVariant(propMeta, getAllParametersMeta(propMeta.functionMeta));
+    // registerIfNullableBranch(propMeta, getAllParametersMetaWithNullableFilter(propMeta.functionMeta));
+
+    registerMethodVariant(propMeta);
+    registerNullableBranch(propMeta);
+    // createContextEntryPoint(ctxGenericPropMeta);
 }
 
 
@@ -133,7 +150,7 @@ function retrieveContextGenericPropMeta(propName, propMeta) {
  * 
  * @param {property_metadata_t} propMeta 
  */
-function registerMethodVariantEntryMeta(propMeta) {
+function registerMethodVariantGenericPropMeta(propMeta) {
 
     const variantMaps = propMeta.owner.typeMeta.methodVariantMaps;
     const mappingTable = propMeta.static ? variantMaps.static.mappingTable : variantMaps._prototype.mappingTable;
@@ -181,9 +198,9 @@ function createEntryPoint(entryPointTarget , methodName, refPropMeta) {
     }
 
     const map = retrieveMethodVariantTableOf(refPropMeta);
-    const mappedPropMeta = map.mappingTable.get(methodName);
+    const genericPropMeta = map.mappingTable.get(methodName);
 
-    if (!mappedPropMeta) {
+    if (!genericPropMeta) {
 
         return;
     }
@@ -193,7 +210,7 @@ function createEntryPoint(entryPointTarget , methodName, refPropMeta) {
         return;
     }
 
-    entryPointTarget[methodName] = generateEntryPointForMethodVariants(mappedPropMeta);
+    entryPointTarget[methodName] = generateEntryPointForMethodVariants(genericPropMeta);
 }
 
 /**
@@ -230,36 +247,86 @@ function markAsVariantEntryPoint(func) {
     func[IS_ENTRY_POINT] = true;
 }
 
+// /**
+//  * This function will be register as a metadata properties resoulution plugin,
+//  * 
+//  * @this Function|Object class or class's prototype that is resolved resolution
+//  * 
+//  * @param {string|symbol} propName 
+//  * @param {property_metadata_t} propMeta 
+//  */
+// function manipulatePseudoOveloading(propName, propMeta) {
+//     /**
+//      * pseudo memthod overload just valid when the target of overlooad is setted up,
+//      * init variant trie for it's target method is not necessary.
+//      */
+//     registerOverloadVariant(propMeta, this);
+// }
+
+// /**
+//  * 
+//  * @param {property_metadata_t} hostPropMeta 
+//  * @param {Array<parameter_metadata_t>} paramMetaList 
+//  * @param {Array<Map<Function, Number>>} extraStatisticTables
+//  */
+// function registerIfNullableBranch(hostPropMeta, paramMetaList, extraStatisticTables = []) {
+
+//     if (paramMetaList === null) {
+
+//         return;
+//     }
+    
+//     registerOverloadVariant(hostPropMeta, paramMetaList, extraStatisticTables, true);
+// }
+
 /**
- * This function will be register as a metadata properties resoulution plugin,
  * 
- * @this Function|Object class or class's prototype that is resolved resolution
- * 
- * @param {string|symbol} propName 
- * @param {property_metadata_t} propMeta 
+ * @param {property_metadata_t} hostPropMeta 
+ * @param {Array<Map<Function, Number>>} extraStatisticTables
  */
-function manipulatePseudoOveloading(propName, propMeta) {
-    /**
-     * pseudo memthod overload just valid when the target of overlooad is setted up,
-     * init variant trie for it's target method is not necessary.
-     */
-    registerOverloadVariant(propMeta, this);
+function registerMethodVariant(hostPropMeta, extraStatisticTables = []) {
+
+    const funcMeta = hostPropMeta.functionMeta;
+    const paramMetaList = getAllParametersMeta(funcMeta) || [];
+    const endpointNode = registerSignature(hostPropMeta, paramMetaList, extraStatisticTables);
+
+    if (!endpointNode) {
+
+        return;
+    }
+
+    validateWithBaseClassImplemetation(hostPropMeta);
+
+    const genericPropMeta = retrieveGenericPropMetaOf(hostPropMeta);
+    endpointNode.endpoint.vTable.set(genericPropMeta.functionMeta, funcMeta);
 }
 
 /**
  * 
  * @param {property_metadata_t} hostPropMeta 
- * @param {Array<parameter_metadata_t>} paramMetaList 
  * @param {Array<Map<Function, Number>>} extraStatisticTables
  */
-function registerIfNullableBranch(hostPropMeta, paramMetaList, extraStatisticTables = []) {
+function registerNullableBranch(hostPropMeta, extraStatisticTables = []) {
 
-    if (paramMetaList === null) {
+    const funcMeta = hostPropMeta.functionMeta;
+    const nullableBranch = getAllParametersMetaWithNullableFilter(funcMeta);
+
+    if (!nullableBranch) {
 
         return;
     }
 
-    registerOverloadVariant(hostPropMeta, paramMetaList, extraStatisticTables, true);
+    const endPointNode = registerSignature(hostPropMeta, nullableBranch, extraStatisticTables);
+
+    if (!endPointNode) {
+
+        return;
+    }
+
+    validateNullableBranch(funcMeta, endPointNode);
+    
+    const genericPropMeta = retrieveGenericPropMetaOf(hostPropMeta);
+    endPointNode.endpoint.vTable.set(genericPropMeta.functionMeta, funcMeta);
 }
 
 /**
@@ -271,10 +338,10 @@ function registerIfNullableBranch(hostPropMeta, paramMetaList, extraStatisticTab
  * @param {Array<Map<Function, Number>>} extraStatisticTables
  * @param {boolean} nullableBranch
  * 
- * @returns {function_variant_param_node_metadata_t}
+ * @returns {function_variant_param_node_metadata_t|undefined}
  */
-function registerOverloadVariant(hostPropMeta, paramMetaList, extraStatisticTables = [], nullableBranch = false) {
-    
+function registerSignature(hostPropMeta, paramMetaList, extraStatisticTables = []) {
+
     if (paramMetaList === null) {
 
         return;
@@ -304,24 +371,72 @@ function registerOverloadVariant(hostPropMeta, paramMetaList, extraStatisticTabl
         && genericImplementation === hostPropMeta//genericFuncMeta
     ) {
 
-        return;
+        return undefined;
     }
-    
-    if (
-        nullableBranch
-    ) {
 
-        validateNullableBranch(hostFuncMeta, genericImplementation, endPointNode);
-    }
-    else if (
-        !nullableBranch
-    ) {
-
-        validateWithBaseClassImplemetation(hostPropMeta)
-    }
-    
-    vTable.set(genericFuncMeta, hostFuncMeta);
+    return endPointNode;
 }
+
+// /**
+//  * Get paramMeta list of hostPropMeta register for new method variant of remotePropMeta
+//  * 
+//  * 
+//  * @param {property_metadata_t} hostPropMeta 
+//  * @param {Array<parameter_metadata_t>} paramMetaList 
+//  * @param {Array<Map<Function, Number>>} extraStatisticTables
+//  * @param {boolean} nullableBranch
+//  * 
+//  * @returns {function_variant_param_node_metadata_t}
+//  */
+// function registerOverloadVariant(hostPropMeta, paramMetaList, extraStatisticTables = [], nullableBranch = false) {
+    
+//     if (paramMetaList === null) {
+
+//         return;
+//     }
+
+//     const hostFuncMeta = hostPropMeta.functionMeta;
+//     const methodVariantTable = retrieveMethodVariantTableOf(hostPropMeta);
+//     const {statisticTable, localTrie} = methodVariantTable;
+//     const variantTrie = FUNC_TRIE;
+
+//     const endPointNode = mergeFuncVariant(
+//         paramMetaList, 
+//         variantTrie, 
+//         [statisticTable, ...extraStatisticTables]
+//     );
+    
+//     const vTable = endPointNode.endpoint.vTable;
+
+//     const genericPropMeta = retrieveGenericPropMetaOf(hostPropMeta);
+//     const genericFuncMeta = genericPropMeta.functionMeta;
+    
+//     const hasImplemetantion = vTable.has(genericFuncMeta);
+//     const genericImplementation = vTable.get(genericFuncMeta);
+    
+//     if (
+//         hasImplemetantion
+//         && genericImplementation === hostPropMeta//genericFuncMeta
+//     ) {
+
+//         return;
+//     }
+    
+//     if (
+//         nullableBranch
+//     ) {
+
+//         validateNullableBranch(hostFuncMeta, genericImplementation, endPointNode);
+//     }
+//     else if (
+//         !nullableBranch
+//     ) {
+
+//         validateWithBaseClassImplemetation(hostPropMeta)
+//     }
+    
+//     vTable.set(genericFuncMeta, hostFuncMeta);
+// }
 
 
 
@@ -342,17 +457,15 @@ function mergeSignature(rootTrieNode, genericPropMeta, paramMetaList, statisticT
     );
 }
 
-function registerNullableVariant() {
-
-
-}
-
 /**
  * @param {function_metadata_t} funcMeta
  * @param {function_metadata_t} genericImplementation 
  * @param {function_variant_param_node_metadata_t} endpointNode
  */
-function validateNullableBranch(funcMeta, genericImplementation, endpointNode) {
+function validateNullableBranch(funcMeta, /*genericImplementation,*/ endpointNode) {
+
+    const genericPropMeta = retrieveGenericPropMetaOf(funcMeta.owner);
+    const genericImplementation = endpointNode.endpoint.vTable.get(genericPropMeta.functionMeta);
 
     if (
         !genericImplementation 
@@ -384,7 +497,7 @@ function retrieveGenericPropMetaOf(propMeta) {
  * 
  * @param {property_metadata_t} propMeta 
  */
-function validateWithBaseClassImplemetation(propMeta, nullable = false) {
+function validateWithBaseClassImplemetation(propMeta) {
     
     const hostFuncMeta = propMeta.functionMeta;
     const deicdeToOverrideBaseImplementation = getMetadataFootPrintByKey(propMeta, OVERRIDE_APPLIED);
@@ -421,10 +534,19 @@ function validateWithBaseClassImplemetation(propMeta, nullable = false) {
     }
 
     if (
-        !nearestBaseImplementation.functionMeta.allowOverride
+        deicdeToOverrideBaseImplementation
+        && !nearestBaseImplementation.functionMeta.isVirtual
     ) {
 
         throw new OverridingNonVirtualMethodError(propMeta, nearestBaseImplementation);
+    }
+
+    if (
+        deicdeToOverrideBaseImplementation
+        && nearestBaseImplementation.functionMeta.isVirtual
+    ) {
+
+        nearestBaseImplementation.functionMeta.vTable.set(propMeta.owner.typeMeta.abstract, hostFuncMeta);
     }
 }
 
@@ -453,7 +575,7 @@ function getNearestBaseImplementationPropMeta(propMeta, trieEndpoint) {
     const typeMeta = propMeta.owner.typeMeta;
     const _class = typeMeta.abstract;
     const depth = getMetadataFootPrintByKey(typeMeta, INHERITANCE_DEPTH);
-    const overloadedName = getMetadataFootPrintByKey(propMeta, OVERLOADED_METHOD_NAME);
+    const overloadedName = getMetadataFootPrintByKey(propMeta, OVERLOADED_METHOD_NAME) || propMeta.name;
     
     let nearestDepth = Infinity;
     let nearestFuncMeta;
@@ -579,101 +701,6 @@ function isOwnerOfPropMeta(propName, propMeta) {
 }
 
 /**
- * @this Function
- * 
- * @param {metadata_t} typeMeta 
- */
-function verifyInterfaceImplementation(typeMeta) {
-
-    if (this.prototype instanceof Interface) {
-
-        return;
-    }
-    
-    const interfaceList = typeMeta.interfaces?.all;
-    
-    for (const Intf of interfaceList || []) {
-
-        verifyInterface(typeMeta, Intf);
-    }
-}
-
-/**
- * 
- * @param {metadata_t} hostTypMeta
- * @param {Interface} intf 
- */
-function verifyInterface(hostTypMeta, intf) {
-    /**@type {metadata_t} */
-    const typeMeta = metaOf(intf);
-
-    if (!typeMeta) {
-
-        return;
-    }
-    
-    const prototype = typeMeta._prototype;
-
-    for (const propMeta of Object.values(prototype.properties)) {
-
-        if (!propMeta.isMethod) {
-
-            continue;
-        }
-
-        const targetMethodName = getMetadataFootPrintByKey(
-            propMeta,
-            OVERLOADED_METHOD_NAME
-        ) || propMeta.name;
-
-        const genericPropMeta =
-            hostTypMeta.methodVariantMaps._prototype.mappingTable.get(targetMethodName);
-
-        if (!genericPropMeta) {
-
-            throw new InterfaceMethodNotImplementedError(hostTypMeta, propMeta);
-        }
-
-        verifyOnTrie(propMeta.functionMeta, genericPropMeta);
-    }
-}
-
-/**
- * 
- * @param {function_metadata_t} interfaceFuncMeta 
- * @param {property_metadata_t} hostGenericPropMeta
- */
-function verifyOnTrie(interfaceFuncMeta, hostGenericPropMeta) {
-
-    const paraMetaList = getAllParametersMeta(interfaceFuncMeta);
-    const trieEndpoint = searchForMatchTrieNode(
-        FUNC_TRIE, paraMetaList, meta => meta?.type || Any
-    )?.endpoint;
-
-    if (!trieEndpoint?.vTable.has(hostGenericPropMeta)) {
-        
-        throw new InterfaceMethodNotImplementedError(
-            hostGenericPropMeta.owner.typeMeta,
-            interfaceFuncMeta.owner
-        );
-    }
-
-    const nullableEndpoint = searchForMatchTrieNode(
-        FUNC_TRIE,
-        paraMetaList,
-        (meta) => (meta?.allowNull ? NULLABLE : meta?.type || Any)
-    )?.endpoint;
-
-    if (!nullableEndpoint?.vTable.has(hostGenericPropMeta)) {
-
-        throw new InterfaceMethodNotImplementedError(
-            hostGenericPropMeta.owner.typeMeta,
-            interfaceFuncMeta.owner
-        );
-    }
-}
-
-/**
  * Decide a how derieved classes inherits its base class method variant maps
  * 
  * @param {metadata_t} typeMeta 
@@ -714,7 +741,7 @@ function manipulateMethodVariantsStatisticTables(typeMeta) {
     /**
      * will optimize the following lines
      */
-    
+
     // console.log(currentClassMethodVariantMaps._prototype === baseClassMethodVariantMaps._prototype)
     // currentClassMethodVariantMaps._prototype.mappingTable = new Map(Array.from(baseClassMethodVariantMaps?._prototype?.mappingTable?.entries()));
     // currentClassMethodVariantMaps.static.mappingTable = new Map(Array.from(baseClassMethodVariantMaps?.static?.mappingTable?.entries()));

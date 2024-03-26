@@ -4,9 +4,9 @@
 
 ## Features
 
-- Runtime type check
-- Interface
-- Method overloading
+- [Runtime type check](#type-checking)
+- [Interface](#interface)
+- [Method overloading](#method-overloading-multiple-dispatch)
 
 ### Prerequisites
 
@@ -92,6 +92,8 @@ class SomeClass {
     }
 }
 ```
+
+## Type Checking
 
 ## Class Attribute
 
@@ -339,13 +341,17 @@ class A {
 }
 ```
 
-## Method Overloading (Multiple Dispatch) 
+## Method Overloading (Multiple Dispatch)
 
 Reflectype provides the ability to oeverloading methods like other object oriented languages (C++, C#, Java). The concept and keywords inspired mostly from C# language.
 
+### Multimethod concept
+
+
+
 ### Usage
 
-### Origin and Pseudo Method
+### Generic and Pseudo Method
 
 ```js
 const {METHOD, returnType, parameters} = require('reflectype');
@@ -529,9 +535,107 @@ overloaded for B
 
 The code above is the Javascript conversion of the illustative C# example before. As a result, contents printed to the console is the same as the C#'s version's. Any type hinted properties of object are `static_cast`ed to the type where they are stored. In the JS example, the object that is stored at `T_obj.prop` is type of `B` but T_obj.prop type if determined as `A` so that when passing literally `test_method_overload_obj.func(T_obj.prop);` the type of the object stored at `T_obj.prop` is casted down to `A` and therefore the method with signature `func(param: A)` is dispathed.
 
-### Multiple Dispatch Concept
+### Context Based Argument Type
 
-### Method Overloading Resolution
+Like other oop programming languages, arguments will be casted down as the declared static type on the method even thouugh they are subtype of the parameter type.
+
+```JS
+class Base {}
+
+class Derived extends Base {}
+
+
+class A {
+
+    @parameter({
+        param: Base
+    })
+    func(param) {
+        /**
+         *  param is now considered as Base
+         */
+        console.log('base');
+        this.func(param);
+    }
+
+    @parameter({
+        a: Derived
+    })
+    [METHOD('func')](a) {
+
+        console.log('derived');
+    }
+}
+
+const obj = new A();
+
+obj.func(new Derived());
+
+/**
+ * this example's output will lead to stack overflow 
+ * because A.func(Base) is dispatched recursively.
+ */
+```
+
+### Type Coercion Lookup
+
+There are 2 special types would be "casted down":
+
+- Number -> String
+- Number -> Boolean
+
+Every Type would be "casted down" as Object.
+
+### Nullable Parameter Branch
+
+Nullable branch appears when there is nullable parameter defined on a specific method.
+
+```JS
+class A {
+
+    @parameters({
+        param: [Number, allowNull]
+    })
+    func(param) {
+
+
+    }
+}
+
+class B extends A {
+
+    @parameters({
+        a: [Number, allowNull]
+    })
+    func(a) {
+
+
+    }
+}
+```
+The following example Illustrates ambigous definition of nullable overloading. When dispatching Nullable (null or undefined) to first parameter of A.func(), there are conflict between A.func(Number) and A.func(String) because they both accept nullable value as their first argument.
+
+```JS
+class A {
+
+    @parameters({
+        param: [Number, allowNull]
+    })
+    func(param) {
+
+
+    }
+
+    @parameter({
+        a: [String, allowNull]
+    })
+    [METHOD('func')](a) {
+
+
+    }
+}
+```
+
 ## Current Benchmark State
 
 script tested
@@ -554,20 +658,25 @@ The new benchmark focused on operation's time of each phase of the algorithm.
 
 Execution time in detail when dispatching a 3 parameters empty body method for one hundred thousand times in 10x3 dimensions method space (when JIT do it's job in optimizing codes).
 
-Bencmark enviroment
+Benchmatk machine
 
-- Operating system: Ubuntu 23.10 linux kernel 6.5.0-25-generic (with performance mode)
+- CPU: AMD Ryzen 5 5500U
+- Memory: 8GB
+
+Environment
+
+- Operating system: Ubuntu 23.10 linux kernel 6.5.0-25-generic (performance mode)
 - Node version: v20.11.1
 
 
-Detail execution time:
+The overall time for retrieving the most specific appplicable method for each request is around 0.005ms when requesting one hundred thousand method invocations.
 
-- estimation phase: 0.006ms (50%)
-- retrieving most specific applicable signature (lookup signature using estimated datas): 0.003ms (25%)
-- down cast arguments: 0.003ms (25%)
+overral execution time (for each request one hundred thousand method invocations):
 
-The overall time for retrieving the most specific appplicable method for each request is around 0.004ms when requesting one hundred thousand method invocations.
-
+- estimation phase: 0.005ms
+- retrieving most specific applicable signature (lookup signature using estimated datas): 0.001ms
+- extract vtable: 0.001ms
+- down cast arguments: 0.001ms
 
 It seems like the operation time of the argument down casting phase approximately equal to the estimation's time because the two operation is identical. Time complexity of the two operation is O(mm) with m is number of arguments and n is the number of each argument's class inheritance chain.
 
@@ -588,4 +697,4 @@ New approaches:
 - [ ] argument type caching
 - [x] static type binding (pure method overloading)
 - [x] evaluate Any type parameters
-- [ ] interface method strict parameters
+- [x] interface method strict parameters

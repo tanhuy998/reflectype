@@ -112,17 +112,17 @@ const obj = new H();
 const c = new C();
 
 
-console.log(metaOf(T).methodVariantMaps.static.statisticTable)
-console.log(metaOf(T).methodVariantMaps._prototype.statisticTable)
-console.log(metaOf(H).methodVariantMaps.static.statisticTable)
-console.log(metaOf(H).methodVariantMaps._prototype.statisticTable)
-console.log(metaOf(C).methodVariantMaps.static.statisticTable)
-console.log(metaOf(C).methodVariantMaps._prototype.statisticTable)
+// console.log(metaOf(T).methodVariantMaps.static.statisticTable)
+// console.log(metaOf(T).methodVariantMaps._prototype.statisticTable)
+// console.log(metaOf(H).methodVariantMaps.static.statisticTable)
+// console.log(metaOf(H).methodVariantMaps._prototype.statisticTable)
+// console.log(metaOf(C).methodVariantMaps.static.statisticTable)
+// console.log(metaOf(C).methodVariantMaps._prototype.statisticTable)
 
 obj.prop = new A();
 
-console.log(getCastedTypeOf(dynamic_cast(obj.prop)))
-console.log()
+// console.log(getCastedTypeOf(dynamic_cast(obj.prop)))
+// console.log()
 // console.log(
 //     diveTrieByArguments(H, mRef.metadata, ['1'])?.map.get(ref.metadata)
 // )

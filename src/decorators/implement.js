@@ -20,9 +20,10 @@ module.exports = implement;
 function implement(...interfaces) {
 
     checkInput(interfaces);
-    resolveInterfaceListResolution(interfaces);
 
     function implementDecorator(_class, _context) {
+
+        resolveInterfaceListResolution(interfaces);
 
         const {kind} = _context;
 
@@ -36,9 +37,10 @@ function implement(...interfaces) {
             throw new TypeError('Interface could not implement another interface')
         }
 
-        initTypeMeta(_class, _context);
+        const typeMeta = initTypeMeta(_class, _context);
         handle(_class, _context, interfaces);
-
+        resolveTypeMetaResolution(_class);
+        
         return _class;
     }
 

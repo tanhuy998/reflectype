@@ -7,7 +7,7 @@ const {
     parameter_metadata_t, 
     metadata_t 
 } = require("../../reflection/metadata");
-const { getTypeOf, isValuable } = require("../type");
+const { getTypeOf, isValuable, isAbstract } = require("../type");
 const { estimateArgs } = require("./methodArgsEstimation.lib");
 const { Interface } = require("../../interface");
 const MethodVariantMismatchError = require("./error/methodVariantMismatchError");
@@ -17,7 +17,7 @@ const { getAllParametersMeta } = require("../functionParam.lib");
 const { getMetadataFootPrintByKey } = require("../footPrint");
 const { DECORATED_VALUE } = require("../constant");
 const { Any } = require("../../type");
-const { static_cast } = require("../casting.lib");
+const { static_cast, getCastedTypeOf } = require("../casting.lib");
 const {FUNC_TRIE} = require('./registry/function.reg');
 const { function_signature_vector, estimation_report_t, vector } = require("./estimationFactor");
 
@@ -76,6 +76,15 @@ function extractFuncMeta(binder, trieEndpoint, propMeta, args) {
 
     let _class = propMeta.owner.typeMeta.abstract;
 
+    /**
+     * castedType is always base class or at least equal
+     * to actualType
+     */
+    const castedType = getCastedTypeOf(binder);
+    const castedTypeMeta = castedType ? metaOf(castedType) : undefined;
+    const implementClass = _class;
+
+    const isClass = isAbstract(binder);
     const funcName = propMeta.name;
     /**
      * Iterate throught inheritance chain,
@@ -100,6 +109,11 @@ function extractFuncMeta(binder, trieEndpoint, propMeta, args) {
     }
 
     throw new MethodVariantMismatchError(propMeta.functionMeta, args);
+}
+
+function extractVirtualFunction() {
+
+    
 }
 
 /**

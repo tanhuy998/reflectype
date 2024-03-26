@@ -2,5 +2,4 @@ const { manipulateMethodVariantsStatisticTables, verifyInterfaceImplementation }
 
 module.exports = [
     manipulateMethodVariantsStatisticTables,
-    verifyInterfaceImplementation,
 ];

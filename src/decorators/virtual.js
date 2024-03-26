@@ -14,6 +14,7 @@ function virtual(_, context) {
     const propMeta = propertyDecorator.initMetadata(_, context);
 
     propMeta.functionMeta.allowOverride = true;
+    propMeta.functionMeta.isVirtual = true;
 
     return getMetadataFootPrintByKey(propMeta, DECORATED_VALUE);
 }

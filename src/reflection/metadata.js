@@ -264,6 +264,16 @@ function function_metadata_t(_owner) {
      * @type {boolean}
      */
     this.allowOverride = false;
+
+    /**
+     * @type {boolean}
+     */
+    this.isVirtual;
+
+    /**
+     * @type {Map<Function, function_metadata_t>}
+     */
+    this.vTable = new Map();
 }
 
 function function_variant_param_node_endpoint_metadata_t() {
