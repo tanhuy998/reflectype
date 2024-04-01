@@ -94,7 +94,7 @@ function verifyOnTrie(interfaceFuncMeta, hostGenericPropMeta) {
     const trieEndpoint = searchForMatchTrieNode(
         FUNC_TRIE, paramMetaList, meta => meta?.type || Any
     )?.endpoint;
-    const genericImplementation = trieEndpoint?.vTable.get(hostGenericPropMeta.functionMeta)
+    const genericImplementation = trieEndpoint?.dispatchTable.get(hostGenericPropMeta.functionMeta)
             || getNearestBaseImplementationPropMeta(
                 hostGenericPropMeta,
                 trieEndpoint
@@ -129,14 +129,14 @@ function verifyOnTrie(interfaceFuncMeta, hostGenericPropMeta) {
         meta => meta?.type || Any
     )?.endpoint;
 
-    const nullableGenericImplementation = nullableEndpoint.vTable.get(hostGenericPropMeta.functionMeta)
+    const nullableGenericImplementation = nullableEndpoint.dispatchTable.get(hostGenericPropMeta.functionMeta)
                 || getNearestBaseImplementationPropMeta(
                     hostGenericPropMeta,
                     nullableEndpoint
                 )?.functionMeta;
 
     if (
-        // !nullableEndpoint?.vTable.has(hostGenericPropMeta.functionMeta)
+        // !nullableEndpoint?.dispatchTable.has(hostGenericPropMeta.functionMeta)
         // && !getNearestBaseImplementationPropMeta(
         //     hostGenericPropMeta,
         //     nullableEndpoint

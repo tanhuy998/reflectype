@@ -8,10 +8,7 @@ const {
 } = require('../methodVariant.lib');
 const { function_metadata_t, parameter_metadata_t } = require('../../reflection/metadata');
 
-describe('Method variant',() => {
+describe('Method overloading',() => {
 
-    test('Locating for new method variant trie node', () => {
-
-        
-    })
+    
 })

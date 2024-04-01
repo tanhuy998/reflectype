@@ -11,7 +11,7 @@ module.exports = class MethodVariantMismatchError extends ReferenceError {
     constructor(genericFuncMeta, args = []) {
         
         const _class = genericFuncMeta.owner.owner.typeMeta.abstract;
-        args = Array.prototype.map.call(args, (val =>( getTypeOf(val) || Any).name)).join(', ');
+        args = Array.prototype.map.call(args, (val => val === null ? 'null' : val === undefined ? 'undefined' : getTypeOf(val).name)).join(', ');
 
         super(`There are no inmplementation for [${_class?.name || _class}].${genericFuncMeta.name}(${args})`);
     }

@@ -1,68 +1,72 @@
 const Reflector = require("../metadata/reflector");
 const ReflectorContext = require("../metadata/reflectorContext");
+const { CASTED_TYPE, VPTR, TYPE_ENFORCEMENT_TRAPS } = require("./constant");
 const { isPrimitive, isValuable, matchType, getTypeOf } = require("./type");
+const { setVPtrOf, releaseVPtrOf, getVPtrOf } = require("./typeEnforcement.lib");
 
-const CASTED_TYPE = Symbol('_casted_type');
+
+//const CASTED_TYPE = Symbol('_casted_type');
+
 const WHILE_lIST = new Set([
     '__is', '__implemented'
 ])
 
-const traps = {
-    get(target, key) {
+// const traps = {
+//     get(target, key) {
 
-        if (key === CASTED_TYPE) {
+//         if (key === CASTED_TYPE) {
 
-            return this[CASTED_TYPE];
-        }
+//             return this[CASTED_TYPE];
+//         }
 
-        restrictAbstractUndeclaredMethod(this[CASTED_TYPE], target, key);
-        const target_prop = target[key];
-        return target_prop;
-    },
-    set(target, key, val) {
+//         restrictAbstractUndeclaredMethod(this[CASTED_TYPE], target, key);
+//         const target_prop = target[key];
+//         return target_prop;
+//     },
+//     set(target, key, val) {
 
-        if (
-            key === CASTED_TYPE
-        ) {
-            this[CASTED_TYPE] = val;
-        }
-        else {
-            target[key] = val;
-        }
+//         if (
+//             key === CASTED_TYPE
+//         ) {
+//             this[CASTED_TYPE] = val;
+//         }
+//         else {
+//             target[key] = val;
+//         }
         
-        return true;
-    }
-}
+//         return true;
+//     }
+// }
 
-const const_cast_traps = {
-    get(target, key) {
+// const const_cast_traps = {
+//     get(target, key) {
 
-        if (key === CASTED_TYPE) {
+//         if (key === CASTED_TYPE) {
 
-            return this[CASTED_TYPE];
-        }
+//             return this[CASTED_TYPE];
+//         }
 
-        const castedType = this[CASTED_TYPE];
-        restrictAbstractUndeclaredMethod(castedType, target, key);
+//         const castedType = this[CASTED_TYPE];
+//         restrictAbstractUndeclaredMethod(castedType, target, key);
         
-        const targetProp = target[key];
-        const castedTypeProp = castedType.prototype[key];
+//         const targetProp = target[key];
+//         const castedTypeProp = castedType.prototype[key];
 
-        // if () {
+//         // if () {
 
 
-        // }
-    },
-    set: traps.set,
-    getPrototypeOf() {
+//         // }
+//     },
+//     set: traps.set,
+//     getPrototypeOf() {
 
-        return this[CASTED_TYPE];
-    },
-    setPrototypeOf() {
+//         return this[CASTED_TYPE];
+//     },
+//     setPrototypeOf() {
 
-        throw new Error('could not set prototype of object that is casted as const_cast()');
-    }
-}
+//         throw new Error('could not set prototype of object that is casted as const_cast()');
+//     }
+// }
 
 module.exports = {
     getCastedTypeOf,
@@ -110,12 +114,14 @@ function getCastedTypeOf(object) {
 
     //console.timeEnd(2)
 
-    if (!isValuable(object)) {
+    return getVPtrOf(object);
 
-        return undefined;
-    }
+    // if (!isValuable(object)) {
 
-    return object[CASTED_TYPE];
+    //     return undefined;
+    // }
+
+    // return object[CASTED_TYPE];
 }
 
 function releaseTypeCast(object) {
@@ -138,34 +144,35 @@ function releaseTypeCast(object) {
  */
 function static_cast(_t, target) {
 
-    if (
-        !meetPrerequisites(target)
-    ) {
-        return target;
-    }
+    // if (
+    //     !meetPrerequisites(target)
+    // ) {
+    //     return target;
+    // }
 
-    if (
-        !matchType(_t, target) 
-        && _t !== Object
-        && !isPrimitive(target)
-    ) {
+    // if (
+    //     !matchType(_t, target) 
+    //     && _t !== Object
+    //     && !isPrimitive(target)
+    // ) {
 
-        throw new TypeError();
-    }
+    //     throw new TypeError();
+    // }
     
-    const ret = new Proxy(
-        isPrimitive(target) ? new (getTypeOf(target))(target) : target
-        ,
-        {
-            [CASTED_TYPE]: _t,
-            ...traps,
-        }
-    );
-    //console.timeEnd('cast');
-    return ret;
-}
+    // const ret = new Proxy(
+    //     isPrimitive(target) ? new (getTypeOf(target))(target) : target
+    //     ,
+    //     {
+    //         [CASTED_TYPE]: _t,
+    //         [VPTR]: target?.[VPTR],
+    //         ...TYPE_ENFORCEMENT_TRAPS,
+    //     }
+    // );
+    // //console.timeEnd('cast');
+    // return ret;
 
-console.log()
+    return setVPtrOf(_t, target);
+}
 
 /**
  * 
@@ -178,7 +185,9 @@ function dynamic_cast(target) {
 
     // return target;
 
-    return static_cast(getTypeOf(target), target);
+    //return static_cast(getTypeOf(target), target);
+
+    return releaseVPtrOf(target);
 }
 
 function const_cast(target) {

@@ -15,11 +15,13 @@ const { MULTIPLE_DISPATCH } = require("./constant");
 const globalConfig = require('../../../config.json');
 const { getAllParametersMeta } = require("../functionParam.lib");
 const { getMetadataFootPrintByKey } = require("../footPrint");
-const { DECORATED_VALUE } = require("../constant");
+const { DECORATED_VALUE, VPTR } = require("../constant");
 const { Any } = require("../../type");
 const { static_cast, getCastedTypeOf } = require("../casting.lib");
 const {FUNC_TRIE} = require('./registry/function.reg');
 const { function_signature_vector, estimation_report_t, vector } = require("./estimationFactor");
+const { extractVirtualFunction } = require("./virtualMethod.lib");
+const debug = require('debug')('pkg:methodOverloading:dispatch');
 
 module.exports = {
     dispatchMethodVariant,
@@ -42,8 +44,7 @@ function dispatchMethodVariant(binder, propMeta, args) {
             : diveTrieByArguments(getTypeOf(binder), genericFuncMeta, args);
         
         if (
-            !trieEndpoint //||
-            //!trieEndpoint.vTable.has(propMeta.functionMeta)
+            !trieEndpoint
         ) {
             
             throw new MethodVariantMismatchError(genericFuncMeta, args);
@@ -67,28 +68,36 @@ function dispatchMethodVariant(binder, propMeta, args) {
 
 /**
  * 
- * @param {Function|Object} binder 
- * @param {function_variant_param_node_endpoint_metadata_t} trieEndpoint 
- * @param {property_metadata_t} propMeta
- * @param {Array<any>} args 
+ * @param {Function|Object} binder the object that bound with the function when invoking it.
+ * @param {function_variant_param_node_endpoint_metadata_t} trieEndpoint the lookedup trie 
+ * endpoint that match the input signature.
+ * @param {property_metadata_t} propMeta the propMeta that is registered to the entry point 
+ * for overloading function, its role is just loopback point.
+ * @param {Array<any>} args input arguments.
  */
 function extractFuncMeta(binder, trieEndpoint, propMeta, args) {
 
     let _class = propMeta.owner.typeMeta.abstract;
+    const actualType = getTypeOf(binder);
 
-    /**
-     * castedType is always base class or at least equal
-     * to actualType
-     */
-    const castedType = getCastedTypeOf(binder);
-    const castedTypeMeta = castedType ? metaOf(castedType) : undefined;
-    const implementClass = _class;
-
-    const isClass = isAbstract(binder);
+    /**@type {Function|typeof Interface} */
+    const vPtr = getCastedTypeOf(binder);
     const funcName = propMeta.name;
+    const vPtr_is_interface = vPtr?.prototype instanceof Interface;
+
+    if (
+        isAbstract(vPtr) &&
+        vPtr !== _class &&
+        (   _class.prototype instanceof vPtr ||
+            vPtr_is_interface //&& vPtr.hasImplementer(_class)
+        )
+    ) {
+        
+        _class = !vPtr_is_interface ? vPtr : metaOf(_class).interfaces.list.get(vPtr);
+    }
+    
     /**
-     * Iterate throught inheritance chain,
-     * catch first matched class exist the endpoint's vtable
+     * Lookup for the 
      */
     while (
         _class !== Object.getPrototypeOf(Function)
@@ -97,24 +106,27 @@ function extractFuncMeta(binder, trieEndpoint, propMeta, args) {
         const typeMeta = metaOf(_class);
         const variantMaps = typeMeta.methodVariantMaps;
         const targetMap = propMeta.static ? variantMaps.static : variantMaps._prototype;
+        const genericFuncMeta = targetMap.mappingTable.get(funcName)?.functionMeta;
+        const genericImplementation = trieEndpoint.dispatchTable.get(genericFuncMeta);
 
-        const lookedupFuncMeta = targetMap.mappingTable.get(funcName)?.functionMeta;
-
-        if (trieEndpoint.vTable.has(lookedupFuncMeta)) {
+        if (
+            typeof genericImplementation === 'object'
+        ) {
             
-            return trieEndpoint.vTable.get(lookedupFuncMeta);
+            return !genericImplementation.isVirtual ? 
+                genericImplementation
+                : extractVirtualFunction(
+                    genericImplementation , vPtr, actualType
+                );
         }
-
+        
         _class = Object.getPrototypeOf(_class);
     }
-
+        
     throw new MethodVariantMismatchError(propMeta.functionMeta, args);
 }
 
-function extractVirtualFunction() {
 
-    
-}
 
 /**
  * 
@@ -123,11 +135,10 @@ function extractVirtualFunction() {
  * @param {Array<any>} args
  */
 function invoke(funcMeta, bindObject, args) {
-
+    
     console.time('prepare invoke')
     /**@type {function} */
     const actualFunc = getMetadataFootPrintByKey(funcMeta.owner, DECORATED_VALUE);
-    
     const paramMetaList = getAllParametersMeta(funcMeta);
     console.timeEnd('prepare invoke')
 
@@ -149,7 +160,6 @@ function invoke(funcMeta, bindObject, args) {
 function castDownArgs(paramMetas, args) {
 
     const ret = [];
-    //let i = 0;
 
     for (let i = 0; i < args.length; ++i) {
 
@@ -226,20 +236,6 @@ function diveTrieByArguments(_class, funcMeta, args) {
 
 /**
  * 
- * @param {function_metadata_t} funcMeta 
- * 
- * @returns {function_variant_param_node_metadata_t}
- */
-function retrieveLocalTrieOf(funcMeta) {
-
-    const variantMaps = funcMeta.owner.owner.typeMeta.methodVariantMaps;
-    const targetMap = funcMeta.owner.static ? variantMaps.static : variantMaps._prototype;
-
-    return targetMap.localTrie;
-}
-
-/**
- * 
  * @param {function_variant_param_node_metadata_t} trieNode 
  * @param {estimation_report_t} estimationReport
  * @param {number} dMass
@@ -277,7 +273,6 @@ function retrieveMostSpecificApplicableEndpoint(
          * to the last estimation piece (also known as last argument)
          */
         nearest.endpoint = trieNode.endpoint;
-        //console.log(dVector);
         return nearest;
     }
 
@@ -354,11 +349,6 @@ function calculateMass(from, to, argMasses) {
     return sum;
 }
 
-function debugNearest(nearest) {
-
-    return nearest.endpoint?.vTable.keys()
-}
-
 function calculateDistance(ref, delta, isInterface = false) {
 
     return (ref === Infinity ? 0 : ref) + delta; //+ isInterface ? INTERFACE_BIAS : 0;
@@ -373,11 +363,6 @@ function calculateDistance(ref, delta, isInterface = false) {
 function modulus(v = new vector(Infinity, Infinity)) {
 
     const { real, imaginary } = v;
-
-    // if (!imaginary) {
-
-    //     return real;
-    // }
 
     return !imaginary ? real : Math.sqrt(real ** 2 + imaginary ** 2);
 }
@@ -402,8 +387,8 @@ function min(left, right) {
 
     return modulus(left.vector) < modulus(right.vector) ? left : right;
 
-    const ld = typeof left.delta !== 'number' || !left.endpoint ? Infinity : left.delta;
-    const rd = typeof right.delta !== 'number' || !right.endpoint ? Infinity : right.delta;
+    // const ld = typeof left.delta !== 'number' || !left.endpoint ? Infinity : left.delta;
+    // const rd = typeof right.delta !== 'number' || !right.endpoint ? Infinity : right.delta;
 
-    return ld < rd ? left : right;
+    // return ld < rd ? left : right;
 }

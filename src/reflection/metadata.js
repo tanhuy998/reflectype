@@ -215,6 +215,7 @@ function function_metadata_t(_owner) {
      * @type {string|symbol}
      */
     this.name = _owner?.name;
+    
     /***
      * @type {Array<Function>}
      */
@@ -273,15 +274,15 @@ function function_metadata_t(_owner) {
     /**
      * @type {Map<Function, function_metadata_t>}
      */
-    this.vTable = new Map();
+    this.vTable;
 }
 
 function function_variant_param_node_endpoint_metadata_t() {
+
     /**
-     * 
      * @type {Map<function_metadata_t, function_metadata_t>}
      */
-    this.vTable = new Map();
+    this.dispatchTable = new Map();
 
     /**
      * @type {Number}

@@ -171,7 +171,7 @@ console.time('total1')
 
 //c.func(new A(), new A(), 1)
 
-for (let i = 0; i < 1; ++i) {
+for (let i = 0; i < 100000; ++i) {
 
     //console.time(2)
 
@@ -185,7 +185,7 @@ console.timeEnd('total1')
 console.time('total2')
 for (let i = 0; i < 100000; ++i) {
 
-    //console.time(2)
+    //console.time(2)>
 
     t.func(...args);
 

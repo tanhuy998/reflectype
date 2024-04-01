@@ -9,6 +9,7 @@ const { METHOD } = require('../../src/libs/methodOverloading/constant.js');
 const Any = require('../../src/type/any.js');
 const implement = require('../../src/decorators/implement.js');
 const virtual = require('../../src/decorators/virtual.js');
+const override = require('../../src/decorators/override.js');
 
 const stack = [];
 const entries = new Set();
@@ -149,6 +150,7 @@ class Y {
 
 class T {
 
+    @virtual
     @parameters({
         a: Number
     })
@@ -220,7 +222,7 @@ class T {
         console.log('T dispose')
     }
 
-    @virtual
+    //@virtual
     @parameters({
         a: Number
     })
@@ -252,7 +254,7 @@ class H extends T {
 
         console.log("static H");
     }
-
+    
     @parameters({
         a: Number 
     })
@@ -277,7 +279,6 @@ class H extends T {
 
     }
 
-    
     @parameters({
         a: [String, allowNull],
         b: Number,
@@ -286,6 +287,15 @@ class H extends T {
     func(a, b, c) {
 
         console.log('H override');
+    }
+
+    @override
+    @parameters({
+        a: Number
+    })
+    [METHOD('func')](a) {
+
+
     }
 
     @parameters({

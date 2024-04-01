@@ -23,7 +23,7 @@ function implement(...interfaces) {
 
     function implementDecorator(_class, _context) {
 
-        resolveInterfaceListResolution(interfaces);
+        setupInterfaces(_class, interfaces);
 
         const {kind} = _context;
 
@@ -33,7 +33,7 @@ function implement(...interfaces) {
         }
         
         if (_class.prototype instanceof Interface) {
-
+            
             throw new TypeError('Interface could not implement another interface')
         }
 
@@ -49,14 +49,15 @@ function implement(...interfaces) {
 }
 
 /**
- * 
- * @param {Array<Interface>} interfaceList 
+ * @param {Function} implementer
+ * @param {Array<typeof Interface>} interfaceList 
  */
-function resolveInterfaceListResolution(interfaceList = []) {
+function setupInterfaces(implementer, interfaceList = []) {
 
-    for (const interface of interfaceList) {
+    for (const intf of interfaceList) {
 
-        resolveTypeMetaResolution(interface);
+        intf.register(implementer);
+        resolveTypeMetaResolution(intf);
     }
 }
 
@@ -78,17 +79,25 @@ function handle(_class, decoratorContext, _interfaces = []) {
     /**@type {metadata_t} */
     const classMeta = metadata[TYPE_JS];
     //const classMeta = refreshTypeMetadata(_class, decoratorContext);
-    
-    if (!classMeta.interfaces) {
-    //|| isInterfacePrototypeConflict(_class)) {
-        
-        const interfaceProto = classMeta.interfaces = new InterfacePrototype(_class, _interfaces);
-        interfaceProto.verify(_class);
+
+    const baseInterfaceProto = classMeta.interfaces;
+    const interfaceProto = classMeta.interfaces = new InterfacePrototype(_class, _interfaces);
+
+    if (typeof baseInterfaceProto === 'object') {
+
+        interfaceProto.approve(baseInterfaceProto);
     }
-    else {
+
+    // if (!classMeta.interfaces) {
+    // //|| isInterfacePrototypeConflict(_class)) {
         
-        classMeta.interfaces.approve(_interfaces);
-    }
+    //     const interfaceProto = classMeta.interfaces = new InterfacePrototype(_class, _interfaces);
+    //     interfaceProto.verify(_class);
+    // }
+    // else {
+        
+    //     classMeta.interfaces.approve(_interfaces);
+    // }
 
     alterClass(_class);
     alterClassPrototype(_class);

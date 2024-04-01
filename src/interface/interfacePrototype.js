@@ -5,13 +5,13 @@ const Interface = require("./interface");
 
 module.exports = class InterfacePrototype {
 
-    /**@type {Set<Interface>} */
-    #interfaces;
+    /**@type {Map<typeof Interface, Function>} */
+    #interfaces = new Map();
 
     /**@type {Array<Interface>} */
     #pool;
 
-    /**@type {Set<Interface>} */
+    /**@type {Map<typeof Interface, Function>} */
     get list() {
         return this.#interfaces;
     }
@@ -40,7 +40,7 @@ module.exports = class InterfacePrototype {
 
         const ret = {};
 
-        for (const intf of this.#interfaces.values()) {
+        for (const intf of this.#interfaces.keys()) {
 
             ret[intf.name] = intf;
         }
@@ -51,7 +51,7 @@ module.exports = class InterfacePrototype {
 
     constructor(_origin , _interfaces = []) {
 
-        this.#interfaces = new Set(_interfaces);
+        //this.#interfaces = new Set(_interfaces);
         this.#pool = _interfaces;
         this.#prototype = new Map();
 
@@ -67,41 +67,70 @@ module.exports = class InterfacePrototype {
             throw new TypeError('_additionalIntfs must be an array of Interface classes');
         }
 
-        return new (self(this))(this.#origin, [...Array.from(this.#interfaces), ..._additionalIntfs])
+        const ret = new (self(this))(this.#origin, ..._additionalIntfs);
+        ret.approve(this);
+
+        return ret;
     }
 
-    approve(_additionalIntfs = []) {
+    // approve(_additionalIntfs = []) {
 
-        if (!isIterable(_additionalIntfs)) {
+    //     if (!isIterable(_additionalIntfs)) {
 
-            throw new TypeError('_additionalIntfs must be an array of Interface classes');
-        }
+    //         throw new TypeError('_additionalIntfs must be an array of Interface classes');
+    //     }
 
-        if (_additionalIntfs.length === 0) {
+    //     if (_additionalIntfs.length === 0) {
 
-            return;
-        }
+    //         return;
+    //     }
 
-        for (const intf of _additionalIntfs) {
+    //     for (const intf of _additionalIntfs) {
 
-            this.#spliceInterface(intf);
-        }
+    //         this.#spliceInterface(intf);
+    //     }
         
-        this.#prepareInformations(_additionalIntfs);
+    //     this.#prepareInformations(_additionalIntfs);
+    // }
+
+    /**
+     * 
+     * @param {InterfacePrototype} interfaceProto 
+     */
+    approve(interfaceProto) {
+
+        const list = interfaceProto.list;
+
+        for (const [intf, origin] of list.entries()) {
+
+            if (this.list.has(intf)) {
+
+                continue;
+            }
+
+            this.list.set(intf, origin);
+        }
     }
 
+    /**
+     * 
+     * @param {typeof Interface} intf 
+     */
     #spliceInterface(intf) {
 
         const intfList = this.#interfaces;
 
         while (intf !== Object.getPrototypeOf(Function)) {
             
-            if (!intfList.has(intf)) {
+            // if (!intfList.has(intf)) {
 
-                intfList.add(intf);
-            }
+            //     intfList.add(intf);
+            // }
 
             //this.#interfaces.add(intf);
+
+            intfList.set(intf, this.#origin);
+            intf.register(this.#origin);
 
             intf = Object.getPrototypeOf(intf);
         }
@@ -109,55 +138,65 @@ module.exports = class InterfacePrototype {
 
     #init() {
         
-        this.#prepareInformations(this.#interfaces.values());
+        //this.#prepareInformations(this.#pool);
+        this.#register();
     }
 
-    /**
-     * 
-     * @param {Iterable<Interface>} _Iterable 
-     */
-    #prepareInformations(_Iterable) {
+    #register() {
 
-        for (const intf of _Iterable) {
+        for (const intf of this.#pool || []) {
 
-            const prototype = intf.prototype;
-
-            for (const methodName of intf.PROTOTYPE) {
-
-                if (methodName === 'constructor') {
-
-                    continue;
-                }
-
-                const token = this.#encodeMethod(prototype[methodName], methodName);
-
-                this.#methods.add(token);
-            }
+            //this.#interfaces.set(intf, this.#origin);
+            this.#spliceInterface(intf);
         }
     }
 
-    #encodeMethod(_func, _name) {
+    // /**
+    //  * 
+    //  * @param {Iterable<Interface>} _Iterable 
+    //  */
+    // #prepareInformations(_Iterable) {
 
-        /**@type {property_metadata_t} */
-        const funcMeta = metaOf(_func);
+    //     for (const intf of _Iterable) {
 
-        // if (!funcMeta) {
+    //         const prototype = intf.prototype;
 
-        //     return _name ?? _func.name;
-        // }
+    //         for (const methodName of intf.PROTOTYPE) {
+
+    //             if (methodName === 'constructor') {
+
+    //                 continue;
+    //             }
+
+    //             // const token = this.#encodeMethod(prototype[methodName], methodName);
+
+    //             // this.#methods.add(token);
+    //         }
+    //     }
+    // }
+
+    // #encodeMethod(_func, _name) {
+
+    //     /**@type {property_metadata_t} */
+    //     const funcMeta = metaOf(_func);
+
+    //     // if (!funcMeta) {
+
+    //     //     return _name ?? _func.name;
+    //     // }
         
-        //const {name, allowNull, type, value} = funcMeta;
+    //     //const {name, allowNull, type, value} = funcMeta;
 
-        const allowNull = funcMeta?.allowNull;
-        const type  = funcMeta?.type;
-        const name = funcMeta?.name;
-        const value = funcMeta?.value;
+    //     const allowNull = funcMeta?.allowNull;
+    //     const type  = funcMeta?.type;
+    //     const name = funcMeta?.name;
+    //     const value = funcMeta?.value;
 
-        const encoded = `${allowNull}-${type?.name}-${name ?? _name ?? _func.name}-${Array.isArray(value) ? value.length : 0}`;
+    //     const encoded = `${allowNull}-${type?.name}-${name ?? _name ?? _func.name}-${Array.isArray(value) ? value.length : 0}`;
 
-        /** the pattern is '[allowNull]-[type]-[funcName]-[args.length]' */
-        return encoded;
-    }
+    //     /** the pattern is '[allowNull]-[type]-[funcName]-[args.length]' */
+    //     return encoded;
+    // }
 
     getPrototype() {
 
@@ -166,19 +205,13 @@ module.exports = class InterfacePrototype {
 
     verify(_object) {
 
-        //console.log(this.origin, this.#interfaces)
-
         const prototype = _object.prototype;
 
         for (const intf of this.#interfaces.values()) {
 
-            //const methods = Object.getOwnPropertyNames(intf.prototype);
             const methods = intf.PROTOTYPE;
 
             const token = this.#methods.values();
-
-
-            //console.log(methods)
 
             /**@type {String} */
             for (const token of this.#methods.values()) {
@@ -190,20 +223,7 @@ module.exports = class InterfacePrototype {
                 if (!prototype[methodName]) throw new TypeError(`class [${_object.name}] implements [${intf.name}] but not defines ${methodName}() method`);
 
                 if (typeof prototype[methodName] !== 'function')  throw new TypeError(`class [${_object.name}] implements [${intf.name}] but defines '${method}' is not type of function`);
-                
-                // const objectMethod = prototype[methodName];
-
-                // const objectMethodToken = this.#encodeMethod(objectMethod);
-
-                // console.log(objectMethodToken, token)
-
-                // if (objectMethodToken !== token) {
-
-                //     throw new Error(`The difinition of [${_object.name}].${methodName} not match the Interface`);
-                // }
             }
         }
     }
 }
-
-//module.exports = InterfacePrototype;
