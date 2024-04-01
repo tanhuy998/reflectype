@@ -79,7 +79,7 @@ class C extends B {
 
 class Test {
 
-    @type(IFoo)
+    @type(IBar)
     accessor obj;
 
     constructor() {

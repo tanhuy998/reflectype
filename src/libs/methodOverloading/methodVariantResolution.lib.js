@@ -9,22 +9,18 @@ const {
     parameter_metadata_t,
     function_metadata_t
 } = require("../../reflection/metadata");
-const Any = require("../../type/any");
 const { DECORATED_VALUE, DECORATOR_APPLIED } = require("../constant");
 const { getMetadataFootPrintByKey } = require("../footPrint");
 const { OVERLOAD_APPLIED, OVERLOAD_TARGET, OVERRIDE_APPLIED, OVERLOADED_METHOD_NAME, NULLABLE } = require("./constant");
 const { isObjectLike, isFirstClass, isObjectKey, isValuable } = require("../type");
 const {getAllParametersMeta, getAllParametersMetaWithNullableFilter} = require('../functionParam.lib');
-const { searchForMethodVariant, mergeFuncVariant, searchForMatchTrieNode } = require("./methodVariantTrieOperation.lib");
+const { mergeFuncVariant } = require("./methodVariantTrieOperation.lib");
 const { dispatchMethodVariant } = require("./methodVariant.lib");
 const {FUNC_TRIE} = require('./registry/function.reg');
 const { LEGACY_PROP_META, INHERITANCE_DEPTH } = require("../metadata/constant");
 const { isPseudoMethod } = require("./pseudoMethod.lib");
-const MethodDuplicateDeclarationError = require("./error/methodDuplicateDeclarationError");
 const OverridingNonVirtualMethodError = require("./error/overridingNonVirtualMethodError");
 const AmbigousSignatureConflictError = require("./error/ambigousSignatureConfilictError");
-const Interface = require("../../interface/interface");
-const InterfaceMethodNotImplementedError = require("./error/interfaceMethodNotImplementedError");
 const debug = require('debug')('pkg:methodOverloading:resolution');
 
 const IS_ENTRY_POINT = '_is_entry_point';
@@ -690,13 +686,6 @@ function manipulateMethodVariantsStatisticTables(typeMeta) {
     /**
      * will optimize the following lines
      */
-
-    // console.log(currentClassMethodVariantMaps._prototype === baseClassMethodVariantMaps._prototype)
-    // currentClassMethodVariantMaps._prototype.mappingTable = new Map(Array.from(baseClassMethodVariantMaps?._prototype?.mappingTable?.entries()));
-    // currentClassMethodVariantMaps.static.mappingTable = new Map(Array.from(baseClassMethodVariantMaps?.static?.mappingTable?.entries()));
     currentClassMethodVariantMaps._prototype.mappingTable = new Map(baseClassMethodVariantMaps?._prototype?.mappingTable?.entries());
     currentClassMethodVariantMaps.static.mappingTable = new Map(baseClassMethodVariantMaps?.static?.mappingTable?.entries());
-
-    // currentClassMethodVariantMaps._prototype.localTrie = baseClassMethodVariantMaps._prototype.localTrie;
-    // currentClassMethodVariantMaps.static.localTrie = baseClassMethodVariantMaps.static.localTrie;
 }

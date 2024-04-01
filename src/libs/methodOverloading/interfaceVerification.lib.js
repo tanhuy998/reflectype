@@ -35,9 +35,12 @@ function verifyInterfaceImplementation(typeMeta) {
         return;
     }
     
-    const interfaceList = typeMeta.interfaces?.all;
+    for (const [Intf, origin] of typeMeta.interfaces.list.entries() || [[]]) {
 
-    for (const Intf of interfaceList || []) {
+        if (origin !== typeMeta.abstract) {
+            
+            continue;
+        }
 
         verifyInterface(typeMeta, Intf);
     }
@@ -90,6 +93,7 @@ function verifyInterface(hostTypMeta, intf) {
  */
 function verifyOnTrie(interfaceFuncMeta, hostGenericPropMeta) {
 
+    const hostTypeMeta = hostGenericPropMeta.owner.typeMeta;
     const paramMetaList = getAllParametersMeta(interfaceFuncMeta);
     const trieEndpoint = searchForMatchTrieNode(
         FUNC_TRIE, paramMetaList, meta => meta?.type || Any
@@ -99,22 +103,10 @@ function verifyOnTrie(interfaceFuncMeta, hostGenericPropMeta) {
                 hostGenericPropMeta,
                 trieEndpoint
             )?.functionMeta;
-    
-    if (
-        // !genericImplementation
-        // && !getNearestBaseImplementationPropMeta(
-        //     hostGenericPropMeta,
-        //     trieEndpoint
-        // )
-        !genericImplementation
-        || genericImplementation.owner.type !== interfaceFuncMeta.owner.type
-    ) {
-        
-        throw new InterfaceMethodNotImplementedError(
-            hostGenericPropMeta.owner.typeMeta,
-            interfaceFuncMeta.owner
-        );
-    }
+
+    verifyImplementation(
+        hostTypeMeta, genericImplementation, interfaceFuncMeta
+    );
     
     const nullableBrannch = getAllParametersMetaWithNullableFilter(interfaceFuncMeta);
     
@@ -135,19 +127,26 @@ function verifyOnTrie(interfaceFuncMeta, hostGenericPropMeta) {
                     nullableEndpoint
                 )?.functionMeta;
 
+    verifyImplementation(
+        hostTypeMeta, nullableGenericImplementation, interfaceFuncMeta
+    );
+}
+
+/**
+ * 
+ * @param {metadata_t} hostTypeMeta 
+ * @param {function_metadata_t} implementation 
+ * @param {function_metadata_t} interfaceFuncMeta 
+ */
+function verifyImplementation(hostTypeMeta, implementation, interfaceFuncMeta) {
+    
     if (
-        // !nullableEndpoint?.dispatchTable.has(hostGenericPropMeta.functionMeta)
-        // && !getNearestBaseImplementationPropMeta(
-        //     hostGenericPropMeta,
-        //     nullableEndpoint
-        // )
-        !nullableGenericImplementation
-        || nullableGenericImplementation.owner.type !== interfaceFuncMeta.owner.type
+        !implementation
+        || implementation.owner.type !== interfaceFuncMeta.owner.type
     ) {
-        
+
         throw new InterfaceMethodNotImplementedError(
-            hostGenericPropMeta.owner.typeMeta,
-            interfaceFuncMeta.owner
-        );
+            hostTypeMeta, interfaceFuncMeta.owner
+        )
     }
 }
