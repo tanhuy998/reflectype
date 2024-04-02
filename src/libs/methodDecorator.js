@@ -26,32 +26,31 @@ module.exports = {
  * @param {property_metadata_t} propMeta 
  * @returns 
  */
-function generateDecorateMethod(_method, propMeta) {
+function generateDecorateMethod(propMeta) {
 
-    if (typeof _method !== 'function') {
+    if (!propMeta.isMethod) {
 
-        throw new TypeError('the object passed as argument to _method is not a function');
+        throw new TypeError('could not generate decorate method for non method propMeta');
     }
-    
+
     return function() {
 
         const [state, ...rest] = arguments;
         const actualInput = state === MULTIPLE_DISPATCH ? rest : arguments;
-        
-        const injectedArgs = getInjectedArguments(this, propMeta.name ?? _method.name);
         const defaultArguments = propMeta.functionMeta.defaultArguments;
         //const args = arguments.length !== 0 ? arguments : injectedArgs ?? (isIterable(defaultArguments) ? defaultArguments : [defaultArguments]);
         const args = actualInput.length !== 0 ? 
             actualInput 
-            : injectedArgs ?? (isIterable(defaultArguments) ? defaultArguments : [defaultArguments]);
+            : isIterable(defaultArguments) ? defaultArguments : [defaultArguments];
 
 
         if (state !== MULTIPLE_DISPATCH) {
 
             compareArgsWithType(propMeta, args);
         }
-
-        const returnValue = _method.call(this, ...args);
+        
+        const originFunc = getMetadataFootPrintByKey(propMeta, ORIGIN_VALUE);
+        const returnValue = originFunc.call(this, ...args);
         const {type} = propMeta;
 
         return checkReturnTypeAndResolve(returnValue, type, propMeta);
@@ -162,7 +161,7 @@ function decorateMethod(_method, context, propMeta) {
 
     if (!metadataHasFootPrint(propMeta, DECORATED_VALUE)) {
 
-        setMetadataFootPrint(propMeta, DECORATED_VALUE, generateDecorateMethod(_method, propMeta));
+        setMetadataFootPrint(propMeta, DECORATED_VALUE, generateDecorateMethod(propMeta));
     }
 
     propMeta.decoratorContext = context;
@@ -286,7 +285,7 @@ function establishClassPrototypeMethod(_unknown, propMeta) {
     
     if (belongsToCurrentMetadataSession(decoratorContext)) {
         
-        newMethod = generateDecorateMethod(oldMethod, propMeta);
+        newMethod = generateDecorateMethod(propMeta);
         unlinkDecoratorContext(propMeta);
     }
     else {
