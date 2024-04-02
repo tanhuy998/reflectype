@@ -36,7 +36,8 @@ function extractVirtualFunction(
     vPtr ||= actualType;
 
     while (
-        _class !== vPtr
+        genericImplementation.vTable.size > 0
+        && _class !== vPtr
     ) {
 
         const overrideImplementation = genericImplementation.vTable.get(_class);
