@@ -41,7 +41,8 @@ const { isPrimitive, getTypeOf } = require('../../src/libs/type.js');
 
 const v8 = require('node:v8');
 const { getCastedTypeOf, dynamic_cast, static_cast } = require('../../src/libs/casting.lib.js');
-const {FUNC_TRIE} = require('../../src/libs/methodOverloading/registry/function.reg.js')
+const {FUNC_TRIE} = require('../../src/libs/methodOverloading/registry/function.reg.js');
+const { performance } = require('node:perf_hooks');
 // const {A} = require('./compiled.js');
 //console.log(METHOD)
 // const refl = new Reflector(A);
@@ -132,7 +133,7 @@ console.log(['all method variant'], retrieveAllSignatures(FUNC_TRIE));
 console.log(['000000000000000000000000000000000000000000000000000000'])
 
 const args = [dynamic_cast(obj.prop), new A(), 1];
-console.time(2)
+
 
 // H.stFunc(1)
 // T.stFunc(1)
@@ -157,13 +158,18 @@ class Temp {
 }
 
 const t = new Temp();
-
+console.time(2)
 o.func('1', 1, true)
+console.timeEnd(2)
+console.time(2)
 obj.func(null, 1, true)
+console.timeEnd(2)
+console.time(2)
 obj.func(1, '1', '1')
+console.timeEnd(2)
 c.func(null, 1, true);
 //c.func(new A(), new A(), 1)
-console.timeEnd(2)
+
 
 c.func(new A(), new A(), true)
 
@@ -171,13 +177,16 @@ console.time('total1')
 
 //c.func(new A(), new A(), 1)
 
-for (let i = 0; i < 100000; ++i) {
+for (let i = 0; i < 1; ++i) {
 
     //console.time(2)
-
+    const start = process.hrtime.bigint();
     //obj.func(...args);
     c.func(new B(), new A(), 1)
+    
+    const end = process.hrtime.bigint();
 
+    console.log('invocation time', end - start);
     //console.timeEnd(2)
 }
 console.timeEnd('total1')

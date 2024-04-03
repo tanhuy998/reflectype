@@ -12,20 +12,20 @@ const { estimateArgs } = require("./methodArgsEstimation.lib");
 const { Interface } = require("../../interface");
 const MethodVariantMismatchError = require("./error/methodVariantMismatchError");
 const { MULTIPLE_DISPATCH } = require("./constant");
-const globalConfig = require('../../../config.json');
 const { getAllParametersMeta } = require("../functionParam.lib");
 const { getMetadataFootPrintByKey } = require("../footPrint");
-const { DECORATED_VALUE, VPTR } = require("../constant");
+const { DECORATED_VALUE } = require("../constant");
 const { Any } = require("../../type");
 const { static_cast, getCastedTypeOf } = require("../casting.lib");
 const {FUNC_TRIE} = require('./registry/function.reg');
-const { function_signature_vector, estimation_report_t, vector } = require("./estimationFactor");
+const { estimation_report_t, vector } = require("./estimationFactor");
 const { extractVirtualFunction } = require("./virtualMethod.lib");
+const { getVPtrOf } = require("../typeEnforcement.lib");
 const debug = require('debug')('pkg:methodOverloading:dispatch');
 
 module.exports = {
     dispatchMethodVariant,
-    diveTrieByArguments,
+    diveTrieByArguments: lookupEndpointNode,
 }
 
 /**
@@ -41,7 +41,7 @@ function dispatchMethodVariant(binder, propMeta, args) {
         const genericFuncMeta = propMeta.functionMeta;
         const trieEndpoint = args.length === 0 ?
             FUNC_TRIE.endpoint 
-            : diveTrieByArguments(getTypeOf(binder), genericFuncMeta, args);
+            : lookupEndpointNode(getTypeOf(binder), genericFuncMeta, args);
         
         if (
             !trieEndpoint
@@ -49,9 +49,9 @@ function dispatchMethodVariant(binder, propMeta, args) {
             
             throw new MethodVariantMismatchError(genericFuncMeta, args);
         }
-        console.time('extract vtable')
+        //console.time('extract vtable')
         const funcMeta = extractFuncMeta(binder, trieEndpoint, propMeta, args);
-        console.timeEnd('extract vtable')
+        //console.timeEnd('extract vtable')
 
         return invoke(funcMeta, binder, args);
     }
@@ -81,24 +81,21 @@ function extractFuncMeta(binder, trieEndpoint, propMeta, args) {
     const actualType = getTypeOf(binder);
 
     /**@type {Function|typeof Interface} */
-    const vPtr = getCastedTypeOf(binder);
+    const vPtr = getVPtrOf(binder);
     const funcName = propMeta.name;
     const vPtr_is_interface = vPtr?.prototype instanceof Interface;
 
     if (
         isAbstract(vPtr) &&
         vPtr !== _class &&
-        (   _class.prototype instanceof vPtr ||
-            vPtr_is_interface //&& vPtr.hasImplementer(_class)
+        (   _class.prototype instanceof vPtr
+            || vPtr_is_interface //&& vPtr.hasImplementer(_class)
         )
     ) {
-        
+
         _class = !vPtr_is_interface ? vPtr : metaOf(_class).interfaces.list.get(vPtr);
     }
     
-    /**
-     * Lookup for the 
-     */
     while (
         _class !== Object.getPrototypeOf(Function)
     ) {
@@ -136,19 +133,19 @@ function extractFuncMeta(binder, trieEndpoint, propMeta, args) {
  */
 function invoke(funcMeta, bindObject, args) {
     
-    console.time('prepare invoke')
+    //console.time('prepare invoke')
     /**@type {function} */
     const actualFunc = getMetadataFootPrintByKey(funcMeta.owner, DECORATED_VALUE);
     const paramMetaList = getAllParametersMeta(funcMeta);
-    console.timeEnd('prepare invoke')
+    //console.timeEnd('prepare invoke')
 
-    console.time('cast down args');
+    //console.time('cast down args');
     args = castDownArgs(paramMetaList, args);
-    console.timeEnd('cast down args')
+    //console.timeEnd('cast down args')
 
-    console.time('invoke');
+    //console.time('invoke');
     const ret = actualFunc.call(bindObject, MULTIPLE_DISPATCH, ...args);
-    console.timeEnd("invoke");
+    //console.timeEnd("invoke");
     return ret;
 }
 
@@ -164,7 +161,7 @@ function castDownArgs(paramMetas, args) {
     for (let i = 0; i < args.length; ++i) {
 
         const argVal = args[i];
-        const meta = paramMetas[i++];
+        const meta = paramMetas[i];
         const paramType = meta?.type;
 
         ret.push(
@@ -197,9 +194,9 @@ function traceAndHandleMismatchVariant(e) {
  * 
  * @returns {function_variant_param_node_endpoint_metadata_t}
  */
-function diveTrieByArguments(_class, funcMeta, args) {
+function lookupEndpointNode(_class, funcMeta, args) {
 
-    console.time('estimation time');
+    //console.time('estimation time');
     const propMeta = funcMeta.owner
     const variantMaps = propMeta.owner.typeMeta.methodVariantMaps;
     const targetMap = propMeta.static ? variantMaps?.static : variantMaps._prototype;
@@ -218,7 +215,7 @@ function diveTrieByArguments(_class, funcMeta, args) {
     }
 
     const estimationReport = estimateArgs(funcMeta, args);
-    console.timeEnd('estimation time');
+    //console.timeEnd('estimation time');
     if (
         estimationReport?.constructor !== estimation_report_t
     ) {
@@ -226,10 +223,10 @@ function diveTrieByArguments(_class, funcMeta, args) {
         return false;
     }
 
-    console.time('calc')
+    //console.time('calc')
     const targetTrie = FUNC_TRIE;
     const ret = retrieveMostSpecificApplicableEndpoint(targetTrie, estimationReport)?.endpoint;
-    console.timeEnd('calc')
+    //console.timeEnd('calc')
     
     return ret;
 } 
@@ -241,7 +238,6 @@ function diveTrieByArguments(_class, funcMeta, args) {
  * @param {number} dMass
  * @param {number} dImaginary
  */
-//function retrieveEndpointByEstimation(trieNode, estimationReport, dMass = Infinity, dImaginary = Infinity) {
 function retrieveMostSpecificApplicableEndpoint(
   trieNode,
   estimationReport,
@@ -258,18 +254,14 @@ function retrieveMostSpecificApplicableEndpoint(
      * if exists.
      */
     let nearest = {
-        //delta: trieNode.endpoint ? (estimationPiece?.[undefined] || 0) * (estimations.length - trieNode.depth) + distance : distance,
-        //endpoint: trieNode.endpoint || undefined
-        vector: dVector//new function_signature_vector(dMass, dImaginary),
-        // delta: dMass,
-        // dImaginary: dImaginary,
+        vector: dVector
     };
     
     if (
         trieNode.depth === argslength//estimations.length 
     ) {
         /**
-         * anchor condition when we reach the trie node whose depth is equal 
+         * pivot condition when we reach the trie node whose depth is equal 
          * to the last estimation piece (also known as last argument)
          */
         nearest.endpoint = trieNode.endpoint;
@@ -291,67 +283,18 @@ function retrieveMostSpecificApplicableEndpoint(
             continue;
         }
 
-        const nextNode = trieNode.current.get(type);
-        //const d = calculateDistance(dMass, delta, (type instanceof Interface));
+        const nextNode = trieNode.current.get(type)
         const d = new vector(
             (dVector.real === Infinity ? 0 : dVector.real) + delta, 
             (dVector.imaginary === Infinity ? 0 : dVector.imaginary) + imaginary
         );
 
-        // if (nextNode.endpoint) {
-
-        //     nearest = min(nearest, {
-        //         delta: d,
-        //         endpoint: nextNode.endpoint
-        //     });
-        // }
-
-        // nearest = min(nearest, retrieveEndpointByEstimation(
-        //     nextNode, estimationReport, d
-        // ));
-
         nearest = min(nearest, retrieveMostSpecificApplicableEndpoint(
             nextNode, estimationReport, d
         ));
-
-        // if (
-        //     globalConfig.multipleDispatchStrictLength !== true &&
-        //     trieNode.endpoint
-        // ) {
-    
-        //     const mass = calculateMass(trieNode.depth + 1, argslength - 1, argMasses);
-    
-        //     nearest = min(nearest, {
-        //         delta: d + mass,
-        //         endpoint: trieNode.endpoint
-        //     })
-        // }
     }
 
     return nearest;
-}
-
-/**
- * 
- * @param {number} from 
- * @param {number} to 
- * @param {Array<Number>} argMasses 
- */
-function calculateMass(from, to, argMasses) {
-
-    let sum = 0;
-
-    for (let i = from; i < to; argMasses) {
-
-        sum = argMasses[i];
-    }
-
-    return sum;
-}
-
-function calculateDistance(ref, delta, isInterface = false) {
-
-    return (ref === Infinity ? 0 : ref) + delta; //+ isInterface ? INTERFACE_BIAS : 0;
 }
 
 /**
@@ -386,9 +329,4 @@ function min(left, right) {
     }
 
     return modulus(left.vector) < modulus(right.vector) ? left : right;
-
-    // const ld = typeof left.delta !== 'number' || !left.endpoint ? Infinity : left.delta;
-    // const rd = typeof right.delta !== 'number' || !right.endpoint ? Infinity : right.delta;
-
-    // return ld < rd ? left : right;
 }

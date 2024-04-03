@@ -34,19 +34,19 @@ class A {
     })
     func(a) {
 
-        console.log('A string');
+        //console.log('A string');
     }
 }
 
 @implement(IBar)
-class B extends A {
+class B extends A { 
 
     @paramameters({
         a: Number
     })
     func(a) {
 
-        console.log('B number');
+        //console.log('B number');
     }
 
     //@override
@@ -55,7 +55,7 @@ class B extends A {
     })
     [METHOD('func')](a) {
 
-        console.log('B string');
+        //console.log('B string');
     }
 
     @returnType(Void)
@@ -73,13 +73,13 @@ class C extends B {
     })
     func(a) {
 
-        console.log('C string');
+        //console.log('C string');
     }
 }
 
 class Test {
 
-    @type(IBar)
+    @type(A)
     accessor obj;
 
     constructor() {
@@ -91,5 +91,13 @@ class Test {
 const obj = (new Test()).obj;
 
 obj.func('');
+
+const start = process.hrtime.bigint();
+for (let i =0; i < 100000; ++i) {
+
+    obj.func('');
+}
+const end = process.hrtime.bigint();
+console.log('total time', end - start);
 
 console.log(obj instanceof IFoo)
