@@ -8,4 +8,7 @@ module.exports = {
     paramsType: require('./paramsType.js'),
     paramameters: require('./parameters.js'),
     returnType: require('./returnType.js'),
+    _override_: require('./override.js'),
+    _virtual_: require('./virtual.js'),
+    _implements: require('./implement.js')
 }
