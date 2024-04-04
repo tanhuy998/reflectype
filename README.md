@@ -55,8 +55,7 @@ The Interface class will prevent us from instantiating object on it's derived cl
 ### Implementing interfaces
 
 ``` javascript
-const {Interface} = require('reflectype/interface');
-const {implement} = require('reflectype');
+const {_implements, Interface} = require('reflectype');
 
 class ILoggable extends Interface {
 
@@ -76,7 +75,7 @@ class IDisposable extends Interface {
 /**
  * would throw error because this class has not been defined log() method
  */
-@implement(ILoggable, IDisposable)
+@_implement(ILoggable, IDisposable)
 class SomeClass {
 
     logConsole(msg) {
@@ -120,9 +119,7 @@ obj.id = 1; // valid set
 #### Type with interfaces
 
 ``` javascript
-const {Interface} = require('reflectype/interface');
-const {implement} = require('reflectype');
-const {type} = require('reflectype');
+const {_implement, Interface, type} = require('reflectype');
 
 class ILoggable extends Interface {
 
@@ -408,7 +405,7 @@ class A {
 
 Maxium number of type hinted parameter for each method is 32 because part of the overall algorithm for method overloading designed in this package is heuristic approach, the decision for choosing the best match method signature for a particular argument list depends mostly on the statistic table that uses numbers (32 bit) to store indexes of a specific type which is potentially been declared.
 
-### Pure Method Overloading (Static Type Binding)
+### Single Dispatch (Early Binding)
 
 Cosider the following example written in C# 
 
@@ -684,7 +681,7 @@ Time average for invoking such a method is 0.010ms.
 
 time average for iterating a an one hundred thousand times empty for loop is 0.6ms.
 
-*Current development state
+*Current development stateV
 - [x] Explicit type matched arguments
 - [x] Interface type matched arguments
 - [x] Single dispatch

@@ -1,8 +1,8 @@
 {
   "name": "reflectype",
-  "version": "0.0.10-beta.17",
+  "version": "1.0.0-rc.2",
   "description": "Support types for Javascript class's property using decorator feature",
-  "main": "./index.js",
+  "main": "./src/index.js",
   "repository": "https://github.com/tanhuy998/reflectype",
   "keywords": [
     "type",
@@ -11,7 +11,15 @@
     "reflection",
     "metadata",
     "type-metadata",
-    "interface"
+    "interface",
+    "multimethod",
+    "overload",
+    "function overloading",
+    "multiple dispatch",
+    "dynamic dispatch",
+    "ad-hoc polymorphism",
+    "single dispatch",
+    "polymorphism"
   ],
   "engines": {
     "node": ">=18.0.0"
