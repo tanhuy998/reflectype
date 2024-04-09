@@ -9,6 +9,8 @@ const { belongsToCurrentMetadataSession } = require('./metadata/metadataTrace.js
 const {
     DECORATED_VALUE,
     ORIGIN_VALUE,
+    ALTER_VALUE,
+    DISPATCH_FUNCTION,
 } = require('./constant.js');
 const { extractFunctionInformations } = require('../utils/function.util.js');
 const { MULTIPLE_DISPATCH, OVERLOAD_APPLIED, PSEUDO_OVERLOADED_METHOD_NAME } = require('./methodOverloading/constant.js');
@@ -54,6 +56,29 @@ function generateDecorateMethod(propMeta) {
         const {type} = propMeta;
 
         return checkReturnTypeAndResolve(returnValue, type, propMeta);
+    }
+}
+
+/**
+ * Generic function is the first entry point for the decorated method,
+ * because private method cannot be alterd after the entired type metadata resolution
+ * resolved, the entry point gives the an abstraction layer for altering the actual method
+ * to be dispatch.
+ * 
+ * @param {property_metadata_t} propMeta 
+ * @returns {function}
+ */
+function generateGenericFunction(propMeta) {
+
+    if (!propMeta.isMethod) {
+
+        throw new TypeError('could not generate decorate method for non method propMeta');
+    }
+
+    return function() {
+
+        const method = getMetadataFootPrintByKey(propMeta, ALTER_VALUE);
+        return method.call(this, ...arguments);
     }
 }
 
@@ -161,7 +186,11 @@ function decorateMethod(_method, context, propMeta) {
 
     if (!metadataHasFootPrint(propMeta, DECORATED_VALUE)) {
 
-        setMetadataFootPrint(propMeta, DECORATED_VALUE, generateDecorateMethod(propMeta));
+        //setMetadataFootPrint(propMeta, DECORATED_VALUE, generateDecorateMethod(propMeta));
+        setMetadataFootPrint(propMeta, DECORATED_VALUE, generateGenericFunction(propMeta));
+        const dispatchFunc = generateDecorateMethod(propMeta);
+        setMetadataFootPrint(propMeta, ALTER_VALUE, discoverFunction);
+        setMetadataFootPrint(propMeta.functionMeta, DISPATCH_FUNCTION, dispatchFunc);
     }
 
     propMeta.decoratorContext = context;

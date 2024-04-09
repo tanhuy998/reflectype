@@ -50,7 +50,7 @@ class A {
     })
     func(a) {
         console.log(this, this instanceof A, isProxy(this))
-        this.#another()
+        this.#another(1)
         //console.log('A string');
     }
 }
@@ -66,7 +66,7 @@ class B extends A {
         //console.log('B number');
     }
 
-    @override
+    //@override
     @paramameters({
         a: String
     })
@@ -85,7 +85,7 @@ class B extends A {
 @implement(IFoo)
 class C extends B {
 
-    @override
+    //@override
     @paramameters({
         a: String
     })
@@ -98,7 +98,7 @@ class C extends B {
 
 class Test {
 
-    @type(IBar)
+    @type(A)
     accessor obj;
 
     constructor() {

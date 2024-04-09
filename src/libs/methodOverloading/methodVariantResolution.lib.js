@@ -10,8 +10,8 @@ const {
     function_metadata_t,
     function_variant_cache_node_endpoint_metadata_t
 } = require("../../reflection/metadata");
-const { DECORATED_VALUE, DECORATOR_APPLIED } = require("../constant");
-const { getMetadataFootPrintByKey } = require("../footPrint");
+const { DECORATED_VALUE, DECORATOR_APPLIED, ALTER_VALUE } = require("../constant");
+const { getMetadataFootPrintByKey, setMetadataFootPrint } = require("../footPrint");
 const { OVERLOAD_APPLIED, OVERLOAD_TARGET, OVERRIDE_APPLIED, OVERLOADED_METHOD_NAME, NULLABLE } = require("./constant");
 const { isObjectLike, isFirstClass, isObjectKey, isValuable } = require("../type");
 const {getAllParametersMeta, getAllParametersMetaWithNullableFilter} = require('../functionParam.lib');
@@ -204,17 +204,26 @@ function createEntryPoint(entryPointTarget , methodName, refPropMeta) {
         return;
     }
 
-    if (isVariantEntryPointFunction(entryPointTarget[methodName])) {
+    if (
+        //isVariantEntryPointFunction(entryPointTarget[methodName])
+        isVariantEntryPointFunction(getMetadataFootPrintByKey(
+            refPropMeta, ALTER_VALUE
+        ))
+    ) {
 
         return;
     }
 
-    Reflect.set(
-        entryPointTarget, 
-        methodName, 
-        generateGenericEntryPoint(genericPropMeta), 
-        entryPointTarget
-    );
+    const multiDispatchGenericEntryPoint = generateGenericEntryPoint(genericPropMeta);
+
+    // Reflect.set(
+    //     entryPointTarget, 
+    //     methodName, 
+    //     multiDispatchGenericEntryPoint, 
+    //     entryPointTarget
+    // );
+
+    setMetadataFootPrint(genericPropMeta, ALTER_VALUE, multiDispatchGenericEntryPoint);
 }
 
 /**
