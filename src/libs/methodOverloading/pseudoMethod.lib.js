@@ -3,7 +3,7 @@ const { property_metadata_t } = require('../../reflection/metadata');
 const { retrieveDecoratorFootPrintByKey, getMetadataFootPrintByKey } = require('../footPrint');
 const { PSEUDO_OVERLOADED_METHOD_NAME } = require('./constant');
 
-const PSEUDO_METHOD_NAME_PATTERN = /^pseudoMethod\$(\w+)-\d+$/;
+const PSEUDO_METHOD_NAME_PATTERN = /^pseudoMethod\$(#?\w+)-\d+$/;
 const TARGET_NAME = 1;
 
 module.exports = {

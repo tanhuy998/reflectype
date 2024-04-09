@@ -1,3 +1,5 @@
+const { isProxy } = require("util/types");
+const { Interface } = require("../interface");
 const Reflector = require("../metadata/reflector");
 const ReflectorContext = require("../metadata/reflectorContext");
 const { VPTR, TYPE_ENFORCEMENT_TRAPS, CASTED_TYPE } = require("./constant");
@@ -5,27 +7,74 @@ const { isPrimitive, isValuable, matchType, getTypeOf } = require("./type");
 
 
 const WHILE_lIST = new Set([
-    '__is', '__implemented'
+    '__is', '__implemented', 'constructor'
 ])
 
+const ORIGIN_OBJECT = Symbol('_origin_object');
+
 const traps = {
-    get(target, key) {
+    get(target, key, receiver) {
 
-        if (key === VPTR) {
+        if (
+            key === VPTR
+            || key === ORIGIN_OBJECT
+        ) {
 
-            return this[VPTR];
+            return this[key];
         }
 
-        restrictAbstractUndeclaredMethod(this[VPTR], target, key);
-        const target_prop = target[key];
-        return target_prop;
+        //restrictAbstractUndeclaredMethod(this[VPTR], target, key);
+        
+        // /**@type {Function|typeof Interface} */
+        // const vPtr = getVPtrOf(this) || getTypeOf(target);
+        // const vPtrIsInterface = vPtr.prototype instanceof Interface;
+        
+        // const proto = vPtr.prototype;
+        
+        // /**
+        //  * Early binding for method calling
+        //  */
+        // if (
+        //     //typeof vPtr.prototype[key] === 'function'
+        //     //typeof getPrototypeProperty.call(proto, key) === 'function'
+        //     typeof Reflect.get(proto, key, proto) === 'function'
+        //     && !WHILE_lIST.has(key)
+        // ) {
+            
+        //     // const ret = !vPtrIsInterface ? 
+        //     // //vPtr.prototype[key] : retrieveInterfaceImplementer(target, vPtr).prototype[key];
+        //     // getPrototypeProperty.call(proto, key) : getPrototypeProperty.call(
+        //     //     retrieveInterfaceImplementer(target, vPtr).prototype, key
+        //     // );
+            
+        //     if (!vPtrIsInterface) {
+               
+        //         const ret =  Reflect.get(proto, key, proto);
+        //         return ret;
+        //     }
+        //     else {
+
+        //         const implementerProto = retrieveInterfaceImplementer(target, vPtr).prototype;
+
+        //         return Reflect.get(implementerProto, key, implementerProto);
+        //     }
+
+        //     //return ret;
+        // }
+        
+        return dispatchPotentialFunction(target, this, key) || target[key];
+
+        // const target_prop = target[key];
+        // return target_prop;
     },
     set(target, key, val) {
 
         if (
             key === VPTR
         ) {
-            this[VPTR] = val;
+            //this[VPTR] = val;
+
+            return false;
         }
         else {
             target[key] = val;
@@ -33,6 +82,61 @@ const traps = {
         
         return true;
     }
+}
+
+/**
+ * 
+ * @param {object|Function} target 
+ * @param {Proxy} wrapper 
+ * @param {string|symbol} key 
+ * @returns 
+ */
+function dispatchPotentialFunction(target, wrapper, key) {
+
+    /**@type {Function|typeof Interface} */
+    const vPtr = wrapper[VPTR] || getTypeOf(target);
+    const vPtrIsInterface = vPtr.prototype instanceof Interface;
+    const proto = vPtrIsInterface ? retrieveInterfaceImplementer(target, vPtr).prototype : vPtr.prototype;
+    
+    if (
+        typeof Reflect.get(proto, key, proto) !== 'function'
+        || WHILE_lIST.has(key)
+    ) {
+
+        return undefined;
+    }
+    
+    return wrappFunction(Reflect.get(proto, key, proto), target);
+}
+
+/**
+ * wrap the function retrieved by proxy getter in order to release
+ * virtual pointer of the binder.
+ * 
+ * @param {function} _func 
+ * @param {object|Function} binder 
+ * @returns 
+ */
+function wrappFunction(_func, binder) {
+    
+    binder = releaseVPtrOf(binder);
+
+    return function() {
+        
+        return _func.call(binder, ...arguments);
+    }
+}
+
+function retrieveInterfaceImplementer(instance, Interface) {
+
+    const reflector = new Reflector(instance);
+    
+    return reflector.metadata.interfaces.list.get(Interface);
+}
+
+function getPrototypeProperty(name) {
+
+    return this[name];
 }
 
 const const_cast_traps = {
@@ -104,6 +208,11 @@ function restrictAbstractUndeclaredMethod(abstract, target, key) {
 
 function getVPtrOf(object) {
 
+    if (typeof object === 'function') {
+
+        throw new TypeError('classes or functions could not own virtual pointer');
+    }
+
     if (!isValuable(object)) {
 
         return undefined;
@@ -132,12 +241,17 @@ function releaseTypeCast(object) {
  */
 function setVPtrOf(_t, target) {
 
+    if (typeof _target === 'function') {
+
+        throw new TypeError('setting virtual pointer to class or function is not allowed.');
+    }
+
     if (
         !meetPrerequisites(target)
     ) {
         return target;
     }
-
+    
     if (
         !matchType(_t, target) 
         && _t !== Object
@@ -152,12 +266,18 @@ function setVPtrOf(_t, target) {
         ,
         {
             [VPTR]: _t,
+            [ORIGIN_OBJECT]: target,
             //[CASTED_TYPE]: target?.[CASTED_TYPE],
             ...traps,
         }
     );
     //console.timeEnd('cast');
     return ret;
+}
+
+function preventClass(_target) {
+
+
 }
 
 /**
@@ -167,11 +287,17 @@ function setVPtrOf(_t, target) {
  */
 function releaseVPtrOf(target) {
 
+    if (typeof object === 'function') {
+
+        throw new TypeError('classes or functions could not own virtual pointer');
+    }
+
     // releaseTypeCast(target);
 
     // return target;
-
-    return setVPtrOf(getTypeOf(target), target);
+    
+    //return setVPtrOf(getTypeOf(target), target);
+    return target?.[ORIGIN_OBJECT] || target;
 }
 
 function const_cast(target) {

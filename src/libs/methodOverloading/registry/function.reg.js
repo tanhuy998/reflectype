@@ -13,8 +13,10 @@ const V_TABLE = new Map();
 /**@type {Map<string|symbol, function_metadata_t>} */
 const REGISTRY = new Map();
 
+const FUNC_CACHE = new function_variant_param_node_metadata_t
 
 module.exports = {
+    FUNC_CACHE,
     FUNC_TRIE, 
     FUNC_NAMES, 
     V_TABLE, 

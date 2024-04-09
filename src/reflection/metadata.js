@@ -35,6 +35,7 @@ module.exports = {
     parameter_metadata_t,
     function_variant_param_node_metadata_t,
     function_variant_param_node_endpoint_metadata_t,
+    function_variant_cache_node_endpoint_metadata_t,
     method_variant_map_metadata_t,
     method_variant_mapping_table_metadata_t
     //function_variant_origin_map_metadata_t,
@@ -285,9 +286,27 @@ function function_variant_param_node_endpoint_metadata_t() {
     this.dispatchTable = new Map();
 
     /**
+     * @type {function_variant_cache_node_endpoint_metadata_t}
+     */
+    this.cache;
+
+    /**
      * @type {Number}
      */
     this.depth;
+}
+
+function function_variant_cache_node_endpoint_metadata_t() {
+
+    // /**
+    //  * @type {Map<function_metadata_t, function_metadata_t>}
+    //  */
+    // this.cachedFuncMeta = new Map();
+
+    /**
+     * @type {Map<function_metadata_t, function_metadata_t>}
+     */
+    this.cacheTable = new Map();
 }
 
 /**
@@ -335,6 +354,11 @@ function function_variant_param_node_metadata_t (ref) {
      * @type {function_variant_param_node_endpoint_metadata_t}
      */
     this.endpoint;
+
+    /**
+     * @type {function_variant_cache_node_endpoint_metadata_t}
+     */
+    this.cache;
 }
 
 // function function_variant_origin_map_metadata_t() {

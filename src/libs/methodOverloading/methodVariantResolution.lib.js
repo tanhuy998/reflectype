@@ -7,7 +7,8 @@ const {
     metadata_t, 
     method_variant_mapping_table_metadata_t, 
     parameter_metadata_t,
-    function_metadata_t
+    function_metadata_t,
+    function_variant_cache_node_endpoint_metadata_t
 } = require("../../reflection/metadata");
 const { DECORATED_VALUE, DECORATOR_APPLIED } = require("../constant");
 const { getMetadataFootPrintByKey } = require("../footPrint");
@@ -45,7 +46,7 @@ module.exports = {
 function manipulateMethodVariantBehavior(propName, propMeta) {
 
     const isOwner = isOwnerOfPropMeta.call(this, propName, propMeta);
-
+    
     if (
         !propMeta.isMethod ||
         !isOwner
@@ -53,14 +54,13 @@ function manipulateMethodVariantBehavior(propName, propMeta) {
 
         return;
     }
-
+    
     if (isOverrideWithoutDecoration.call(this, propName, propMeta)) {
         const currentClass = typeof this === 'function' ? this : this.constructor;
         const overridedClass = propMeta.owner.typeMeta.abstract;
         throw new ReferenceError(`could not define undecorated method [${currentClass?.name}].${propName}() to override base class's decorated method [${overridedClass?.name}].${propName}()`);
     }
     
-
     if (
         !isPseudoMethod(propMeta) &&
         isOwner
@@ -85,11 +85,12 @@ function manipulateMethodVariantBehavior(propName, propMeta) {
     let statisticTable;
 
     if (
-        (isOverloading
-        || hasLegacy) 
+        isOverloading
+        || (hasLegacy && !propMeta.private)
+        || isOwner && propMeta.functionMeta.isVirtual
         //&& !isPseudoMethod(propMeta)
     ) {
-
+        //console.log(3)
         const overloadedName = getMetadataFootPrintByKey(propMeta, OVERLOADED_METHOD_NAME) || propMeta.name;
         const genericPropMeta = retrieveMethodVariantTableOf(propMeta).mappingTable.get(overloadedName);
         createContextEntryPoint(genericPropMeta);
@@ -182,7 +183,7 @@ function createContextEntryPoint(propMeta) {
  * @param {property_metadata_t} refPropMeta 
  */
 function createEntryPoint(entryPointTarget , methodName, refPropMeta) {
-
+    
     if (!isObjectLike(entryPointTarget)) {
 
         throw new TypeError();
@@ -208,14 +209,19 @@ function createEntryPoint(entryPointTarget , methodName, refPropMeta) {
         return;
     }
 
-    entryPointTarget[methodName] = generateEntryPointForMethodVariants(genericPropMeta);
+    Reflect.set(
+        entryPointTarget, 
+        methodName, 
+        generateGenericEntryPoint(genericPropMeta), 
+        entryPointTarget
+    );
 }
 
 /**
  * 
  * @param {property_metadata_t} originPropMeta 
  */
-function generateEntryPointForMethodVariants(originPropMeta) {
+function generateGenericEntryPoint(originPropMeta) {
     
     const ENTRY_POINT = function () {
         
@@ -266,9 +272,9 @@ function registerMethodVariant(hostPropMeta, extraStatisticTables = []) {
     }
 
     validateWithBaseClassImplemetation(hostPropMeta, endpointNode);
-
-    const genericPropMeta = retrieveGenericPropMetaOf(hostPropMeta);
-    endpointNode.endpoint.dispatchTable.set(genericPropMeta.functionMeta, funcMeta);
+    setEndpoint(endpointNode, hostPropMeta, funcMeta);
+    // const genericPropMeta = retrieveGenericPropMetaOf(hostPropMeta);
+    // endpointNode.endpoint.dispatchTable.set(genericPropMeta.functionMeta, funcMeta);
 }
 
 /**
@@ -298,9 +304,22 @@ function registerNullableBranch(hostPropMeta, extraStatisticTables = []) {
     }
 
     validateNullableBranch(funcMeta, endPointNode);
-    
+    setEndpoint(endPointNode, hostPropMeta, funcMeta);
+    // const genericPropMeta = retrieveGenericPropMetaOf(hostPropMeta);
+    // endPointNode.endpoint.dispatchTable.set(genericPropMeta.functionMeta, funcMeta);
+}
+
+/**
+ * 
+ * @param {function_variant_param_node_metadata_t} trieNode 
+ * @param {property_metadata_t} hostPropMeta 
+ * @param {function_metadata_t} genericImplementation 
+ */
+function setEndpoint(trieNode, hostPropMeta, genericImplementation) {
+
     const genericPropMeta = retrieveGenericPropMetaOf(hostPropMeta);
-    endPointNode.endpoint.dispatchTable.set(genericPropMeta.functionMeta, funcMeta);
+    trieNode.endpoint.dispatchTable.set(genericPropMeta.functionMeta, genericImplementation);
+    const cache = trieNode.cache ??= new function_variant_cache_node_endpoint_metadata_t();
 }
 
 /**

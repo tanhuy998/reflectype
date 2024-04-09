@@ -20,7 +20,9 @@ const { static_cast, getCastedTypeOf } = require("../casting.lib");
 const {FUNC_TRIE} = require('./registry/function.reg');
 const { estimation_report_t, vector } = require("./estimationFactor");
 const { extractVirtualFunction } = require("./virtualMethod.lib");
-const { getVPtrOf } = require("../typeEnforcement.lib");
+const { getVPtrOf, releaseVPtrOf } = require("../typeEnforcement.lib");
+const { isProxy } = require("util/types");
+const { lookupArgBranch, mergeArgBranch } = require("./argLookup.lib");
 const debug = require('debug')('pkg:methodOverloading:dispatch');
 
 module.exports = {
@@ -36,24 +38,19 @@ module.exports = {
  */
 function dispatchMethodVariant(binder, propMeta, args) {
     
+    let hasCache = false;
+
     try {
-
-        const genericFuncMeta = propMeta.functionMeta;
-        const trieEndpoint = args.length === 0 ?
-            FUNC_TRIE.endpoint 
-            : lookupEndpointNode(getTypeOf(binder), genericFuncMeta, args);
         
-        if (
-            !trieEndpoint
-        ) {
-            
-            throw new MethodVariantMismatchError(genericFuncMeta, args);
-        }
-        //console.time('extract vtable')
-        const funcMeta = extractFuncMeta(binder, trieEndpoint, propMeta, args);
-        //console.timeEnd('extract vtable')
+        const funcMeta = dispatchPotentialVirtualFunciton(
+            propMeta,
+            lookupArgBranch(propMeta.functionMeta, args)
+            || investigateGenericImplementation(binder, propMeta, args)
+            , binder
+        )
+        const ret = invoke(funcMeta, binder, args);
 
-        return invoke(funcMeta, binder, args);
+        return ret;
     }
     catch (e) {
 
@@ -66,6 +63,53 @@ function dispatchMethodVariant(binder, propMeta, args) {
     }
 }
 
+function investigateGenericImplementation(binder, genericPropMeta, args = []) {
+    
+    const genericFuncMeta = genericPropMeta.functionMeta;
+    const trieEndpoint = args.length === 0 ?
+        FUNC_TRIE.endpoint
+        : lookupEndpointNode(getTypeOf(binder), genericFuncMeta, args);
+
+    if (
+        !trieEndpoint
+    ) {
+
+        throw new MethodVariantMismatchError(genericFuncMeta, args);
+    }
+    
+    const genericImplementation = extractGenericImplementation(binder, trieEndpoint, genericPropMeta, args);
+
+    if (typeof genericImplementation === 'object') {
+
+        mergeArgBranch(genericFuncMeta, genericImplementation, args);
+    }
+
+    return genericImplementation;
+}
+
+/**
+ * 
+ * @param {property_metadata_t} inputGenPropMeta
+ * @param {function_metadata_t} resolvedGenImpl 
+ * @param {Function|object}
+ * 
+ * @returns {function_metadata_t}
+ */
+function dispatchPotentialVirtualFunciton(inputGenPropMeta, resolvedGenImpl, bindObj) {
+    
+    const actualType = getTypeOf(bindObj);
+    /**@type {Function|typeof Interface} */
+    //const vPtr = getVPtrOf(bindObj);
+    const vPtr = inputGenPropMeta.owner.typeMeta.abstract;
+    
+    return !resolvedGenImpl.isVirtual ? 
+    resolvedGenImpl
+    : extractVirtualFunction(
+        resolvedGenImpl , vPtr, actualType
+    );
+}
+
+
 /**
  * 
  * @param {Function|Object} binder the object that bound with the function when invoking it.
@@ -75,8 +119,8 @@ function dispatchMethodVariant(binder, propMeta, args) {
  * for overloading function, its role is just loopback point.
  * @param {Array<any>} args input arguments.
  */
-function extractFuncMeta(binder, trieEndpoint, propMeta, args) {
-
+function extractGenericImplementation(binder, trieEndpoint, propMeta, args) {
+    
     let _class = propMeta.owner.typeMeta.abstract;
     const actualType = getTypeOf(binder);
 
@@ -110,11 +154,13 @@ function extractFuncMeta(binder, trieEndpoint, propMeta, args) {
             typeof genericImplementation === 'object'
         ) {
             
-            return !genericImplementation.isVirtual ? 
-                genericImplementation
-                : extractVirtualFunction(
-                    genericImplementation , vPtr, actualType
-                );
+            // return !genericImplementation.isVirtual ? 
+            //     genericImplementation
+            //     : extractVirtualFunction(
+            //         genericImplementation , vPtr, actualType
+            //     );
+
+            return genericImplementation;
         }
         
         _class = Object.getPrototypeOf(_class);
@@ -144,6 +190,8 @@ function invoke(funcMeta, bindObject, args) {
     //console.timeEnd('cast down args')
 
     //console.time('invoke');
+    bindObject = releaseVPtrOf(bindObject);
+
     const ret = actualFunc.call(bindObject, MULTIPLE_DISPATCH, ...args);
     //console.timeEnd("invoke");
     return ret;

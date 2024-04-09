@@ -158,26 +158,26 @@ class Temp {
 }
 
 const t = new Temp();
-console.time(2)
-o.func('1', 1, true)
-console.timeEnd(2)
-console.time(2)
-obj.func(null, 1, true)
-console.timeEnd(2)
-console.time(2)
-obj.func(1, '1', '1')
-console.timeEnd(2)
-c.func(null, 1, true);
+// console.time(2)
+// o.func('1', 1, true)
+// console.timeEnd(2)
+// console.time(2)
+// obj.func(null, 1, true)
+// console.timeEnd(2)
+// console.time(2)
+// obj.func(1, '1', '1')
+// console.timeEnd(2)
+// c.func(null, 1, true);
 //c.func(new A(), new A(), 1)
 
 
-c.func(new A(), new A(), true)
+//c.func(new A(), new A(), true)
 
 console.time('total1')
 
 //c.func(new A(), new A(), 1)
 
-for (let i = 0; i < 1; ++i) {
+for (let i = 0; i < 100000; ++i) {
 
     //console.time(2)
     const start = process.hrtime.bigint();

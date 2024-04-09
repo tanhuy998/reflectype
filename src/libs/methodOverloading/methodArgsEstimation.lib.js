@@ -9,6 +9,7 @@ const { getTypeOf, isValuable } = require("../type");
 const { ESTIMATION_MASS, NULLABLE } = require("./constant");
 const MethodVariantMismatchError = require("./error/methodVariantMismatchError");
 const { estimation_complex_t, estimation_report_t, EstimationPieace } = require("./estimationFactor");
+const { getTypeForFunctionDispatch } = require("./util.lib");
 
 /**
  * because of using a number (which is 4 bytes floating point) as 
@@ -57,10 +58,10 @@ module.exports = {
 /**
  * 
  * @param {parameter_metadata_t} paramMeta 
- * @param {function_variant_param_node_metadata_t} variantNodeMeta 
+ * @param {number} depth 
  * @param {?Array<Map<Function, number>>} statisticTables 
  */
-function addStatisticalPieace(paramMeta, variantNodeMeta, statisticTables = []) {
+function addStatisticalPieace(paramMeta, depth, statisticTables = []) {
 
     for (let i = 0; i < statisticTables.length; ++i) {
 
@@ -71,11 +72,11 @@ function addStatisticalPieace(paramMeta, variantNodeMeta, statisticTables = []) 
             continue;
         }
 
-        acknowledge(paramMeta?.type ?? Any, variantNodeMeta.depth, table);
+        acknowledge(paramMeta?.type ?? Any, depth, table);
 
         if (paramMeta?.allowNull) {
 
-            acknowledge(NULLABLE, variantNodeMeta.depth, table);
+            acknowledge(NULLABLE, depth, table);
         }
     }
 }
@@ -292,7 +293,8 @@ function decideToChoose(_type, index, statisticTable, estimationPiece, delta = 0
  */
 function estimateArgType(argVal, index = 0, statisticTable) {
 
-    const _type = getCastedTypeOf(argVal) || getTypeOf(argVal) || NULLABLE;
+    //const _type = getCastedTypeOf(argVal) || getTypeOf(argVal) || NULLABLE;
+    const _type = getTypeForFunctionDispatch(argVal);
 
     const estimationPiece = new EstimationPieace(_type);
     diveInheritanceChain(_type, index, statisticTable, estimationPiece);

@@ -9,7 +9,8 @@ const {
     REGEX_DECORATOR_DETECT,
     REGEX_ES6_CONSTRUCTOR_EXTRACT,
     REGEX_WHITE_SPACE,
-    REGEX_REST_PARAM_DETECT
+    REGEX_REST_PARAM_DETECT,
+    REGEX_ES6_METHOD_DETECT
 } = require("./constant");
 
 const config = require('../../config.json');
@@ -72,13 +73,13 @@ function extractClassConstructorInformations(_class) {
 function extractFunctionInformations(_func) {
     
     if (typeof _func !== 'function') {
-
+        
         return undefined;
     }
 
     const str = _func.toString();
-    const match = str.replace(REGEX_FUNCTION_BODY_DETECT, EMPTY_STRING)
-                    .match(REGEX_FUNCTION_DETECT);
+    let match = str.replace(REGEX_FUNCTION_BODY_DETECT, EMPTY_STRING);
+    match = match.match(REGEX_ES6_METHOD_DETECT);
 
     return match ? resolveFunctionMeta(match[FUNCTION_PARAMS], _func) : undefined
 }

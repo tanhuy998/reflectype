@@ -1,3 +1,4 @@
+const { isProxy } = require("util/types");
 const { paramameters, Interface, Void } = require("../../src");
 const implement = require("../../src/decorators/implement");
 const override = require("../../src/decorators/override");
@@ -5,6 +6,7 @@ const returnType = require("../../src/decorators/returnType");
 const type = require("../../src/decorators/type");
 const virtual = require("../../src/decorators/virtual");
 const { METHOD } = require("../../src/libs/methodOverloading/constant");
+const { getVPtrOf } = require("../../src/libs/typeEnforcement.lib");
 
 class IFoo extends Interface {
 
@@ -28,12 +30,27 @@ class IBar extends IFoo {
 @implement(IFoo)
 class A {
 
+    @returnType(Void)
+    #another() {
+
+        console.log(1)
+    }
+
+    @paramameters({
+        a: Number
+    })
+    [METHOD('#another')](a) {
+
+        console.log('private number');
+    }
+
     @virtual
     @paramameters({
         a: String
     })
     func(a) {
-
+        console.log(this, this instanceof A, isProxy(this))
+        this.#another()
         //console.log('A string');
     }
 }
@@ -49,13 +66,14 @@ class B extends A {
         //console.log('B number');
     }
 
-    //@override
+    @override
     @paramameters({
         a: String
     })
     [METHOD('func')](a) {
 
-        //console.log('B string');
+        //super.func('')
+        console.log('B string');
     }
 
     @returnType(Void)
@@ -67,19 +85,20 @@ class B extends A {
 @implement(IFoo)
 class C extends B {
 
-    //@override
+    @override
     @paramameters({
         a: String
     })
     func(a) {
 
-        //console.log('C string');
+        //super.func('')
+        console.log('C string');
     }
 }
 
 class Test {
 
-    @type(A)
+    @type(IBar)
     accessor obj;
 
     constructor() {
@@ -90,14 +109,19 @@ class Test {
 
 const obj = (new Test()).obj;
 
+
 obj.func('');
 
 const start = process.hrtime.bigint();
-for (let i =0; i < 100000; ++i) {
+console.time(2);
+for (let i =0; i < 0; ++i) {
 
     obj.func('');
 }
+console.timeEnd(2);
 const end = process.hrtime.bigint();
 console.log('total time', end - start);
 
 console.log(obj instanceof IFoo)
+
+

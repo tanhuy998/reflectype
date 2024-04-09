@@ -5,7 +5,8 @@ const {
     parameter_metadata_t, 
     function_variant_param_node_endpoint_metadata_t, 
     metaOf, 
-    method_variant_mapping_table_metadata_t 
+    method_variant_mapping_table_metadata_t, 
+    function_variant_cache_node_endpoint_metadata_t
 } = require("../../reflection/metadata");
 const Any = require("../../type/any");
 const { addStatisticalPieace } = require("./methodArgsEstimation.lib");
@@ -19,6 +20,7 @@ module.exports = {
     retrieveTrie,
     retrieveSignatureMatrix,
     searchForMatchTrieNode,
+    _mergeTrieBranch
 }
 
 /**
@@ -126,16 +128,56 @@ function mergeFuncVariant(paramMetaList, rootTrieNode, statisticTables) {
         throw new Error(); // will be a custom error
     }
 
-    /**@type {function_variant_param_node_metadata_t} */
-    let ret = rootTrieNode;
+    // /**@type {function_variant_param_node_metadata_t} */
+    // let ret = rootTrieNode;
 
-    for (const paramMeta of paramMetaList || []) {
+    // for (const paramMeta of paramMetaList || []) {
 
-        ret = insertTrieNode(ret, paramMeta, statisticTables);
-    }
+    //     ret = insertTrieNode(ret, paramMeta, statisticTables);
+    // }
+
+    const ret = _mergeTrieBranch(
+        rootTrieNode, 
+        paramMetaList.map(meta => meta?.type || Any),
+        statisticTables
+    )
 
     ret.endpoint ??= new function_variant_param_node_endpoint_metadata_t();
     ret.endpoint.depth = ret.depth;
+    ret.cache ??= new function_variant_cache_node_endpoint_metadata_t();
+
+    manipulateStatisticTable(paramMetaList, statisticTables);
+
+    return ret;
+}
+
+
+function manipulateStatisticTable(paramMetaList = [], statisticTables) {
+
+    for (let depth = 0; depth < paramMetaList.length; ++depth) {
+
+        const meta = paramMetaList[depth];
+        addStatisticalPieace(meta, depth, statisticTables);
+    }
+}
+
+/**
+ * 
+ * @param {function_variant_param_node_endpoint_metadata_t} node 
+ * @param {Iterable} list 
+ * @param {function} transform
+ * @returns 
+ */
+function _mergeTrieBranch(node, list, transform) {
+
+    /**@type {function_variant_param_node_metadata_t} */
+    let ret = node;
+    const hasTransform = typeof transform === 'function';
+
+    for (const val of list || []) {
+
+        ret = insertTrieNode(ret, hasTransform ? transform(val) : val);
+    }
 
     return ret;
 }
@@ -149,21 +191,17 @@ function mergeFuncVariant(paramMetaList, rootTrieNode, statisticTables) {
  * @param {?Array<Map<Function, number>>} statisticTables
  * 
  */
-function insertTrieNode(currentNode, paraMeta, statisticTables = []) {
-
-    const _type = paraMeta?.type || Any;
-
-    addStatisticalPieace(paraMeta, currentNode, statisticTables);
+function insertTrieNode(currentNode, key) {
 
     const current = currentNode.current;
 
-    if (current.has(_type)) {
+    if (current.has(key)) {
 
-        return current.get(_type);
+        return current.get(key);
     }
 
     const nextNode = new function_variant_param_node_metadata_t(currentNode);
-    current.set(_type, nextNode);
+    current.set(key, nextNode);
 
     return nextNode;
 }
