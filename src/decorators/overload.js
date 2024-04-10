@@ -1,7 +1,7 @@
 const {DECORATED_VALUE} = require('../libs/constant');
 const { getMetadataFootPrintByKey } = require('../libs/footPrint');
 const { isNonIterableObjectKey } = require('../libs/type');
-const { manipulateOverloading, validateAndReturnTargetPropMeta } = require('../utils/decorator/overload.util');
+const { manipulateOverloading, validateAndReturnTargetPropMeta, setupOverload } = require('../utils/decorator/overload.util');
 const propertyDecorator = require('../libs/propertyDecorator');
 
 module.exports = overload;
