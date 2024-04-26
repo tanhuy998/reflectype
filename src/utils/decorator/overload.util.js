@@ -5,7 +5,7 @@ const { retrieveTypeMetadata } = require('../../libs/metadata/metadataTrace');
 const MetadataAspect = require('../../metadata/aspect/metadataAspect');
 const ReflectionQuerySubject = require('../../metadata/query/reflectionQuerySubject');
 const { property_metadata_t, metadata_t } = require('../../reflection/metadata');
-const final = require('../../decorators/final');
+//const final = require('../../decorators/final');
 const { METADATA } = require('../../constants');
 
 module.exports = {
@@ -26,7 +26,7 @@ module.exports = {
  */
 function setupOverload(_, decoratorContext, propMeta, targetPropMeta) {
 
-    final(_, decoratorContext); // decorator that mark the current method is final
+    //final(_, decoratorContext); // decorator that mark the current method is final
     setOverloadFootPrint(propMeta, targetPropMeta)
 }
 

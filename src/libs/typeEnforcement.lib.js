@@ -2,13 +2,15 @@ const { isProxy } = require("util/types");
 const { Interface } = require("../interface");
 const Reflector = require("../metadata/reflector");
 const ReflectorContext = require("../metadata/reflectorContext");
-const { VPTR, TYPE_ENFORCEMENT_TRAPS, CASTED_TYPE } = require("./constant");
+//const { VPTR, TYPE_ENFORCEMENT_TRAPS, CASTED_TYPE } = require("./constant");
 const { isPrimitive, isValuable, matchType, getTypeOf } = require("./type");
 
 
 const WHILE_lIST = new Set([
     '__is', '__implemented', 'constructor'
 ])
+
+const VPTR = Symbol('vPtr');
 
 const ORIGIN_OBJECT = Symbol('_origin_object');
 
@@ -22,50 +24,8 @@ const traps = {
 
             return this[key];
         }
-
-        //restrictAbstractUndeclaredMethod(this[VPTR], target, key);
-        
-        // /**@type {Function|typeof Interface} */
-        // const vPtr = getVPtrOf(this) || getTypeOf(target);
-        // const vPtrIsInterface = vPtr.prototype instanceof Interface;
-        
-        // const proto = vPtr.prototype;
-        
-        // /**
-        //  * Early binding for method calling
-        //  */
-        // if (
-        //     //typeof vPtr.prototype[key] === 'function'
-        //     //typeof getPrototypeProperty.call(proto, key) === 'function'
-        //     typeof Reflect.get(proto, key, proto) === 'function'
-        //     && !WHILE_lIST.has(key)
-        // ) {
-            
-        //     // const ret = !vPtrIsInterface ? 
-        //     // //vPtr.prototype[key] : retrieveInterfaceImplementer(target, vPtr).prototype[key];
-        //     // getPrototypeProperty.call(proto, key) : getPrototypeProperty.call(
-        //     //     retrieveInterfaceImplementer(target, vPtr).prototype, key
-        //     // );
-            
-        //     if (!vPtrIsInterface) {
-               
-        //         const ret =  Reflect.get(proto, key, proto);
-        //         return ret;
-        //     }
-        //     else {
-
-        //         const implementerProto = retrieveInterfaceImplementer(target, vPtr).prototype;
-
-        //         return Reflect.get(implementerProto, key, implementerProto);
-        //     }
-
-        //     //return ret;
-        // }
         
         return dispatchPotentialFunction(target, this, key) || target[key];
-
-        // const target_prop = target[key];
-        // return target_prop;
     },
     set(target, key, val) {
 
@@ -82,6 +42,46 @@ const traps = {
         
         return true;
     }
+}
+
+const const_cast_traps = {
+    get(target, key) {
+
+        if (key === VPTR) {
+
+            return this[VPTR];
+        }
+
+        const castedType = this[VPTR];
+        restrictAbstractUndeclaredMethod(castedType, target, key);
+        
+        const targetProp = target[key];
+        const castedTypeProp = castedType.prototype[key];
+
+        // if () {
+
+
+        // }
+    },
+    set: traps.set,
+    getPrototypeOf() {
+
+        return this[VPTR];
+    },
+    setPrototypeOf() {
+
+        throw new Error('could not set prototype of object that is casted as const_cast()');
+    }
+}
+
+module.exports = {
+    getVPtrOf: _getVPtrOf,
+    //releaseTypeCast,
+    setVPtrOf: _setVPtrOf,
+    releaseVPtrOf: _releaseVPtrOf,
+    _getVPtrOf,
+    _setVPtrOf,
+    _releaseVPtrOf,
 }
 
 /**
@@ -119,11 +119,11 @@ function dispatchPotentialFunction(target, wrapper, key) {
  */
 function wrappFunction(_func, binder) {
     
-    binder = releaseVPtrOf(binder);
+    binder = _releaseVPtrOf(binder);
 
     return function() {
         
-        return _func.call(binder, ...arguments);
+        return _func.apply(binder, arguments);
     }
 }
 
@@ -137,43 +137,6 @@ function retrieveInterfaceImplementer(instance, Interface) {
 function getPrototypeProperty(name) {
 
     return this[name];
-}
-
-const const_cast_traps = {
-    get(target, key) {
-
-        if (key === VPTR) {
-
-            return this[VPTR];
-        }
-
-        const castedType = this[VPTR];
-        restrictAbstractUndeclaredMethod(castedType, target, key);
-        
-        const targetProp = target[key];
-        const castedTypeProp = castedType.prototype[key];
-
-        // if () {
-
-
-        // }
-    },
-    set: traps.set,
-    getPrototypeOf() {
-
-        return this[VPTR];
-    },
-    setPrototypeOf() {
-
-        throw new Error('could not set prototype of object that is casted as const_cast()');
-    }
-}
-
-module.exports = {
-    getVPtrOf,
-    //releaseTypeCast,
-    setVPtrOf,
-    releaseVPtrOf,
 }
 
 /**
@@ -206,7 +169,7 @@ function restrictAbstractUndeclaredMethod(abstract, target, key) {
     }
 }
 
-function getVPtrOf(object) {
+function _getVPtrOf(object) {
 
     if (typeof object === 'function') {
 
@@ -239,7 +202,7 @@ function releaseTypeCast(object) {
  * @param {Object|any} target 
  * @returns {Object|any}
  */
-function setVPtrOf(_t, target) {
+function _setVPtrOf(_t, target) {
 
     if (typeof _target === 'function') {
 
@@ -285,7 +248,7 @@ function preventClass(_target) {
  * @param {Object|any} target 
  * @returns {Object|any}
  */
-function releaseVPtrOf(target) {
+function _releaseVPtrOf(target) {
 
     if (typeof object === 'function') {
 

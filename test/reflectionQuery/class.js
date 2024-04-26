@@ -379,7 +379,7 @@ class C extends H {
     })
     [METHOD('func')](param1, b, c) {
 
-        console.log('9');
+        //console.log('9');
 
     }
 

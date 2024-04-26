@@ -1,3 +1,5 @@
+'use strict'
+
 const { 
     property_metadata_t, 
     function_metadata_t, 
@@ -64,23 +66,24 @@ function retrieveTrie(propMeta) {
  */
 function searchForMatchTrieNode(rootTrieNode, list, transform) {
 
-    const iterator = (list || [])[Symbol.iterator]();
-    let iteration = iterator.next();
+    // const iterator = (list || [])[Symbol.iterator]();
+    // let iteration = iterator.next();
     let currentNode = rootTrieNode;
+    const hasTransform = typeof transform === 'function';
+    const length = list?.length || 0
 
-    while (
-        !iteration.done
-    ) {
+    for (let i = 0; i < length; ++i) {
 
-        const _type = typeof transform === 'function' ? transform(iteration.value) : iteration.value;
+        const _key = list[i];
+        const lookupKey = hasTransform ? transform(_key) : _key;
+        const nextNode = currentNode.current.get(lookupKey);
 
-        if (!currentNode.current.has(_type)) {
+        if (typeof nextNode !== 'object') {
 
             return undefined;
         }
 
-        currentNode = currentNode.current.get(_type);
-        iteration = iterator.next();
+        currentNode = nextNode;
     }
 
     return currentNode;

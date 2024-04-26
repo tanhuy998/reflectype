@@ -175,18 +175,21 @@ const t = new Temp();
 
 console.time('total1')
 
-//c.func(new A(), new A(), 1)
+c.func(new B(), new A(), 1);
+
+const _ = [new B(), new A(), 1];
 
 for (let i = 0; i < 100000; ++i) {
 
     //console.time(2)
-    const start = process.hrtime.bigint();
+    //const start = process.hrtime.bigint();
     //obj.func(...args);
-    c.func(new B(), new A(), 1)
+    // c.func(new B(), new A(), 1)
+    c.func(..._)
     
-    const end = process.hrtime.bigint();
+    //const end = process.hrtime.bigint();
 
-    console.log('invocation time', end - start);
+    //console.log('invocation time', end - start);
     //console.timeEnd(2)
 }
 console.timeEnd('total1')
@@ -196,17 +199,27 @@ for (let i = 0; i < 100000; ++i) {
 
     //console.time(2)>
 
-    t.func(...args);
+    //t.func(...args);
+    t.func.call(t, ...args);
+    
+    //t.func(1,2,3)
 
     //console.timeEnd(2)
 }
-
+console.timeEnd('total2')
 for (let i = 0; i < 100000; ++i) {
 
     Math.sqrt();
 }
 
-console.timeEnd('total2')
+
+
+console.time('3')
+for (let i = 0; i < 100000; ++i) {
+
+    t.func.apply(t, args)
+}
+console.timeEnd('3')
 
 // const typeMeta = ref.metadata.owner.typeMeta;
 // const trieMaps = typeMeta.methodVariantMaps;

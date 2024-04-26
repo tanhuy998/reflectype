@@ -1,3 +1,5 @@
+'use strict'
+
 const { 
     property_metadata_t, 
     function_variant_param_node_metadata_t, 
@@ -12,7 +14,7 @@ const {
 } = require("../../reflection/metadata");
 const { DECORATED_VALUE, DECORATOR_APPLIED, ALTER_VALUE } = require("../constant");
 const { getMetadataFootPrintByKey, setMetadataFootPrint } = require("../footPrint");
-const { OVERLOAD_APPLIED, OVERLOAD_TARGET, OVERRIDE_APPLIED, OVERLOADED_METHOD_NAME, NULLABLE } = require("./constant");
+const { OVERLOAD_APPLIED, OVERLOAD_TARGET, OVERRIDE_APPLIED, OVERLOADED_METHOD_NAME, NULLABLE, FINAL_APPLIED } = require("./constant");
 const { isObjectLike, isFirstClass, isObjectKey, isValuable } = require("../type");
 const {getAllParametersMeta, getAllParametersMetaWithNullableFilter} = require('../functionParam.lib');
 const { mergeFuncVariant } = require("./methodVariantTrieOperation.lib");
@@ -71,18 +73,8 @@ function manipulateMethodVariantBehavior(propName, propMeta) {
     
     const isOverloading = isOverloadingMethod.call(this, propName, propMeta);
     const hasLegacy = isOverridingBaseClassMethod.call(this, propName, propMeta);
-
-    // if (
-    //     !isOverloading &&
-    //     !hasLegacy
-    // ) {
-
-    //     return;
-    // }
-
-    const ctxGenericPropMeta = retrieveContextGenericPropMeta.call(this, propName, propMeta);
-
-    let statisticTable;
+    // const ctxGenericPropMeta = retrieveContextGenericPropMeta.call(this, propName, propMeta);
+    // let statisticTable;
 
     if (
         isOverloading
@@ -90,37 +82,25 @@ function manipulateMethodVariantBehavior(propName, propMeta) {
         || isOwner && propMeta.functionMeta.isVirtual
         //&& !isPseudoMethod(propMeta)
     ) {
-        //console.log(3)
+
         const overloadedName = getMetadataFootPrintByKey(propMeta, OVERLOADED_METHOD_NAME) || propMeta.name;
         const genericPropMeta = retrieveMethodVariantTableOf(propMeta).mappingTable.get(overloadedName);
         createContextEntryPoint(genericPropMeta);
     }
 
-    // if (hasLegacy) {
-    //     /**
-    //      * in this case, the remote propMeta is known as the legacy
-    //      * of the current propMeta which is placed in base class.
-    //      */
-    //     createContextEntryPoint(propMeta);
-    //     statisticTable = retrieveMethodVariantTableOf(propMeta).statisticTable;
-    // }
-
-    // /**
-    //  * remotePropMeta could be on base class therefore when registering remotePropMeta,
-    //  * update the state of 
-    //  */
-    // registerOverloadVariant(ctxGenericPropMeta, getAllParametersMeta(ctxGenericPropMeta.functionMeta), [statisticTable]);
-    // registerIfNullableBranch(ctxGenericPropMeta, getAllParametersMetaWithNullableFilter(ctxGenericPropMeta.functionMeta), [statisticTable]);
-
-    // registerOverloadVariant(propMeta, getAllParametersMeta(propMeta.functionMeta));
-    // registerIfNullableBranch(propMeta, getAllParametersMetaWithNullableFilter(propMeta.functionMeta));
-
-    registerMethodVariant(propMeta);
-    registerNullableBranch(propMeta);
-    // createContextEntryPoint(ctxGenericPropMeta);
+    _register(propMeta);
 }
 
+/**
+ * 
+ * @param {property_metadata_t} propMeta 
+ */
+function _register(propMeta) {
 
+    registerMethodVariant(propMeta);
+    //const hasNullableBranch = registerPotentialNullableBranch(propMeta);
+    //verifyPotentialFinalMethod(propMeta, hasNullableBranch);
+}
 
 /**
  * @this
@@ -205,7 +185,6 @@ function createEntryPoint(entryPointTarget , methodName, refPropMeta) {
     }
 
     if (
-        //isVariantEntryPointFunction(entryPointTarget[methodName])
         isVariantEntryPointFunction(getMetadataFootPrintByKey(
             refPropMeta, ALTER_VALUE
         ))
@@ -215,14 +194,6 @@ function createEntryPoint(entryPointTarget , methodName, refPropMeta) {
     }
 
     const multiDispatchGenericEntryPoint = generateGenericEntryPoint(genericPropMeta);
-
-    // Reflect.set(
-    //     entryPointTarget, 
-    //     methodName, 
-    //     multiDispatchGenericEntryPoint, 
-    //     entryPointTarget
-    // );
-
     setMetadataFootPrint(genericPropMeta, ALTER_VALUE, multiDispatchGenericEntryPoint);
 }
 
@@ -290,15 +261,17 @@ function registerMethodVariant(hostPropMeta, extraStatisticTables = []) {
  * 
  * @param {property_metadata_t} hostPropMeta 
  * @param {Array<Map<Function, Number>>} extraStatisticTables
+ * 
+ * @returns {boolean}
  */
-function registerNullableBranch(hostPropMeta, extraStatisticTables = []) {
+function registerPotentialNullableBranch(hostPropMeta, extraStatisticTables = []) {
 
     const funcMeta = hostPropMeta.functionMeta;
     const nullableBranch = getAllParametersMetaWithNullableFilter(funcMeta);
 
     if (!nullableBranch) {
 
-        return;
+        return false;
     }
 
     const endPointNode = registerSignature(
@@ -309,13 +282,15 @@ function registerNullableBranch(hostPropMeta, extraStatisticTables = []) {
 
     if (!endPointNode) {
 
-        return;
+        return false;
     }
 
     validateNullableBranch(funcMeta, endPointNode);
     setEndpoint(endPointNode, hostPropMeta, funcMeta);
     // const genericPropMeta = retrieveGenericPropMetaOf(hostPropMeta);
     // endPointNode.endpoint.dispatchTable.set(genericPropMeta.functionMeta, funcMeta);
+
+    return true;
 }
 
 /**
@@ -328,7 +303,7 @@ function setEndpoint(trieNode, hostPropMeta, genericImplementation) {
 
     const genericPropMeta = retrieveGenericPropMetaOf(hostPropMeta);
     trieNode.endpoint.dispatchTable.set(genericPropMeta.functionMeta, genericImplementation);
-    const cache = trieNode.cache ??= new function_variant_cache_node_endpoint_metadata_t();
+    //const cache = trieNode.cache ??= new function_variant_cache_node_endpoint_metadata_t();
 }
 
 /**
@@ -447,6 +422,7 @@ function retrieveGenericPropMetaOf(propMeta) {
 function validateWithBaseClassImplemetation(propMeta, endpointNode) {
     
     const deicdeToOverride = getMetadataFootPrintByKey(propMeta, OVERRIDE_APPLIED);
+    const isFinal = getMetadataFootPrintByKey(propMeta, FINAL_APPLIED);
 
     if (!endpointNode) {
 
@@ -455,10 +431,19 @@ function validateWithBaseClassImplemetation(propMeta, endpointNode) {
 
     if (!deicdeToOverride) {
 
+        if (isFinal) {
+
+            throw new Error();
+        }
+
         return;
     }
 
-    const virtualImplementation = lookupVirtualMethodOrFail(
+    /**
+     *  When decideToOverride === true
+     */
+
+    const virtualImplementation = lookupVirtualMethod(
         endpointNode.endpoint, propMeta
     );
     
@@ -467,13 +452,28 @@ function validateWithBaseClassImplemetation(propMeta, endpointNode) {
         throw new OverridingNonVirtualMethodError(propMeta);
     }
 
+    const baseImplementationPropMeta = getNearestBaseImplementationPropMeta(
+        propMeta, endpointNode.endpoint
+    );
+
+    
+    if (
+        baseImplementationPropMeta.owner.typeMeta.abstract === Object.getPrototypeOf(propMeta.owner.typeMeta.abstract)
+        && getMetadataFootPrintByKey(baseImplementationPropMeta, FINAL_APPLIED)
+    ) {
+        /**
+         * prevent override base class final method
+         */
+        throw new Error('could not override base class final method');
+    }
+
     virtualImplementation.vTable.set(
         propMeta.owner.typeMeta.abstract, propMeta.functionMeta
     );
 }
 
 /**
- * Lookup for the nearest virtual method, throws OverridingNonVirtualMethodError when there's
+ * Lookup for the nearest virtual method, return undefined when there's
  * normal method exists on the prototype chain.
  * 
  * @param {function_variant_param_node_endpoint_metadata_t} nodeEndpoint 
@@ -481,7 +481,7 @@ function validateWithBaseClassImplemetation(propMeta, endpointNode) {
  * 
  * @returns {function_metadata_t|undefined}
  */
-function lookupVirtualMethodOrFail(nodeEndpoint, propMeta) {
+function lookupVirtualMethod(nodeEndpoint, propMeta) {
 
     let _class = Object.getPrototypeOf(propMeta.owner.typeMeta.abstract);
 
@@ -515,11 +515,30 @@ function lookupVirtualMethodOrFail(nodeEndpoint, propMeta) {
              * When the current implementation is not only virtual but also override,
              * it's mean the current 'override' behavior apllied to the method is invalid.
              */
-            //throw new OverridingNonVirtualMethodError(propMeta);
             return undefined;
         }
 
         _class = Object.getPrototypeOf(_class);
+    }
+}
+
+/**
+ * 
+ * @param {property_metadata_t} propMeta 
+ */
+function verifyPotentialFinalMethod(propMeta, hasNullableBranch = false) {
+
+    const isMarkedFinal = getMetadataFootPrintByKey(propMeta, FINAL_APPLIED);
+
+    if (!isMarkedFinal) {
+
+        return;
+    }   
+    else if (
+        !getMetadataFootPrintByKey(propMeta.functionMeta, OVERRIDE_APPLIED)
+    ) {
+
+        throw new Error();
     }
 }
 
@@ -552,7 +571,7 @@ function getNearestBaseImplementationPropMeta(propMeta, trieEndpoint) {
     
     let nearestDepth = Infinity;
     let nearestFuncMeta;
-
+    
     for (const [genericFuncMeta, variantFuncMeta] of trieEndpoint.dispatchTable.entries()) {
         
         const t = genericFuncMeta.owner.owner.typeMeta;

@@ -7,6 +7,7 @@ const type = require("../../src/decorators/type");
 const virtual = require("../../src/decorators/virtual");
 const { METHOD } = require("../../src/libs/methodOverloading/constant");
 const { getVPtrOf } = require("../../src/libs/typeEnforcement.lib");
+const final = require("../../src/decorators/final");
 
 class IFoo extends Interface {
 
@@ -66,7 +67,8 @@ class B extends A {
         //console.log('B number');
     }
 
-    //@override
+    //@final
+    @override
     @paramameters({
         a: String
     })
@@ -85,7 +87,8 @@ class B extends A {
 @implement(IFoo)
 class C extends B {
 
-    //@override
+    @final
+    @override
     @paramameters({
         a: String
     })

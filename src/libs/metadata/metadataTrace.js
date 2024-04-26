@@ -50,7 +50,8 @@ module.exports = {
     belongsToCurrentMetadataSession,
     retrieveMetaObject,
     refreshTypeMetaObjectForDecoratorMetadata,
-    refreshClassTypeMetadata
+    refreshClassTypeMetadata,
+    getLegacyPropMetaOf,
 }
 
 function currentClassMeta() {
@@ -218,6 +219,15 @@ function placeLegacyPropMeta(propMeta, legacyPropMeta) {
 
     propMeta[FOOTPRINT] ||= {};
     propMeta[FOOTPRINT][LEGACY_PROP_META] = legacyPropMeta;
+}
+
+/**
+ * 
+ * @param {property_metadata_t} propMeta 
+ */
+function getLegacyPropMetaOf(propMeta) {
+
+    return  propMeta[FOOTPRINT]?.[LEGACY_PROP_META];
 }
 
 /**

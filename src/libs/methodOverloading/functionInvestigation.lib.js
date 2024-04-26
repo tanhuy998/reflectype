@@ -1,3 +1,5 @@
+'use strict'
+
 const { 
     property_metadata_t, 
     function_variant_param_node_metadata_t, 
@@ -20,12 +22,21 @@ module.exports = {
     investigateGenericImplementation
 }
 
+/**
+ * 
+ * @param {object|class} binder 
+ * @param {property_metadata_t} genericPropMeta 
+ * @param {Array<any>} args 
+ * 
+ * @returns {function_metadata_t}
+ */
 function investigateGenericImplementation(binder, genericPropMeta, args = []) {
 
     const genericFuncMeta = genericPropMeta.functionMeta;
     const trieEndpoint = args.length === 0 ?
         FUNC_TRIE.endpoint
-        : lookupEndpointNode(getTypeOf(binder), genericFuncMeta, args);
+        //: lookupEndpointNode(getTypeOf(binder), genericFuncMeta, args);
+        : lookupEndpointNode(genericFuncMeta, args);
 
     if (
         !trieEndpoint
@@ -34,11 +45,17 @@ function investigateGenericImplementation(binder, genericPropMeta, args = []) {
         throw new MethodVariantMismatchError(genericFuncMeta, args);
     }
 
-    const genericImplementation = extractGenericImplementation(binder, trieEndpoint, genericPropMeta, args);
+    const genericImplementation = extractGenericImplementation(
+        trieEndpoint, genericPropMeta, getTypeOf(binder), getVPtrOf(binder)
+    );
 
     if (typeof genericImplementation === 'object') {
 
         mergeArgBranch(genericFuncMeta, genericImplementation, args);
+    }
+    else {
+
+        throw new MethodVariantMismatchError(genericPropMeta.function, args);
     }
 
     return genericImplementation;
@@ -46,20 +63,24 @@ function investigateGenericImplementation(binder, genericPropMeta, args = []) {
 
 /**
  * 
- * @param {Function|Object} binder the object that bound with the function when invoking it.
  * @param {function_variant_param_node_endpoint_metadata_t} trieEndpoint the lookedup trie 
  * endpoint that match the input signature.
  * @param {property_metadata_t} propMeta the propMeta that is registered to the entry point 
  * for overloading function, its role is just loopback point.
- * @param {Array<any>} args input arguments.
+ * @param {Function} actualType
+ * @param {Function?} vPtr
+ * 
+ * @returns {function_metadata_t}
  */
-function extractGenericImplementation(binder, trieEndpoint, propMeta, args) {
+function extractGenericImplementation(
+    trieEndpoint, 
+    propMeta,  
+    actualType, 
+    vPtr
+) {
 
+    vPtr ??= actualType;
     let _class = propMeta.owner.typeMeta.abstract;
-    const actualType = getTypeOf(binder);
-
-    /**@type {Function|typeof Interface} */
-    const vPtr = getVPtrOf(binder);
     const funcName = propMeta.name;
     const vPtr_is_interface = vPtr?.prototype instanceof Interface;
 
@@ -88,32 +109,24 @@ function extractGenericImplementation(binder, trieEndpoint, propMeta, args) {
             typeof genericImplementation === 'object'
         ) {
 
-            // return !genericImplementation.isVirtual ? 
-            //     genericImplementation
-            //     : extractVirtualFunction(
-            //         genericImplementation , vPtr, actualType
-            //     );
-
             return genericImplementation;
         }
 
         _class = Object.getPrototypeOf(_class);
     }
-
-    throw new MethodVariantMismatchError(propMeta.functionMeta, args);
+    
+    return undefined;
 }
 
 /**
  * 
- * @param {Function} _class 
  * @param {function_metadata_t} funcMeta 
  * @param {Array} args 
  * 
  * @returns {function_variant_param_node_endpoint_metadata_t}
  */
-function lookupEndpointNode(_class, funcMeta, args) {
+function lookupEndpointNode(funcMeta, args) {
 
-    //console.time('estimation time');
     const propMeta = funcMeta.owner
     const variantMaps = propMeta.owner.typeMeta.methodVariantMaps;
     const targetMap = propMeta.static ? variantMaps?.static : variantMaps._prototype;
@@ -132,7 +145,7 @@ function lookupEndpointNode(_class, funcMeta, args) {
     }
 
     const estimationReport = estimateArgs(funcMeta, args);
-    //console.timeEnd('estimation time');
+
     if (
         estimationReport?.constructor !== estimation_report_t
     ) {
@@ -140,20 +153,16 @@ function lookupEndpointNode(_class, funcMeta, args) {
         return false;
     }
 
-    //console.time('calc')
-    const targetTrie = FUNC_TRIE;
-    const ret = retrieveMostSpecificApplicableEndpoint(targetTrie, estimationReport)?.endpoint;
-    //console.timeEnd('calc')
-
-    return ret;
+    return retrieveMostSpecificApplicableEndpoint(FUNC_TRIE, estimationReport)?.endpoint;
 }
 
 /**
  * 
  * @param {function_variant_param_node_metadata_t} trieNode 
  * @param {estimation_report_t} estimationReport
- * @param {number} dMass
- * @param {number} dImaginary
+ * @param {vector} dVector
+ * 
+ * @returns {}
  */
 function retrieveMostSpecificApplicableEndpoint(
     trieNode,

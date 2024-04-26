@@ -52,7 +52,7 @@ module.exports = {
     estimateArgType,
     typeStatisticallyExistsOn,
     estimateArgs,
-    
+    _estimateList,
 }
 
 /**
@@ -160,16 +160,59 @@ function estimateArgs(funcMeta, args = []) {
         throw new ReferenceError();
     }
 
+    // let ret;
+    // let argMasses;
+    // let index = 0;
+
+    // let hasNullable;
+    
+    // for (let i = 0; i < args.length; ++i) {
+
+    //     const argVal = args[i];
+    //     const estimationPiece = estimateArgType(argVal, index, statisticTable);
+        
+    //     if (
+    //         //!Array.isArray(estimationPiece) ||
+    //         estimationPiece.length === 0
+    //     ) {
+
+    //         return undefined;
+    //     }
+        
+    //     hasNullable ||= estimationPiece[NULLABLE];
+    //     (ret ||= []).push(estimationPiece);
+    //     (argMasses ||= []).push(estimationPiece[ESTIMATION_MASS]);
+
+    //     ++index;
+    // }
+    
+    // return new estimation_report_t(ret, argMasses, hasNullable);
+
+    return _estimateList(args, statisticTable, getTypeForFunctionDispatch);
+}
+
+/**
+ * 
+ * @param {Array<any>} list 
+ * @param {Map<Function, number>} statisticTable 
+ * @param {function} transform 
+ * 
+ * @returns {estimation_report_t}
+ */
+function _estimateList(list, statisticTable, transform) {
+
+    const has_transform = typeof transform === 'function';
+
     let ret;
-    let argMasses;
-    let index = 0;
+    let masses;
+    //let index = 0;
 
     let hasNullable;
     
-    for (let i = 0; i < args.length; ++i) {
+    for (let i = 0; i < list.length; ++i) {
 
-        const argVal = args[i];
-        const estimationPiece = estimateArgType(argVal, index, statisticTable);
+        const key = has_transform ? transform(list[i]) : list[i];
+        const estimationPiece = _estimateType(key, i, statisticTable);
         
         if (
             //!Array.isArray(estimationPiece) ||
@@ -181,12 +224,12 @@ function estimateArgs(funcMeta, args = []) {
         
         hasNullable ||= estimationPiece[NULLABLE];
         (ret ||= []).push(estimationPiece);
-        (argMasses ||= []).push(estimationPiece[ESTIMATION_MASS]);
+        (masses ||= []).push(estimationPiece[ESTIMATION_MASS]);
 
-        ++index;
+        //++index;
     }
     
-    return new estimation_report_t(ret, argMasses, hasNullable);
+    return new estimation_report_t(ret, masses, hasNullable);
 }
 
 function calculateDelta() {
@@ -296,6 +339,11 @@ function estimateArgType(argVal, index = 0, statisticTable) {
     //const _type = getCastedTypeOf(argVal) || getTypeOf(argVal) || NULLABLE;
     const _type = getTypeForFunctionDispatch(argVal);
 
+    return _estimateType(_type, index, statisticTable);
+}
+
+function _estimateType(_type, index, statisticTable) {
+
     const estimationPiece = new EstimationPieace(_type);
     diveInheritanceChain(_type, index, statisticTable, estimationPiece);
 
@@ -304,7 +352,7 @@ function estimateArgType(argVal, index = 0, statisticTable) {
         && !(_type instanceof Interface)
     ) {
 
-        diveInterfaces(argVal, index, statisticTable, estimationPiece);
+        diveInterfaces(_type, index, statisticTable, estimationPiece);
     }
 
     // if (
@@ -340,16 +388,16 @@ function checkForCoerciveTypes(_type, index, statisticTable, estimationPeace) {
 
 /**
  * 
- * @param {any} argVal 
+ * @param {any} _type 
  * @param {Map<Function, Number>} statisticTable
  * @param {EstimationPieace} estimationPeace
  * 
  * @returns {EstimationPieace} 
  */
-function diveInterfaces(argVal, index, statisticTable, estimationPeace) {
+function diveInterfaces(_type, index, statisticTable, estimationPeace) {
 
     const bias = estimationPeace[ESTIMATION_MASS] + INTERFACE_BIAS;
-    const interfaceList = getAllInterfacesOf(argVal);
+    const interfaceList = getAllInterfacesOf(_type);
 
     if (
         !Array.isArray(interfaceList)
@@ -375,12 +423,12 @@ function diveInterfaces(argVal, index, statisticTable, estimationPeace) {
 
 /**
  * 
- * @param {Object|Function} _unknown 
+ * @param {Function} _type 
  * @returns {Array<Interface>}
  */
-function getAllInterfacesOf(_unknown) {
+function getAllInterfacesOf(_type) {
 
-    const _type = getTypeOf(_unknown);
+    //const _type = getTypeOf(_type);
     const intfList = metaOf(_type)?.interfaces?.all;
 
     return Array.isArray(intfList) ? intfList : undefined;

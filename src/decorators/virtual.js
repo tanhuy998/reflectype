@@ -1,6 +1,6 @@
 const { DECORATED_VALUE } = require('../libs/constant');
 const { setMetadataFootPrint, getMetadataFootPrintByKey } = require('../libs/footPrint');
-const { OVERRIDE_APPLIED } = require('../libs/methodOverloading/constant');
+const { OVERRIDE_APPLIED, FINAL_APPLIED } = require('../libs/methodOverloading/constant');
 const propertyDecorator = require('../libs/propertyDecorator');
 
 module.exports = virtual;
@@ -22,6 +22,11 @@ function virtual(_, context) {
     if (getMetadataFootPrintByKey(propMeta.functionMeta, OVERRIDE_APPLIED)) {
 
         throw new SyntaxError('Could not mark a method as virtual which intent to override it\'s base class method');
+    }
+
+    if (getMetadataFootPrintByKey(propMeta, FINAL_APPLIED)) {
+
+        throw new SyntaxError('Could not mark a method as virtual which intent to be final');
     }
 
     propMeta.functionMeta.allowOverride = true;

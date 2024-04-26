@@ -12,6 +12,7 @@ module.exports = {
     OVERLOAD_TARGET: '_overload_target',
     OVERLOAD_APPLIED: '_isOverloadMethod',
     OVERLOAD_PENDING: '_overload_pending',
+    FINAL_APPLIED: '_is_finall',
     OVERRIDE_APPLIED: '_isOverrideMethod',
     LAST_TRIE_NODE: '_last_trie_node',
     PSEUDO_OVERLOADED_METHOD_NAME: '_pseudo_overloaed_method_name',

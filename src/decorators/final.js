@@ -1,7 +1,11 @@
 const { markAsDecorator } = require("../utils/decorator/general");
 
-const { setDecoratorFootPrint } = require("../libs/footPrint");
+const { setDecoratorFootPrint, getMetadataFootPrintByKey, setMetadataFootPrint } = require("../libs/footPrint");
 const { IS_FINAL } = require("../libs/keyword/constant");
+const { initMetadata } = require("../libs/propertyDecorator");
+const { OVERRIDE_APPLIED, FINAL_APPLIED } = require("../libs/methodOverloading/constant");
+const { getLegacyPropMeta, getLegacyPropMetaOf } = require("../libs/metadata/metadataTrace");
+const { DECORATED_VALUE } = require("../libs/constant");
 
 markAsDecorator(final);
 
@@ -11,13 +15,19 @@ function final(_, context) {
 
     const {kind} = context;
     
-    switch(kind) {
-        case 'method': {
-            const propertyDecorator = require("../libs/propertyDecorator");
-            propertyDecorator.initMetadata(...arguments);
-            setDecoratorFootPrint(_, context, IS_FINAL);
-        }
-        default:
-            break;
+    if (kind !== 'method') {
+
+        throw new Error();
     }
+
+    const propMeta = initMetadata(_, context);
+    const funcMeta = propMeta.functionMeta;
+
+    if (funcMeta.isVirtual) {
+
+        throw new ReferenceError('virtual method could not be virtual');
+    }
+
+    setMetadataFootPrint(propMeta, FINAL_APPLIED);
+    return getMetadataFootPrintByKey(propMeta, DECORATED_VALUE);
 }

@@ -1,3 +1,5 @@
+'use strict'
+
 const {metaOf, metadata_t, property_metadata_t, prototype_metadata_t, PROP_META_INITIALIZED, function_metadata_t} = require('../reflection/metadata.js');
 const {getMetadataFootPrintByKey, metadataHasFootPrint, setMetadataFootPrint} = require('./footPrint.js');
 const matchType = require('./matchType.js');
@@ -52,7 +54,7 @@ function generateDecorateMethod(propMeta) {
         }
         
         const originFunc = getMetadataFootPrintByKey(propMeta, ORIGIN_VALUE);
-        const returnValue = originFunc.call(this, ...args);
+        const returnValue = originFunc.apply(this, args);//originFunc.call(this, ...args);
         const {type} = propMeta;
 
         return checkReturnTypeAndResolve(returnValue, type, propMeta);
@@ -78,7 +80,7 @@ function generateGenericFunction(propMeta) {
     return function() {
 
         const method = getMetadataFootPrintByKey(propMeta, ALTER_VALUE);
-        return method.call(this, ...arguments);
+        return method.apply(this, arguments);
     }
 }
 

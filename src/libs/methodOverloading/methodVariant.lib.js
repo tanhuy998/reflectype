@@ -1,3 +1,5 @@
+'use strict'
+
 const { 
     property_metadata_t, 
     function_variant_param_node_metadata_t, 
@@ -32,19 +34,25 @@ module.exports = {
 
 /**
  * 
- * @param {Object|Function|any} binder 
+ * @param {Object|Function|any} receiver 
  * @param {property_metadata_t} propMeta 
  * @param {Array<any>} args 
  */
-function dispatchMethodVariant(binder, propMeta, args) {
+function dispatchMethodVariant(receiver, propMeta, args) {
 
-    const funcMeta = dispatchPotentialVirtualFunciton(
-        propMeta,
-        lookupArgBranch(propMeta.functionMeta, args)
-        || investigateGenericImplementation(binder, propMeta, args)
-        , binder
-    )
-    return invoke(funcMeta, binder, args);
+    let funcMeta = lookupArgBranch(propMeta.functionMeta, args)
+    || investigateGenericImplementation(receiver, propMeta, args);
+
+    funcMeta = !propMeta.static ? dispatchPotentialVirtualFunciton(
+        propMeta, funcMeta, receiver
+    ) : funcMeta;
+
+    return invoke(funcMeta, receiver, args);
+}
+
+function _find() {
+
+
 }
 
 /**
@@ -73,10 +81,10 @@ function dispatchPotentialVirtualFunciton(inputGenPropMeta, resolvedGenImpl, bin
 /**
  * 
  * @param {function_metadata_t} funcMeta 
- * @param {any} bindObject
+ * @param {any} receiver
  * @param {Array<any>} args
  */
-function invoke(funcMeta, bindObject, args) {
+function invoke(funcMeta, receiver, args) {
     
     //console.time('prepare invoke')
     /**@type {function} */
@@ -89,11 +97,12 @@ function invoke(funcMeta, bindObject, args) {
     //console.timeEnd('cast down args')
 
     //console.time('invoke');
-    bindObject = releaseVPtrOf(bindObject);
+    receiver = releaseVPtrOf(receiver);
 
-    const ret = actualFunc.call(bindObject, MULTIPLE_DISPATCH, ...args);
+    args.unshift(MULTIPLE_DISPATCH);
+    //const ret = actualFunc.call(bindObject, MULTIPLE_DISPATCH, ...args);
     //console.timeEnd("invoke");
-    return ret;
+    return actualFunc.apply(receiver, args);
 }
 
 /**
