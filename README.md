@@ -12,32 +12,14 @@
 
 #### Babel version
 
-To achieve accurate transpilatio, this package needs the latest version of Babel dependencies after version 7.23 because since version 7.23, Babel add implementation for TC-39 proposal decorator metadata.
+To achieve accurate transpilation, this package needs the latest version of Babel dependencies after version 7.23 because since version 7.23, Babel add implementation for TC-39 proposal decorator metadata.  
 
-This is configuration dependencies when developing this pacakage
-
-```
-{
-    "devDependencies": {
-        "@babel/core": "^7.23.5",
-        "@babel/node": "^7.22.19",
-        "@babel/plugin-proposal-decorators": "^7.23.5",
-        "@babel/preset-env": "^7.23.5",
-        "@babel/register": "^7.22.15",
-        "@types/node": "^20.10.4",
-        "babel-jest": "^29.7.0",
-        "jest": "^29.7.0"
-    }
-}
-```
+Node.js environment at least in version 
 
 #### .babelrc setup
 
 ```json
 {
-    "presets": [
-        "@babel/preset-env"
-    ],
     "plugins": [
         ["@babel/plugin-proposal-decorators", { "version": "2023-05" }]
     ]
@@ -75,7 +57,7 @@ class IDisposable extends Interface {
 /**
  * would throw error because this class has not been defined log() method
  */
-@_implement(ILoggable, IDisposable)
+@_implements(ILoggable, IDisposable)
 class SomeClass {
 
     logConsole(msg) {
@@ -119,7 +101,7 @@ obj.id = 1; // valid set
 #### Type with interfaces
 
 ``` javascript
-const {_implement, Interface, type} = require('reflectype');
+const {_implements, Interface, type} = require('reflectype');
 
 class ILoggable extends Interface {
 
@@ -139,7 +121,7 @@ class IDisposable extends Interface {
 /**
  * would throw error because this class has not been defined log() method
  */
-@implement(ILoggable, IDisposable)
+@_implements(ILoggable, IDisposable)
 class SomeClass {
 
     logConsole(msg) {
